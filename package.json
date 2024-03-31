@@ -1,0 +1,50 @@
+{
+  "name": "kerfuffle",
+  "version": "1.0.1",
+  "description": "User Friendly Visual Programming Language",
+  "author": "catpea",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catpea/visual-programming-language.git"
+  },
+  "bugs": {
+    "url": "https://github.com/catpea/visual-programming-language/issues"
+  },
+  "homepage": "https://github.com/catpea/visual-programming-language#readme",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "./start.js",
+    "save": "git add .; git commit -m 'Updated Release'; git push; npm version patch; npm publish; git push;",
+    "test": "./try.js"
+  },
+  "keywords": [],
+  "imports": {
+    "#plug-ins/*": "./plug-ins/*",
+    "#abstract/*": "./abstract/*"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@codemirror/commands": "^6.3.3",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.24.1",
+    "bootstrap": "^5.3.2",
+    "calculate-percent": "^2.1.0",
+    "codemirror": "^6.0.1",
+    "events": "^3.3.0",
+    "lodash": "^4.17.21",
+    "oneof": "^2.1.0",
+    "panzoom": "^9.4.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "chalk": "^5.3.0",
+    "esbuild": "0.19.6",
+    "esbuild-sass-plugin": "^2.16.0"
+  },
+  "directories": {
+    "doc": "doc"
+  }
+}

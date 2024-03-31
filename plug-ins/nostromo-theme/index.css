@@ -1,0 +1,169 @@
+:root, [data-ui-theme=nostromo] {
+  --editor-primary: rgba(92, 182, 118, 255);
+  --editor-secondary: rgba(0, 75, 34, 255);
+  --editor-success: rgba(81, 53, 52, 255);
+  --editor-info: rgba(88, 43, 48, 255);
+  --editor-warning: rgba(17, 77, 26, 255);
+  --editor-danger: rgba(101, 20, 27, 255);
+  --editor-light: rgba(255, 196, 158, 255);
+  --editor-dark: rgba(3, 17, 17, 255);
+}
+
+
+body {
+  background-color: black;
+}
+
+rect {
+
+}
+
+svg.editor-interface {
+    outline: none;
+}
+
+.editor-background {
+    fill: var(--editor-dark);
+    stroke: var(--editor-primary);
+}
+
+.editor-scene {
+  fill: transparent;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+  editor-anchor-line
+  editor-component-what
+*/
+
+.editor-anchor {
+
+  stroke: var(--editor-primary);
+  fill: var(--editor-dark);
+
+  stroke-width: 2;
+
+
+  &.compatible {
+    fill: var(--editor-success);
+  }
+
+  &.incompatible {
+    fill: var(--editor-danger);
+  }
+
+  &.selected {
+    stroke: var(--editor-warning);
+  }
+
+}
+
+
+
+
+
+
+.editor-anchor-line {
+  stroke: var(--editor-primary);
+  stroke-width: 2;
+}
+
+
+.editor-line {
+  stroke: var(--editor-secondary);
+  stroke-width: 2;
+  &.selected {
+    stroke: var(--editor-warning);
+  }
+}
+
+.editor-line-midpoint {
+  fill: var(--editor-primary);
+  stroke: var(--editor-primary);
+  &.selected {
+    stroke: var(--editor-warning);
+    fill: var(--editor-warning);
+  }
+}
+
+.editor-caption {
+  stroke: var(--editor-primary);
+  stroke-width: 2;
+  &.selected {
+    stroke: var(--editor-warning);
+  }
+}
+
+.editor-junction {
+  stroke: var(--editor-primary);
+  stroke-width: 2;
+  &.selected {
+    stroke: var(--editor-warning);
+  }
+}
+
+.editor-container {
+  stroke: var(--editor-primary);
+  stroke-width: 2;
+}
+
+.editor-control {
+  stroke: var(--editor-primary);
+  stroke-width: 2;
+}
+
+.editor-frame {
+  stroke: var(--editor-primary);
+  stroke-width: 2;
+}
+
+div.editor-codemirror {
+  background-color: var(--editor-dark);
+  border: 2px solid var(--editor-dark);
+}
+
+div.editor-codemirror * {
+  border-radius: 0 ! important;
+}
+
+
+.editor-label {
+  stroke: var(--editor-primary);
+  fill: var(--editor-dark);
+  &.selected {
+    fill: var(--editor-warning);
+  }
+}
+.editor-label-text {
+  pointer-events: none;
+  fill: var(--editor-primary);
+}
+
+
+
+
+
+.editor-device-info-text {
+  fill: var(--editor-primary);
+}
+
+.editor-device-info {
+  stroke: var(--editor-primary);
+  fill: var(--editor-dark);
+  &.selected {
+    fill: var(--editor-warning);
+  }
+}
