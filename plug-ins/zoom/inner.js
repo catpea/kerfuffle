@@ -7,7 +7,7 @@ export default class Zoom {
   zone;
   area;
 
-  magnitude = .5; // magnitude of change
+  magnitude = 1; // magnitude of change
   min = 0.1;
   max = 15;
 
