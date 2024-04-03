@@ -1838,131 +1838,29 @@
     };
   };
 
-  // plug-ins/pan/index.js
-  var Pan = class {
+  // plug-ins/windows/Viewport.js
+  var Viewport = class {
     static {
-      __name(this, "Pan");
+      __name(this, "Viewport");
     }
-    transformMovement = (data) => data;
-    component;
-    handle;
-    mouseDownHandler;
-    mouseMoveHandler;
-    mouseUpHandler;
-    dragging = false;
-    previousX = 0;
-    previousY = 0;
-    constructor({ component, handle, zone, transformMovement }) {
-      if (transformMovement)
-        this.transformMovement = transformMovement;
-      this.component = component;
-      this.handle = handle;
-      this.zone = zone;
-      this.mount();
-    }
-    mount() {
-      this.mouseDownHandler = (e) => {
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-        this.dragging = true;
-        this.component.iframe = false;
-        this.zone.addEventListener("mousemove", this.mouseMoveHandler);
-      };
-      this.mouseMoveHandler = (e) => {
-        const movementX = this.transformMovement(this.previousX - e.screenX);
-        const movementY = this.transformMovement(this.previousY - e.screenY);
-        const transforms = this.component.getTransforms();
-        const t = transforms.reduce((a, c) => ({ x: a.x + c.x, y: a.y + c.y, z: a.z + c.z - 1 }), { x: 0, y: 0, z: 1 });
-        console.log(t);
-        this.component.panX = this.component.panX - movementX;
-        this.component.panY = this.component.panY - movementY;
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-      };
-      this.mouseUpHandler = (e) => {
-        this.dragging = false;
-        this.component.iframe = true;
-        this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
-      };
-      this.handle.addEventListener("mousedown", this.mouseDownHandler);
-      this.zone.addEventListener("mouseup", this.mouseUpHandler);
-    }
-    destroy() {
-      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
-      this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
-      this.zone.removeEventListener("mouseup", this.mouseUpHandler);
-    }
-  };
-
-  // plug-ins/zoom/inner.js
-  var Zoom = class {
-    static {
-      __name(this, "Zoom");
-    }
-    probe = null;
-    transformMovement = (data) => data;
-    component;
-    element;
-    zone;
-    area;
-    magnitude = 1;
-    // magnitude of change
-    min = 0.1;
-    max = 15;
-    constructor({ component, element, zone, transformMovement, area, probe }) {
-      if (probe)
-        this.probe = probe;
-      if (transformMovement)
-        this.transformMovement = transformMovement;
-      this.area = area;
-      this.component = component;
-      this.element = element;
-      this.zone = zone;
-      this.mount();
-    }
-    mount() {
-      this.wheelHandler = (e) => {
-        const x0 = this.area.x;
-        const y0 = this.area.y;
-        const zoom0 = this.component.zoom;
-        const panX0 = this.component.panX;
-        const panY0 = this.component.panY;
-        console.clear();
-        console.log("INITIAL", { x0, y0, zoom0, panX0, panY0 }, this.element);
-        const IN = 1;
-        const OUT = -1;
-        let zoomDirection = e.deltaY > 0 ? OUT : IN;
-        let zoomCorrection = this.magnitude * zoomDirection;
-        const limitZooming = /* @__PURE__ */ __name((v) => Math.min(this.max, Math.max(this.min, v)), "limitZooming");
-        let zoom1 = limitZooming(zoom0 + zoomCorrection);
-        const scaleRatio = zoom0 / zoom1;
-        if (scaleRatio == 1) {
-          return;
-        }
-        console.info({ zoom1, scaleRatio });
-        const rescale = /* @__PURE__ */ __name((v) => v / scaleRatio, "rescale");
-        const cursorX = e.x + x0;
-        const cursorY = e.y + y0;
-        let panX1 = cursorX - rescale(cursorX - panX0);
-        let panY1 = cursorY - rescale(cursorY - panY0);
-        this.component.zoom = zoom1;
-        this.component.panX = panX1 / zoom1;
-        this.component.panY = panY1 / zoom1;
-        const transforms = this.component.getTransforms();
-        console.log("FINAL", { zoom1, panX1, panY1, scaleRatio });
-        console.table(transforms);
-        console.log(transforms.reduce((a, c) => ({ x: a.x + c.x, y: a.y + c.y, z: a.z + c.z }), { x: 0, y: 0, z: 0 }));
-        if (this.probe)
-          this.probe({ cursor: { x: cursorX, y: cursorY } });
-      };
-      this.zone.addEventListener("wheel", this.wheelHandler, { passive: true });
-      this.element.addEventListener("wheel", this.wheelHandler, { passive: true });
-    }
-    destroy() {
-      this.removeStartedObserver();
-      this.zone.removeEventListener("wheel", this.wheelHandler);
-      this.element.removeEventListener("wheel", this.wheelHandler);
-    }
+    static extends = [Container];
+    methods = {
+      initialize() {
+      },
+      mount() {
+        this.el.ClipPath = svg.clipPath({ id: `clip-path-${this.id}` });
+        this.maskRectangle = svg.rect();
+        this.el.ClipPath.appendChild(this.maskRectangle);
+        this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => {
+          update(this.maskRectangle, { x, y, width, height });
+        });
+        this.el.Mask = svg.g({ "clip-path": `url(#clip-path-${this.id})` });
+        this.maskedElements = svg.g({ style: { "transform-origin": "top left" } });
+        this.el.Mask.appendChild(this.maskedElements);
+        console.warn(`this.maskedElements needs a background to track actusl x and y of mouse wheel hits`);
+        this.appendElements();
+      }
+    };
   };
 
   // plug-ins/windows/Junction.js
@@ -2162,30 +2060,39 @@
     };
     methods = {
       initialize() {
-        console.log("ROOT", this.getRootContainer());
         if (this.getRootContainer().isRootWindow)
           return;
         console.info("Line must detect the g it should be placed into");
         this.h = 400;
         this.subLayout = new RelativeLayout(this);
-        this.el.Group = svg.g();
-        this.childrenGroup = svg.g({ style: { "transform-origin": "top left" } });
-        this.el.Group.appendChild(this.childrenGroup);
-        globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: this.el.Group });
+      },
+      mount() {
+        const [horizontal, [addButton, delButton]] = nest(Horizontal, [
+          [Label, { h: 32, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
+          [Label, { h: 32, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
+        ], (c) => this.children.create(c));
+        this.disposable = click(addButton.handle, (e) => {
+          const id = uuid3();
+          const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
+          this.elements.create(node);
+        });
+        const paneBody = new Instance(Viewport, { h: 500, parent: this });
+        this.children.create(paneBody);
+        globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
         this.on("panX", (v) => requestAnimationFrame(() => {
-          this.childrenGroup.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+          paneBody.maskedElements.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
         }));
         this.on("panY", (v) => requestAnimationFrame(() => {
-          this.childrenGroup.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+          paneBody.maskedElements.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
         }));
         this.on("zoom", (v) => requestAnimationFrame(() => {
-          this.childrenGroup.style.scale = this.zoom;
+          paneBody.maskedElements.style.scale = this.zoom;
         }));
         this.on("elements.created", (node) => {
           const Ui = this.types.find((o) => o.name == node.type);
           if (!Ui)
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-          const ui = new Instance(Ui, { id: node.id, node, scene: this.childrenGroup });
+          const ui = new Instance(Ui, { id: node.id, node, scene: paneBody.maskedElements });
           this.applications.create(ui);
           ui.start();
           this.subLayout.manage(ui);
@@ -2195,63 +2102,44 @@
           this.applications.get(id).destroy();
           this.applications.remove(id);
         });
-      },
-      mount() {
-        const [horizontal, [addButton, delButton, vplCanvas]] = nest(Horizontal, [
-          [Label, { h: 32, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
-          [Label, { h: 32, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
-        ], (c) => this.children.create(c));
-        this.disposable = click(addButton.handle, (e) => {
-          const id = uuid3();
-          const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
-          this.elements.create(node);
-        });
-        const area = new Instance(Container, { h: 500, parent: this });
-        this.children.create(area);
-        area.draw();
-        const diagnosticRuler1 = new DiagnosticRuler("scene ruler", this.scene, "red");
-        this.any(["x", "y", "w", "h"], (coordinates) => diagnosticRuler1.draw(coordinates));
-        const diagnosticRuler2 = new DiagnosticRuler("childrenGroup/area ruler", this.childrenGroup, "green");
-        area.any(["x", "y", "w", "h"], (coordinates) => diagnosticRuler2.draw(coordinates, 50));
-        const diagnosticCross1 = new DiagnosticCross("scene", this.scene, "red");
-        this.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross1.draw(coordinates));
-        const diagnosticCross2 = new DiagnosticCross("childrenGroup/area", this.childrenGroup, "green");
-        area.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross2.draw(coordinates));
-        const centerCircle = svg.circle({ style: { "pointer-events": "none" }, stroke: "red", r: 5 });
-        this.childrenGroup.appendChild(centerCircle);
-        area.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(centerCircle, { cx: x + w / 2, cy: y + h / 2 }));
-        const outlineRectangle = svg.rect({ style: { "pointer-events": "none" }, stroke: "blue", fill: "none" });
-        this.childrenGroup.appendChild(outlineRectangle);
-        area.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(outlineRectangle, { x, y, width: w, height: h }));
-        this.el.ClipPath = svg.clipPath({ id: `clip-path-${this.id}` });
-        const clipPathRect = svg.rect();
-        this.el.ClipPath.appendChild(clipPathRect);
-        update(this.el.Group, { "clip-path": `url(#clip-path-${this.id})` });
-        area.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => {
-          update(clipPathRect, { x, y, width, height });
-        });
         this.appendElements();
-        const pan = new Pan({
-          component: this,
-          handle: area.el.Container,
-          zone: window
-          // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
-        });
-        this.destructable = () => pan.destroy();
-        const diagnosticPoint1 = new DiagnosticPoint("scrollwheel hit", this.childrenGroup, "yellow");
-        const zoom = new Zoom({
-          component: this,
-          area,
-          element: area.el.Container,
-          zone: area.el.Container,
-          // transformMovement: (v)=>v/globalThis.project.zoom,
-          probe: ({ cursor }) => {
-            diagnosticPoint1.draw(cursor);
-          }
-        });
-        this.destructable = () => zoom.destroy();
+        if (1) {
+          const diagnosticRuler1 = new DiagnosticRuler("scene ruler", this.scene, "red");
+          this.any(["x", "y", "w", "h"], (coordinates) => diagnosticRuler1.draw(coordinates));
+          const diagnosticRuler2 = new DiagnosticRuler("maskedElements/paneBody ruler", paneBody.maskedElements, "green");
+          paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticRuler2.draw(coordinates, 50));
+          const diagnosticCross1 = new DiagnosticCross("scene", this.scene, "red");
+          this.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross1.draw(coordinates));
+          const diagnosticCross2 = new DiagnosticCross("maskedElements/paneBody", paneBody.maskedElements, "green");
+          paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross2.draw(coordinates));
+          const centerCircle = svg.circle({ style: { "pointer-events": "none" }, stroke: "red", r: 5 });
+          paneBody.maskedElements.appendChild(centerCircle);
+          paneBody.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(centerCircle, { cx: x + w / 2, cy: y + h / 2 }));
+          const outlineRectangle = svg.rect({ style: { "pointer-events": "none" }, stroke: "blue", fill: "none" });
+          paneBody.maskedElements.appendChild(outlineRectangle);
+          paneBody.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(outlineRectangle, { x, y, width: w, height: h }));
+        }
+        console.warn("these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern");
+        if (0) {
+          const pan = new Pan({
+            component: this,
+            handle: paneBody.el.Container,
+            zone: window
+            // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
+          });
+          this.destructable = () => pan.destroy();
+          const zoom = new Zoom({
+            component: this,
+            area: paneBody,
+            element: paneBody.el.Container,
+            zone: paneBody.el.Container,
+            // transformMovement: (v)=>v/globalThis.project.zoom,
+            probe: ({ cursor }) => {
+            }
+          });
+          this.destructable = () => zoom.destroy();
+        }
         const transforms = this.getTransforms(this);
-        console.table(transforms);
       }
     };
   };
@@ -2331,32 +2219,6 @@
       }
       update(this.textContainer, { x, y: baseY + deltaY });
       this.text.nodeValue = `${this.name}`;
-    }
-  };
-  var DiagnosticPoint = class {
-    static {
-      __name(this, "DiagnosticPoint");
-    }
-    space = 8;
-    name;
-    parent;
-    constructor(name2, parent, stroke) {
-      this.name = name2;
-      this.parent = parent;
-      this.centerCircle = svg.circle({ style: { "pointer-events": "none" }, stroke, r: this.space });
-      this.parent.appendChild(this.centerCircle);
-      this.indicatorLine = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
-      this.parent.appendChild(this.indicatorLine);
-      this.textContainer = svg.text({ "dominant-baseline": "middle", fill: stroke });
-      this.parent.appendChild(this.textContainer);
-      this.text = text("xxxx");
-      this.textContainer.appendChild(this.text);
-    }
-    draw({ x, y }) {
-      update(this.centerCircle, { cx: x, cy: y });
-      update(this.indicatorLine, { x1: x + this.space, y1: y, x2: x + this.space * 4, y2: y });
-      update(this.textContainer, { x: x + this.space * 4, y });
-      this.text.nodeValue = `${x}x ${y}y ${this.name}`;
     }
   };
 
