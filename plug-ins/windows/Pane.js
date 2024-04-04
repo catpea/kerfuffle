@@ -30,9 +30,9 @@ export default class Pane {
   };
 
   observables = {
-    panX: 0,
-    panY: 0,
-    zoom: 1,
+    panX: 100,
+    panY: 100,
+    zoom: 1.5,
 
     applications: [],
     elements: [],
@@ -80,14 +80,14 @@ export default class Pane {
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
       // Based on pan and zoom adjust the viewport.
-      this.on('panX', v=> requestAnimationFrame(() => { paneBody.maskedElements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
-      this.on('panY', v=> requestAnimationFrame(() => { paneBody.maskedElements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
-      this.on('zoom', v=> requestAnimationFrame(() => { paneBody.maskedElements.style.scale = this.zoom }));
+      this.on('panX', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
+      this.on('panY', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
+      this.on('zoom', v=> requestAnimationFrame(() => { paneBody.elements.style.scale = this.zoom }));
 
       this.on("elements.created", (node) => {
         const Ui = this.types.find(o=>o.name==node.type); // concept as in conceptmap is a component as it is a GUI thing.
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-        const ui = new Instance(Ui, {id:node.id, node, scene: paneBody.maskedElements});
+        const ui = new Instance(Ui, {id:node.id, node, scene: paneBody.elements});
         this.applications.create(ui);
         ui.start()
         this.subLayout.manage(ui);
@@ -107,25 +107,41 @@ export default class Pane {
 
 
       if(1){
+
+
+        const diagnosticText1 = new DiagnosticText('zoom', paneBody.elements, 'yellow')
+        this.any(['panX', 'panY'],coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        paneBody.any(['x','y'],coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+
+
+        const diagnosticWidth1 = new DiagnosticWidth('panX', paneBody.background, 'pink')
+        this.any(['panX', 'panY'],coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        paneBody.any(['x','y','w','h'],coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+
+        const diagnosticHeight1 = new DiagnosticHeight('panY', paneBody.background, 'purple')
+        this.any(['panX', 'panY'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        paneBody.any(['x','y','w','h'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+
+
         const diagnosticRuler1 = new DiagnosticRuler('scene ruler', this.scene, 'red')
         this.any(['x','y','w','h'],coordinates=>diagnosticRuler1.draw(coordinates));
 
-        const diagnosticRuler2 = new DiagnosticRuler('maskedElements/paneBody ruler', paneBody.maskedElements, 'green')
-        paneBody.any(['x','y','w','h'],coordinates=>diagnosticRuler2.draw(coordinates, 50));
+        const diagnosticRuler2 = new DiagnosticRuler('elements/paneBody ruler', paneBody.elements, 'green')
+        paneBody.any(['x','y','w','h'],coordinates=>diagnosticRuler2.draw(coordinates, -350));
 
         const diagnosticCross1 = new DiagnosticCross('scene', this.scene, 'red')
         this.any(['x','y','w','h'],coordinates=>diagnosticCross1.draw(coordinates));
 
-        const diagnosticCross2 = new DiagnosticCross('maskedElements/paneBody', paneBody.maskedElements, 'green')
+        const diagnosticCross2 = new DiagnosticCross('elements/paneBody', paneBody.elements, 'green')
         paneBody.any(['x','y','w','h'],coordinates=>diagnosticCross2.draw(coordinates));
 
 
         const centerCircle = svg.circle({style:{'pointer-events': 'none'}, stroke:'red', r:5})
-        paneBody.maskedElements.appendChild(centerCircle);
+        paneBody.elements.appendChild(centerCircle);
         paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(centerCircle, {cx:x+w/2,cy:y+h/2 }))
 
         const outlineRectangle = svg.rect({style:{'pointer-events': 'none'}, stroke:'blue', fill:'none'})
-        paneBody.maskedElements.appendChild(outlineRectangle);
+        paneBody.elements.appendChild(outlineRectangle);
         paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
 
       }
@@ -144,7 +160,7 @@ export default class Pane {
         // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
       }); this.destructable = ()=>pan.destroy()
 
-      // const diagnosticPoint1 = new DiagnosticPoint('scrollwheel hit', this.maskedElements, 'yellow')
+      // const diagnosticPoint1 = new DiagnosticPoint('scrollwheel hit', this.elements, 'yellow')
 
       const zoom = new Zoom({
         component: this,
@@ -168,6 +184,24 @@ export default class Pane {
 
 }
 
+
+class DiagnosticText {
+  space = 8;
+  name;
+  parent;
+  constructor(name, parent, stroke){
+    this.name = name;
+    this.parent = parent;
+    this.textContainer = svg.text({ 'dominant-baseline': 'hanging', fill:stroke });
+    this.parent.appendChild(this.textContainer);
+    this.text = text("xxxx");
+    this.textContainer.appendChild(this.text);
+  }
+  draw({zoom, x,y,w,h}){
+    update(this.textContainer, {x,y});
+    this.text.nodeValue = `${zoom} ${this.name}`
+  }
+}
 
 class DiagnosticCross {
   space = 8;
@@ -198,6 +232,10 @@ class DiagnosticCross {
     this.text.nodeValue = `${x+w/2}x ${y+h/2}y ${w}w ${h}h ${this.name}`
   }
 }
+
+
+
+
 class DiagnosticRuler {
   mark = 12;
   marks = [];
@@ -250,6 +288,64 @@ class DiagnosticRuler {
 
   }
 }
+
+
+
+
+
+class DiagnosticWidth {
+  name;
+  parent;
+  space = 32;
+  constructor(name, parent, stroke){
+    this.name = name;
+    this.parent = parent;
+    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
+    this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
+    this.parent.appendChild(this.diagonal1);
+    this.parent.appendChild(this.diagonal2);
+
+    this.textContainer = svg.text({fill:stroke });
+    this.parent.appendChild(this.textContainer);
+    this.text = text(this.name);
+    this.textContainer.appendChild(this.text);
+  }
+  draw({x,y, panX, panY, zoom}, n=0){
+    update(this.diagonal1, {x1:x, y1:y+panY, x2:x+panX, y2:y+panY} );
+    update(this.diagonal2, {x1:x*zoom, y1:(y+panY)*zoom, x2:(x+panX)*zoom, y2:(y+panY)*zoom} );
+    update(this.textContainer, {x:x,y:y+panY});
+    this.text.nodeValue = `${this.name}: ${panX}x (${(panX*zoom).toFixed(4)}x scaled)`
+  }
+}
+
+class DiagnosticHeight {
+  name;
+  parent;
+  space = 32;
+
+  constructor(name, parent, stroke){
+    this.name = name;
+    this.parent = parent;
+    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
+    this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
+    this.parent.appendChild(this.diagonal1);
+    this.parent.appendChild(this.diagonal2);
+
+    this.textContainer = svg.text({fill:stroke });
+    this.parent.appendChild(this.textContainer);
+    this.text = text(this.name);
+    this.textContainer.appendChild(this.text);
+  }
+  draw({x,y, panX, panY, zoom}, n=0){
+    update(this.diagonal1, {x1:panX, y1:y, x2:panX, y2:y+panY} );
+    update(this.diagonal2, {x1:panX*zoom, y1:y, x2:panX*zoom, y2:(y+panY)*zoom} );
+
+    update(this.textContainer, {x:x+panX,y:y+panY/2});
+    this.text.nodeValue = `${this.name}: ${panY}y (${(panY*zoom).toFixed(4)}y scaled)`
+  }
+}
+
+
 class DiagnosticPoint {
   space = 8;
   name;

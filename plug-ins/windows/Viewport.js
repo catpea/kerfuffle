@@ -26,10 +26,14 @@ export default class Viewport {
       this.el.Mask = svg.g({'clip-path': `url(#clip-path-${this.id})`})
 
       // Create The Masked Elements <g> that accept transforms - they never overflow the mask.
-      this.maskedElements = svg.g({style:{'transform-origin': 'top left'}})
-      this.el.Mask.appendChild(this.maskedElements);
+      this.background = svg.g({name:'background', style:{}})
+      this.el.Mask.appendChild(this.background);
+      console.log(this.background);
 
-      console.warn(`this.maskedElements needs a background to track actusl x and y of mouse wheel hits`)
+      this.elements = svg.g({name:'elements', style:{'transform-origin': 'top left'}})
+      this.el.Mask.appendChild(this.elements);
+
+      console.warn(`this.elements needs a background to track actusl x and y of mouse wheel hits`)
 
       this.appendElements();
 

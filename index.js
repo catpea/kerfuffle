@@ -1855,9 +1855,12 @@
           update(this.maskRectangle, { x, y, width, height });
         });
         this.el.Mask = svg.g({ "clip-path": `url(#clip-path-${this.id})` });
-        this.maskedElements = svg.g({ style: { "transform-origin": "top left" } });
-        this.el.Mask.appendChild(this.maskedElements);
-        console.warn(`this.maskedElements needs a background to track actusl x and y of mouse wheel hits`);
+        this.background = svg.g({ name: "background", style: {} });
+        this.el.Mask.appendChild(this.background);
+        console.log(this.background);
+        this.elements = svg.g({ name: "elements", style: { "transform-origin": "top left" } });
+        this.el.Mask.appendChild(this.elements);
+        console.warn(`this.elements needs a background to track actusl x and y of mouse wheel hits`);
         this.appendElements();
       }
     };
@@ -2049,9 +2052,9 @@
       contain: true
     };
     observables = {
-      panX: 0,
-      panY: 0,
-      zoom: 1,
+      panX: 100,
+      panY: 100,
+      zoom: 1.5,
       applications: [],
       elements: [],
       anchors: [],
@@ -2080,19 +2083,19 @@
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
         this.on("panX", (v) => requestAnimationFrame(() => {
-          paneBody.maskedElements.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+          paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
         }));
         this.on("panY", (v) => requestAnimationFrame(() => {
-          paneBody.maskedElements.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
+          paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
         }));
         this.on("zoom", (v) => requestAnimationFrame(() => {
-          paneBody.maskedElements.style.scale = this.zoom;
+          paneBody.elements.style.scale = this.zoom;
         }));
         this.on("elements.created", (node) => {
           const Ui = this.types.find((o) => o.name == node.type);
           if (!Ui)
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-          const ui = new Instance(Ui, { id: node.id, node, scene: paneBody.maskedElements });
+          const ui = new Instance(Ui, { id: node.id, node, scene: paneBody.elements });
           this.applications.create(ui);
           ui.start();
           this.subLayout.manage(ui);
@@ -2104,19 +2107,28 @@
         });
         this.appendElements();
         if (1) {
+          const diagnosticText1 = new DiagnosticText("zoom", paneBody.elements, "yellow");
+          this.any(["panX", "panY"], (coordinates) => diagnosticText1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
+          paneBody.any(["x", "y"], (coordinates) => diagnosticText1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
+          const diagnosticWidth1 = new DiagnosticWidth("panX", paneBody.background, "pink");
+          this.any(["panX", "panY"], (coordinates) => diagnosticWidth1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
+          paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticWidth1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
+          const diagnosticHeight1 = new DiagnosticHeight("panY", paneBody.background, "purple");
+          this.any(["panX", "panY"], (coordinates) => diagnosticHeight1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
+          paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticHeight1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
           const diagnosticRuler1 = new DiagnosticRuler("scene ruler", this.scene, "red");
           this.any(["x", "y", "w", "h"], (coordinates) => diagnosticRuler1.draw(coordinates));
-          const diagnosticRuler2 = new DiagnosticRuler("maskedElements/paneBody ruler", paneBody.maskedElements, "green");
-          paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticRuler2.draw(coordinates, 50));
+          const diagnosticRuler2 = new DiagnosticRuler("elements/paneBody ruler", paneBody.elements, "green");
+          paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticRuler2.draw(coordinates, -350));
           const diagnosticCross1 = new DiagnosticCross("scene", this.scene, "red");
           this.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross1.draw(coordinates));
-          const diagnosticCross2 = new DiagnosticCross("maskedElements/paneBody", paneBody.maskedElements, "green");
+          const diagnosticCross2 = new DiagnosticCross("elements/paneBody", paneBody.elements, "green");
           paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross2.draw(coordinates));
           const centerCircle = svg.circle({ style: { "pointer-events": "none" }, stroke: "red", r: 5 });
-          paneBody.maskedElements.appendChild(centerCircle);
+          paneBody.elements.appendChild(centerCircle);
           paneBody.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(centerCircle, { cx: x + w / 2, cy: y + h / 2 }));
           const outlineRectangle = svg.rect({ style: { "pointer-events": "none" }, stroke: "blue", fill: "none" });
-          paneBody.maskedElements.appendChild(outlineRectangle);
+          paneBody.elements.appendChild(outlineRectangle);
           paneBody.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(outlineRectangle, { x, y, width: w, height: h }));
         }
         console.warn("these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern");
@@ -2142,6 +2154,26 @@
         const transforms = this.getTransforms(this);
       }
     };
+  };
+  var DiagnosticText = class {
+    static {
+      __name(this, "DiagnosticText");
+    }
+    space = 8;
+    name;
+    parent;
+    constructor(name2, parent, stroke) {
+      this.name = name2;
+      this.parent = parent;
+      this.textContainer = svg.text({ "dominant-baseline": "hanging", fill: stroke });
+      this.parent.appendChild(this.textContainer);
+      this.text = text("xxxx");
+      this.textContainer.appendChild(this.text);
+    }
+    draw({ zoom, x, y, w, h }) {
+      update(this.textContainer, { x, y });
+      this.text.nodeValue = `${zoom} ${this.name}`;
+    }
   };
   var DiagnosticCross = class {
     static {
@@ -2219,6 +2251,58 @@
       }
       update(this.textContainer, { x, y: baseY + deltaY });
       this.text.nodeValue = `${this.name}`;
+    }
+  };
+  var DiagnosticWidth = class {
+    static {
+      __name(this, "DiagnosticWidth");
+    }
+    name;
+    parent;
+    space = 32;
+    constructor(name2, parent, stroke) {
+      this.name = name2;
+      this.parent = parent;
+      this.diagonal1 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
+      this.diagonal2 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
+      this.parent.appendChild(this.diagonal1);
+      this.parent.appendChild(this.diagonal2);
+      this.textContainer = svg.text({ fill: stroke });
+      this.parent.appendChild(this.textContainer);
+      this.text = text(this.name);
+      this.textContainer.appendChild(this.text);
+    }
+    draw({ x, y, panX, panY, zoom }, n = 0) {
+      update(this.diagonal1, { x1: x, y1: y + panY, x2: x + panX, y2: y + panY });
+      update(this.diagonal2, { x1: x * zoom, y1: (y + panY) * zoom, x2: (x + panX) * zoom, y2: (y + panY) * zoom });
+      update(this.textContainer, { x, y: y + panY });
+      this.text.nodeValue = `${this.name}: ${panX}x (${(panX * zoom).toFixed(4)}x scaled)`;
+    }
+  };
+  var DiagnosticHeight = class {
+    static {
+      __name(this, "DiagnosticHeight");
+    }
+    name;
+    parent;
+    space = 32;
+    constructor(name2, parent, stroke) {
+      this.name = name2;
+      this.parent = parent;
+      this.diagonal1 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
+      this.diagonal2 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
+      this.parent.appendChild(this.diagonal1);
+      this.parent.appendChild(this.diagonal2);
+      this.textContainer = svg.text({ fill: stroke });
+      this.parent.appendChild(this.textContainer);
+      this.text = text(this.name);
+      this.textContainer.appendChild(this.text);
+    }
+    draw({ x, y, panX, panY, zoom }, n = 0) {
+      update(this.diagonal1, { x1: panX, y1: y, x2: panX, y2: y + panY });
+      update(this.diagonal2, { x1: panX * zoom, y1: y, x2: panX * zoom, y2: (y + panY) * zoom });
+      update(this.textContainer, { x: x + panX, y: y + panY / 2 });
+      this.text.nodeValue = `${this.name}: ${panY}y (${(panY * zoom).toFixed(4)}y scaled)`;
     }
   };
 
