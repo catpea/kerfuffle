@@ -21,6 +21,16 @@ import { RelativeLayout } from "/plug-ins/layout-manager/index.js";
 
 const uuid = bundle['uuid'];
 
+const through = (...functions) => {
+  return (data) => {
+    let response = data;
+    for (const funct of functions) {
+      response = funct(response) ?? response;
+    }
+    return response;
+  }
+}
+
 export default class Pane {
 
   static extends = [Vertical];
@@ -30,9 +40,9 @@ export default class Pane {
   };
 
   observables = {
-    panX: 100,
-    panY: 100,
-    zoom: 1.5,
+    panX: 200,
+    panY: 200,
+    zoom: 2,
 
     applications: [],
     elements: [],
@@ -53,6 +63,37 @@ export default class Pane {
     },
 
     mount(){
+
+
+      {
+        let v = 0;
+        setInterval(x=>{;
+          let Δ = Math.sin(v);
+          v=v+0.003;
+          if(v>=Math.PI) v = 0
+          this.panX = (100*Δ);
+          this.panY = (100*Δ);
+        }, 1_000/32)
+
+      }
+      {
+        let a = Math.PI/16
+        let v = a;
+        setInterval(x=>{;
+          let Δ = Math.sin(v);
+          v=v+0.01;
+
+          this.zoom = (2*Δ);
+          console.log(this.zoom);
+          // console.log(v);
+          // console.log(Δ);
+
+            if(v>=Math.PI-a) v = a
+        }, 1_000/32)
+
+      }
+
+
 
       /*
       - standard scene set by parent
@@ -75,11 +116,12 @@ export default class Pane {
       })
 
       // Add Viewport
-      const paneBody = new Instance(Viewport, {h: 500, parent: this});
+      const paneBody = new Instance(Viewport, {h: 666, parent: this});
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
       // Based on pan and zoom adjust the viewport.
+      console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
       this.on('panX', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
       this.on('panY', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
       this.on('zoom', v=> requestAnimationFrame(() => { paneBody.elements.style.scale = this.zoom }));
@@ -111,14 +153,14 @@ export default class Pane {
 
         const diagnosticText1 = new DiagnosticText('zoom', paneBody.elements, 'yellow')
         this.any(['panX', 'panY'],coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        paneBody.any(['x','y'],coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        paneBody.any(['x','y'], coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
 
 
-        const diagnosticWidth1 = new DiagnosticWidth('panX', paneBody.background, 'pink')
-        this.any(['panX', 'panY'],coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        paneBody.any(['x','y','w','h'],coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        const diagnosticWidth1 = new DiagnosticWidth('panX', paneBody.background, 'gold')
+        this.any(['panX', 'panY'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        paneBody.any(['x','y','w','h'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
 
-        const diagnosticHeight1 = new DiagnosticHeight('panY', paneBody.background, 'purple')
+        const diagnosticHeight1 = new DiagnosticHeight('panY', paneBody.background, 'gold')
         this.any(['panX', 'panY'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
         paneBody.any(['x','y','w','h'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
 
@@ -133,7 +175,7 @@ export default class Pane {
         this.any(['x','y','w','h'],coordinates=>diagnosticCross1.draw(coordinates));
 
         const diagnosticCross2 = new DiagnosticCross('elements/paneBody', paneBody.elements, 'green')
-        paneBody.any(['x','y','w','h'],coordinates=>diagnosticCross2.draw(coordinates));
+        paneBody.any(['x','y','w','h'], through(  o=>this.transform(o), o=>diagnosticCross2.draw(o) ) );
 
 
         const centerCircle = svg.circle({style:{'pointer-events': 'none'}, stroke:'red', r:5})
@@ -142,7 +184,8 @@ export default class Pane {
 
         const outlineRectangle = svg.rect({style:{'pointer-events': 'none'}, stroke:'blue', fill:'none'})
         paneBody.elements.appendChild(outlineRectangle);
-        paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
+        // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
+        paneBody.any(['x','y','w','h'], through( o=>console.log(o), o=>this.transform(o, ['x','y','w','h']), ({x,y,w,h})=>({x,y,width:w,height:h}), o=>update(outlineRectangle, o), o=>console.log(o) ) )
 
       }
 
@@ -176,10 +219,29 @@ export default class Pane {
       }
 
 
-      const transforms = this.getTransforms(this);
-      // console.table(transforms)
+
+
+    },
+
+    transform(o, keys=null){
+      let response = o;
+      for (const transform of this.getTransforms(this)) {
+        response = Object.fromEntries(Object.entries(response).map(([k,v])=>{
+          if(keys===null){ // transform all
+            return [k, v/this.zoom]
+          } else if(keys.length){
+            if(keys.includes(k)){ // picked
+              return [k,v/this.zoom];
+            }else{ // do nothing
+              return [k,v];
+            }
+          }
+        }));
+      }
+      return response;
 
     }
+
   }
 
 }
@@ -300,7 +362,7 @@ class DiagnosticWidth {
   constructor(name, parent, stroke){
     this.name = name;
     this.parent = parent;
-    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
+    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, opacity:.4, stroke, fill:'none'});
     this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
     this.parent.appendChild(this.diagonal1);
     this.parent.appendChild(this.diagonal2);
@@ -311,9 +373,9 @@ class DiagnosticWidth {
     this.textContainer.appendChild(this.text);
   }
   draw({x,y, panX, panY, zoom}, n=0){
-    update(this.diagonal1, {x1:x, y1:y+panY, x2:x+panX, y2:y+panY} );
-    update(this.diagonal2, {x1:x*zoom, y1:(y+panY)*zoom, x2:(x+panX)*zoom, y2:(y+panY)*zoom} );
-    update(this.textContainer, {x:x,y:y+panY});
+    // update(this.diagonal1, {x1:x, y1:y+panY, x2:x+panX, y2:y+panY} );
+    update(this.diagonal2, {x1:x*zoom, y1:y+(panY*zoom), x2:x+(panX*zoom), y2:y+(panY*zoom)} );
+    update(this.textContainer, {x:x*zoom,y:y+(panY*zoom)});
     this.text.nodeValue = `${this.name}: ${panX}x (${(panX*zoom).toFixed(4)}x scaled)`
   }
 }
@@ -326,7 +388,7 @@ class DiagnosticHeight {
   constructor(name, parent, stroke){
     this.name = name;
     this.parent = parent;
-    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
+    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, opacity:.4, stroke, fill:'none'});
     this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
     this.parent.appendChild(this.diagonal1);
     this.parent.appendChild(this.diagonal2);
@@ -337,10 +399,10 @@ class DiagnosticHeight {
     this.textContainer.appendChild(this.text);
   }
   draw({x,y, panX, panY, zoom}, n=0){
-    update(this.diagonal1, {x1:panX, y1:y, x2:panX, y2:y+panY} );
-    update(this.diagonal2, {x1:panX*zoom, y1:y, x2:panX*zoom, y2:(y+panY)*zoom} );
+    // update(this.diagonal1, {x1:panX, y1:y, x2:panX, y2:y+panY} );
+    update(this.diagonal2, {x1:panX*zoom, y1:y, x2:panX*zoom, y2:y+(panY*zoom)} );
 
-    update(this.textContainer, {x:x+panX,y:y+panY/2});
+    update(this.textContainer, {x:panX*zoom, y:(y+(panY*zoom))/2});
     this.text.nodeValue = `${this.name}: ${panY}y (${(panY*zoom).toFixed(4)}y scaled)`
   }
 }

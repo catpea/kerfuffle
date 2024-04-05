@@ -2043,6 +2043,15 @@
 
   // plug-ins/windows/Pane.js
   var uuid3 = bundle["uuid"];
+  var through = /* @__PURE__ */ __name((...functions) => {
+    return (data) => {
+      let response = data;
+      for (const funct of functions) {
+        response = funct(response) ?? response;
+      }
+      return response;
+    };
+  }, "through");
   var Pane = class {
     static {
       __name(this, "Pane");
@@ -2052,9 +2061,9 @@
       contain: true
     };
     observables = {
-      panX: 100,
-      panY: 100,
-      zoom: 1.5,
+      panX: 200,
+      panY: 200,
+      zoom: 2,
       applications: [],
       elements: [],
       anchors: [],
@@ -2070,6 +2079,31 @@
         this.subLayout = new RelativeLayout(this);
       },
       mount() {
+        {
+          let v = 0;
+          setInterval((x) => {
+            ;
+            let \u0394 = Math.sin(v);
+            v = v + 3e-3;
+            if (v >= Math.PI)
+              v = 0;
+            this.panX = 100 * \u0394;
+            this.panY = 100 * \u0394;
+          }, 1e3 / 32);
+        }
+        {
+          let a = Math.PI / 16;
+          let v = a;
+          setInterval((x) => {
+            ;
+            let \u0394 = Math.sin(v);
+            v = v + 0.01;
+            this.zoom = 2 * \u0394;
+            console.log(this.zoom);
+            if (v >= Math.PI - a)
+              v = a;
+          }, 1e3 / 32);
+        }
         const [horizontal, [addButton, delButton]] = nest(Horizontal, [
           [Label, { h: 32, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
           [Label, { h: 32, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
@@ -2079,9 +2113,10 @@
           const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
           this.elements.create(node);
         });
-        const paneBody = new Instance(Viewport, { h: 500, parent: this });
+        const paneBody = new Instance(Viewport, { h: 666, parent: this });
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
+        console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
         this.on("panX", (v) => requestAnimationFrame(() => {
           paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)`;
         }));
@@ -2110,10 +2145,10 @@
           const diagnosticText1 = new DiagnosticText("zoom", paneBody.elements, "yellow");
           this.any(["panX", "panY"], (coordinates) => diagnosticText1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
           paneBody.any(["x", "y"], (coordinates) => diagnosticText1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
-          const diagnosticWidth1 = new DiagnosticWidth("panX", paneBody.background, "pink");
+          const diagnosticWidth1 = new DiagnosticWidth("panX", paneBody.background, "gold");
           this.any(["panX", "panY"], (coordinates) => diagnosticWidth1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
           paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticWidth1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
-          const diagnosticHeight1 = new DiagnosticHeight("panY", paneBody.background, "purple");
+          const diagnosticHeight1 = new DiagnosticHeight("panY", paneBody.background, "gold");
           this.any(["panX", "panY"], (coordinates) => diagnosticHeight1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
           paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticHeight1.draw({ zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY }));
           const diagnosticRuler1 = new DiagnosticRuler("scene ruler", this.scene, "red");
@@ -2123,13 +2158,13 @@
           const diagnosticCross1 = new DiagnosticCross("scene", this.scene, "red");
           this.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross1.draw(coordinates));
           const diagnosticCross2 = new DiagnosticCross("elements/paneBody", paneBody.elements, "green");
-          paneBody.any(["x", "y", "w", "h"], (coordinates) => diagnosticCross2.draw(coordinates));
+          paneBody.any(["x", "y", "w", "h"], through((o) => this.transform(o), (o) => diagnosticCross2.draw(o)));
           const centerCircle = svg.circle({ style: { "pointer-events": "none" }, stroke: "red", r: 5 });
           paneBody.elements.appendChild(centerCircle);
           paneBody.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(centerCircle, { cx: x + w / 2, cy: y + h / 2 }));
           const outlineRectangle = svg.rect({ style: { "pointer-events": "none" }, stroke: "blue", fill: "none" });
           paneBody.elements.appendChild(outlineRectangle);
-          paneBody.any(["x", "y", "w", "h"], ({ x, y, w, h }) => update(outlineRectangle, { x, y, width: w, height: h }));
+          paneBody.any(["x", "y", "w", "h"], through((o) => console.log(o), (o) => this.transform(o, ["x", "y", "w", "h"]), ({ x, y, w, h }) => ({ x, y, width: w, height: h }), (o) => update(outlineRectangle, o), (o) => console.log(o)));
         }
         console.warn("these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern");
         if (0) {
@@ -2151,7 +2186,23 @@
           });
           this.destructable = () => zoom.destroy();
         }
-        const transforms = this.getTransforms(this);
+      },
+      transform(o, keys = null) {
+        let response = o;
+        for (const transform of this.getTransforms(this)) {
+          response = Object.fromEntries(Object.entries(response).map(([k, v]) => {
+            if (keys === null) {
+              return [k, v / this.zoom];
+            } else if (keys.length) {
+              if (keys.includes(k)) {
+                return [k, v / this.zoom];
+              } else {
+                return [k, v];
+              }
+            }
+          }));
+        }
+        return response;
       }
     };
   };
@@ -2263,7 +2314,7 @@
     constructor(name2, parent, stroke) {
       this.name = name2;
       this.parent = parent;
-      this.diagonal1 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
+      this.diagonal1 = svg.line({ style: { "pointer-events": "none" }, opacity: 0.4, stroke, fill: "none" });
       this.diagonal2 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
       this.parent.appendChild(this.diagonal1);
       this.parent.appendChild(this.diagonal2);
@@ -2273,9 +2324,8 @@
       this.textContainer.appendChild(this.text);
     }
     draw({ x, y, panX, panY, zoom }, n = 0) {
-      update(this.diagonal1, { x1: x, y1: y + panY, x2: x + panX, y2: y + panY });
-      update(this.diagonal2, { x1: x * zoom, y1: (y + panY) * zoom, x2: (x + panX) * zoom, y2: (y + panY) * zoom });
-      update(this.textContainer, { x, y: y + panY });
+      update(this.diagonal2, { x1: x * zoom, y1: y + panY * zoom, x2: x + panX * zoom, y2: y + panY * zoom });
+      update(this.textContainer, { x: x * zoom, y: y + panY * zoom });
       this.text.nodeValue = `${this.name}: ${panX}x (${(panX * zoom).toFixed(4)}x scaled)`;
     }
   };
@@ -2289,7 +2339,7 @@
     constructor(name2, parent, stroke) {
       this.name = name2;
       this.parent = parent;
-      this.diagonal1 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
+      this.diagonal1 = svg.line({ style: { "pointer-events": "none" }, opacity: 0.4, stroke, fill: "none" });
       this.diagonal2 = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
       this.parent.appendChild(this.diagonal1);
       this.parent.appendChild(this.diagonal2);
@@ -2299,9 +2349,8 @@
       this.textContainer.appendChild(this.text);
     }
     draw({ x, y, panX, panY, zoom }, n = 0) {
-      update(this.diagonal1, { x1: panX, y1: y, x2: panX, y2: y + panY });
-      update(this.diagonal2, { x1: panX * zoom, y1: y, x2: panX * zoom, y2: (y + panY) * zoom });
-      update(this.textContainer, { x: x + panX, y: y + panY / 2 });
+      update(this.diagonal2, { x1: panX * zoom, y1: y, x2: panX * zoom, y2: y + panY * zoom });
+      update(this.textContainer, { x: panX * zoom, y: (y + panY * zoom) / 2 });
       this.text.nodeValue = `${this.name}: ${panY}y (${(panY * zoom).toFixed(4)}y scaled)`;
     }
   };
