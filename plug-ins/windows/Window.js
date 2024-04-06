@@ -18,17 +18,12 @@ export default class Window {
   };
 
   properties = {
-    streams: new Map(),
     contain:true,
-
-    isRootWindow: false,
   };
 
   methods = {
 
     initialize(){
-      if(!this.oo) throw new Error("Window oo Not Found")
-      // console.log(`%cWindow.initialize!`, 'background: hsl(180, 70%, 60%); color: black;');
     },
 
     mount(){
@@ -44,7 +39,7 @@ export default class Window {
       //
 
       this.on("node", (node) => {
-        node.on("caption", caption => this.caption = caption);
+        if(node.caption) node.on("caption", caption => this.caption = caption);
       });
 
       const move = new Move({
@@ -78,16 +73,6 @@ export default class Window {
   };
 
   constraints = {
-
-    // NOTE: TODO ITEM BELOW
-    // TODO: add method constraints this will requre gathering all constraints from each chain item
-    // createWindowComponent: {
-    //   'object must be based on Component': function(v){
-    //     console.log('YYY', v);
-    //     // if(! Theme.prototype.isPrototypeOf(v) ) return {error:'must extend Theme'};
-    //   }
-    // }
-
   };
 
 }

@@ -129,19 +129,20 @@ export default class Component {
       }
       return response;
     },
-    //
-    // getTransforms(list=[]) {
-    //   console.log(this.oo.name);
-    //
-    //   if(this.parent?.getTransforms){
-    //     this.parent.getTransforms(list);
-    //   } else if(this.parent){
-    //     list.unshift(this.parent);
-    //   }
-    //
-    //   list.push(this);
-    //   return list;
-    // }
+
+
+
+
+    getRoot() {
+      let response = null;
+      if(!this.parent){
+        response = this;
+      }else{
+        response = this.parent.getRoot();
+      }
+      return response;
+    },
+
 
 
 
@@ -155,6 +156,14 @@ export default class Component {
       }
       if(element.parent) this.getTransforms(element.parent, list);
       return list;
+    },
+
+    getApplication(element) {
+      if(!element) element = this;
+      if(element.isApplication){
+        return this;
+      }
+      if(element.parent) return this.getApplication(element.parent);
     },
 
   }

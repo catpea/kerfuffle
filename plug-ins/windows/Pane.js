@@ -1,4 +1,4 @@
-import deepEqual from 'deep-equal';
+// import deepEqual from 'deep-equal';
 
 import { DiagnosticText, DiagnosticRectangle, DiagnosticCross, DiagnosticRuler, DiagnosticWidth, DiagnosticHeight, DiagnosticPoint } from "/plug-ins/diagnostic/index.js"
 
@@ -12,7 +12,8 @@ import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
 
-import Application from "/plug-ins/applications/Application.js";
+import TestWindow from "/plug-ins/applications/TestWindow.js";
+
 import Viewport from "/plug-ins/windows/Viewport.js";
 import Container from "/plug-ins/windows/Container.js";
 import Vertical from "/plug-ins/windows/Vertical.js";
@@ -45,47 +46,50 @@ export default class Pane {
   };
 
   observables = {
-    panX: 100,
-    panY: 100,
-    zoom: 1,
+    url:null,
+
+    panX: 110,
+    panY: 110,
+    zoom: .5,
 
     applications: [],
     elements: [],
     anchors: [],
     pipes: [],
-    types: [ Junction, Line ],
+    types: [ TestWindow, Junction, Line ],
   };
 
   methods = {
 
     initialize(){
-      console.assert(deepEqual({X:200,Y:200},this.transform({X:100, Y:100}, null, 2)), 'this.transform calculations are incorrect.')
-      console.assert(deepEqual({X:50,Y:50},this.transform({X:100, Y:100}, null, .5)), 'this.transform calculations are incorrect.')
+      // console.assert(deepEqual({X:200,Y:200},this.transform({X:100, Y:100}, null, 2)), 'this.transform calculations are incorrect.')
+      // console.assert(deepEqual({X:50,Y:50},this.transform({X:100, Y:100}, null, .5)), 'this.transform calculations are incorrect.')
 
       if(this.getRootContainer().isRootWindow) return;
 
 
       console.info('Line must detect the g it should be placed into');
       this.h = 400;
-      this.subLayout = new RelativeLayout(this);
 
     },
 
     mount(){
 
 
-      if(0){
+      console.log('Pane Mount', this.url);
+
+      if(1){
         let v = 0;
         setInterval(x=>{;
           let Δ = Math.sin(v);
-          v=v+0.003;
+          v=v+0.001;
           if(v>=Math.PI) v = 0
           this.panX = (100*Δ);
           this.panY = (100*Δ);
         }, 1_000/32)
       }
 
-      if(0){
+      if(1){
         let u = Math.PI/2;
         let v = 0-u;
         setInterval(x=>{;
@@ -127,9 +131,23 @@ export default class Pane {
       }
 
       // Add Viewport
-      const paneBody = new Instance(Viewport, {h: 666, parent: this});
+
+      const paneBody = new Instance(Viewport, {h: 700,   parent: this});
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
+      console.log('hhh this.getRootContainer().isRootWindow', this.getRootContainer().isRootWindow);
+
+      // CODE ANOMALY FOR ROOT EDGECASE
+      if(this.parent.isRootWindow){
+        this.parent.on('h', parentH=>{
+          const childrenHeight = this.children.filter(c=>!(c===paneBody)).reduce((total, c) => total + (c.h), 0);
+          const freeSpace = parentH - childrenHeight;
+          paneBody.h = freeSpace;
+          paneBody.H = freeSpace;
+        })
+
+      };
+
 
       // Based on pan and zoom adjust the viewport.
       console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
@@ -146,10 +164,9 @@ export default class Pane {
       this.on("elements.created", (node) => {
         const Ui = this.types.find(o=>o.name==node.type); // concept as in conceptmap is a component as it is a GUI thing.
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-        const ui = new Instance(Ui, {id:node.id, node, scene: paneBody.elements});
+        const ui = new Instance(Ui, {id:node.id, node, scene: paneBody.content, parent: this});
         this.applications.create(ui);
         ui.start()
-        this.subLayout.manage(ui);
       }, {replay:true});
 
       this.on("elements.removed", ({id}) => {
@@ -253,6 +270,30 @@ export default class Pane {
 
 
 
+      this.on('url', url=>this.load(this.url));
+
+
+
+
+
+
+
+
+
+
+
+    },
+
+    async load(url){
+      if(!url) return;
+      const rehydrated = await (await fetch(url)).json();
+      console.log({rehydrated});
+      this.meta = rehydrated.meta;
+      for (const {meta, data} of rehydrated.data) {
+        const node = new Instance(Node, {origin: this.getApplication().id});
+        node.assign(meta, data);
+        this.elements.create( node ); // -> see project #onStart for creation.
+      }
     },
 
     transform(o, keys=null, scale=null){

@@ -95,6 +95,17 @@ export class VerticalLayout extends Layout {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 	}
 
 	calculateChildW(child) {
@@ -123,8 +134,9 @@ export class VerticalLayout extends Layout {
 		  this.parent.p +
 			this.parent.b;
 
-			// if(response < this.parent.H) response = this.parent.H; // hard height (min-height)
-			if(response < this.parent.H) response = this.parent.H; // hard height (min-height)
+	 		if(response < this.parent.H){
+				response = this.parent.H; // hard height (min-height)
+			}
 
 		return response;
 	}
@@ -148,6 +160,9 @@ export class VerticalLayout extends Layout {
 
 		return response;
 	}
+
+ 
+
 
 
 
