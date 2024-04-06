@@ -41,6 +41,42 @@ export default class System {
       window.addEventListener('resize', this.debouncedOnResize);
       onResize();
 
+
+      // 
+      //
+      //
+      //
+      //
+      //
+      // const node1 = new Instance(Node, {id:1, origin: 1, x:10,y:10, data:{}});
+      // const node2 = new Instance(Node, {id:2, origin: 1, x:500,y:500, data:{}});
+      //
+      // const app1 = new Instance(Application, {id:node1.id, node, scene:paneBody.elements, isRootWindow: false});
+      // const app2 = new Instance(Application, {id:node2.id, node, scene:paneBody.elements, isRootWindow: false});
+      //
+      //
+      //
+      //
+      //
+      //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     },
 
     destroy(){

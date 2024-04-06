@@ -1,3 +1,7 @@
+import deepEqual from 'deep-equal';
+
+import { DiagnosticText, DiagnosticRectangle, DiagnosticCross, DiagnosticRuler, DiagnosticWidth, DiagnosticHeight, DiagnosticPoint } from "/plug-ins/diagnostic/index.js"
+
 import { svg, update, click, text } from "/plug-ins/domek/index.js"
 import {nest} from "/plug-ins/nest/index.js";
 
@@ -8,6 +12,7 @@ import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
 
+import Application from "/plug-ins/applications/Application.js";
 import Viewport from "/plug-ins/windows/Viewport.js";
 import Container from "/plug-ins/windows/Container.js";
 import Vertical from "/plug-ins/windows/Vertical.js";
@@ -40,9 +45,9 @@ export default class Pane {
   };
 
   observables = {
-    panX: 200,
-    panY: 200,
-    zoom: 2,
+    panX: 100,
+    panY: 100,
+    zoom: 1,
 
     applications: [],
     elements: [],
@@ -54,7 +59,11 @@ export default class Pane {
   methods = {
 
     initialize(){
+      console.assert(deepEqual({X:200,Y:200},this.transform({X:100, Y:100}, null, 2)), 'this.transform calculations are incorrect.')
+      console.assert(deepEqual({X:50,Y:50},this.transform({X:100, Y:100}, null, .5)), 'this.transform calculations are incorrect.')
+
       if(this.getRootContainer().isRootWindow) return;
+
 
       console.info('Line must detect the g it should be placed into');
       this.h = 400;
@@ -65,7 +74,7 @@ export default class Pane {
     mount(){
 
 
-      {
+      if(0){
         let v = 0;
         setInterval(x=>{;
           let Δ = Math.sin(v);
@@ -74,21 +83,21 @@ export default class Pane {
           this.panX = (100*Δ);
           this.panY = (100*Δ);
         }, 1_000/32)
-
       }
-      {
-        let a = Math.PI/16
-        let v = a;
+
+      if(0){
+        let u = Math.PI/2;
+        let v = 0-u;
         setInterval(x=>{;
           let Δ = Math.sin(v);
           v=v+0.01;
-
-          this.zoom = (2*Δ);
+          let z = 1.5+Δ
+          this.zoom = (z);
           console.log(this.zoom);
           // console.log(v);
           // console.log(Δ);
 
-            if(v>=Math.PI-a) v = a
+            if(v>=Math.PI+u) v = 0-u
         }, 1_000/32)
 
       }
@@ -103,17 +112,19 @@ export default class Pane {
       */
 
       // Add Menu
-      const [horizontal, [ addButton, delButton ]] = nest(Horizontal, [
-        [Label, {h: 32, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
-        [Label, {h: 32, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
-      ], (c)=>this.children.create(c));
+      if(1){
+        const [horizontal, [ addButton, delButton ]] = nest(Horizontal, [
+          [Label, {h: 32, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, {h: 32, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
+        ], (c)=>this.children.create(c));
 
-      // Add Menu Listeners
-      this.disposable = click(addButton.handle, e=>{
-        const id = uuid();
-        const node = new Instance( Node, {id, origin:this.getRootContainer().id, type: "Junction", x: 300, y: 300, data:{}} );
-        this.elements.create(node);
-      })
+        // Add Menu Listeners
+        this.disposable = click(addButton.handle, e=>{
+          const id = uuid();
+          const node = new Instance( Node, {id, origin:this.getRootContainer().id, type: "Junction", x: 300, y: 300, data:{}} );
+          this.elements.create(node);
+        })
+      }
 
       // Add Viewport
       const paneBody = new Instance(Viewport, {h: 666, parent: this});
@@ -122,9 +133,15 @@ export default class Pane {
 
       // Based on pan and zoom adjust the viewport.
       console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
-      this.on('panX', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
-      this.on('panY', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${this.panX}px, ${this.panY}px)` }));
-      this.on('zoom', v=> requestAnimationFrame(() => { paneBody.elements.style.scale = this.zoom }));
+
+      this.on('panX', panX=>paneBody.panX=panX);
+      this.on('panY', panY=>paneBody.panY=panY);
+      this.on('zoom', zoom=>paneBody.zoom=zoom);
+
+      // this.on('panX', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${(paneBody.x/this.zoom)+(this.panX/this.zoom)}px, ${(paneBody.y/this.zoom)+(this.panY/this.zoom)}px)` }));
+      // this.on('panY', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${(paneBody.x/this.zoom)+(this.panX/this.zoom)}px, ${(paneBody.y/this.zoom)+(this.panY/this.zoom)}px)` }));
+      // this.on('zoom', v=> requestAnimationFrame(() => { paneBody.elements.style.scale = this.zoom }));
+
 
       this.on("elements.created", (node) => {
         const Ui = this.types.find(o=>o.name==node.type); // concept as in conceptmap is a component as it is a GUI thing.
@@ -151,41 +168,55 @@ export default class Pane {
       if(1){
 
 
-        const diagnosticText1 = new DiagnosticText('zoom', paneBody.elements, 'yellow')
-        this.any(['panX', 'panY'],coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        paneBody.any(['x','y'], coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        // const diagnosticText1 = new DiagnosticText('zoom', paneBody.elements, 'yellow')
+        // this.any(['panX', 'panY'],coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        // paneBody.any(['x','y'], coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        //
+        //
+        // const diagnosticWidth1 = new DiagnosticWidth('panX', paneBody.background, 'gold')
+        // this.any(['panX', 'panY'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        // paneBody.any(['x','y','w','h'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        //
+        // const diagnosticHeight1 = new DiagnosticHeight('panY', paneBody.background, 'gold')
+        // this.any(['panX', 'panY'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        // paneBody.any(['x','y','w','h'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        //
+        //
+        // const diagnosticRuler1 = new DiagnosticRuler('scene ruler', this.scene, 'red')
+        // this.any(['x','y','w','h'],coordinates=>diagnosticRuler1.draw(coordinates));
+        //
+        // const diagnosticRuler2 = new DiagnosticRuler('elements/paneBody ruler', paneBody.elements, 'green')
+        // paneBody.any(['x','y','w','h'],coordinates=>diagnosticRuler2.draw(coordinates, -350));
+        //
+        // const diagnosticCross1 = new DiagnosticCross('scene', this.scene, 'red')
+        // this.any(['x','y','w','h'],coordinates=>diagnosticCross1.draw(coordinates));
+        //
+        // const diagnosticCross2 = new DiagnosticCross('elements/paneBody', paneBody.elements, 'green')
+        // paneBody.any(['x','y','w','h'], through(  o=>this.transform(o), o=>diagnosticCross2.draw(o) ) );
+        //
+        //
+        // const centerCircle = svg.circle({style:{'pointer-events': 'none'}, stroke:'red', r:5})
+        // paneBody.elements.appendChild(centerCircle);
+        // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(centerCircle, {cx:x+w/2,cy:y+h/2 }))
+
+        // const outlineRectangle1 = svg.rect({style:{'pointer-events': 'none'}, stroke:'blue', fill:'none'})
+        // paneBody.componentBackground.appendChild(outlineRectangle1);
+        // // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
+        // // paneBody.any(['x','y','w','h'], through( o=>console.log(o), o=>this.transform(o, ['x','y','w','h']), o=>console.log(o), ({x,y,w,h})=>({x,y,width:w,height:h}), o=>update(outlineRectangle, o) ) )
+        // paneBody.any(['x','y','w','h'], through( ({x,y,w,h})=>({x:0,y:0,width:w,height:h}), o=>update(outlineRectangle1, o) ) )
+        //
+        //
+        // const outlineRectangle2 = svg.rect({style:{'pointer-events': 'none'}, stroke:'red', fill:'none'})
+        // paneBody.elements.appendChild(outlineRectangle2);
+        // // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
+        // // paneBody.any(['x','y','w','h'], through( o=>console.log(o), o=>this.transform(o, ['x','y','w','h']), o=>console.log(o), ({x,y,w,h})=>({x,y,width:w,height:h}), o=>update(outlineRectangle, o) ) )
+        // paneBody.any(['x','y','w','h'], through( ({x,y,w,h})=>({x:0,y:0,width:w,height:h}), o=>update(outlineRectangle2, o) ) )
 
 
-        const diagnosticWidth1 = new DiagnosticWidth('panX', paneBody.background, 'gold')
-        this.any(['panX', 'panY'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        paneBody.any(['x','y','w','h'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
+        // const diagnosticRectangle1 = new DiagnosticRectangle('viewport background', paneBody.componentBackground, 'green')
+        // paneBody.any(['x','y','w','h'], through(  o=>this.transform(o), o=>diagnosticRectangle1.draw(o) ) );
+        //
 
-        const diagnosticHeight1 = new DiagnosticHeight('panY', paneBody.background, 'gold')
-        this.any(['panX', 'panY'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        paneBody.any(['x','y','w','h'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-
-
-        const diagnosticRuler1 = new DiagnosticRuler('scene ruler', this.scene, 'red')
-        this.any(['x','y','w','h'],coordinates=>diagnosticRuler1.draw(coordinates));
-
-        const diagnosticRuler2 = new DiagnosticRuler('elements/paneBody ruler', paneBody.elements, 'green')
-        paneBody.any(['x','y','w','h'],coordinates=>diagnosticRuler2.draw(coordinates, -350));
-
-        const diagnosticCross1 = new DiagnosticCross('scene', this.scene, 'red')
-        this.any(['x','y','w','h'],coordinates=>diagnosticCross1.draw(coordinates));
-
-        const diagnosticCross2 = new DiagnosticCross('elements/paneBody', paneBody.elements, 'green')
-        paneBody.any(['x','y','w','h'], through(  o=>this.transform(o), o=>diagnosticCross2.draw(o) ) );
-
-
-        const centerCircle = svg.circle({style:{'pointer-events': 'none'}, stroke:'red', r:5})
-        paneBody.elements.appendChild(centerCircle);
-        paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(centerCircle, {cx:x+w/2,cy:y+h/2 }))
-
-        const outlineRectangle = svg.rect({style:{'pointer-events': 'none'}, stroke:'blue', fill:'none'})
-        paneBody.elements.appendChild(outlineRectangle);
-        // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
-        paneBody.any(['x','y','w','h'], through( o=>console.log(o), o=>this.transform(o, ['x','y','w','h']), ({x,y,w,h})=>({x,y,width:w,height:h}), o=>update(outlineRectangle, o), o=>console.log(o) ) )
 
       }
 
@@ -221,17 +252,19 @@ export default class Pane {
 
 
 
+
     },
 
-    transform(o, keys=null){
+    transform(o, keys=null, scale=null){
+      let zoom = scale??this.zoom;
       let response = o;
       for (const transform of this.getTransforms(this)) {
         response = Object.fromEntries(Object.entries(response).map(([k,v])=>{
           if(keys===null){ // transform all
-            return [k, v/this.zoom]
+            return [k, v*zoom]
           } else if(keys.length){
             if(keys.includes(k)){ // picked
-              return [k,v/this.zoom];
+              return [k,v*zoom];
             }else{ // do nothing
               return [k,v];
             }
@@ -244,190 +277,4 @@ export default class Pane {
 
   }
 
-}
-
-
-class DiagnosticText {
-  space = 8;
-  name;
-  parent;
-  constructor(name, parent, stroke){
-    this.name = name;
-    this.parent = parent;
-    this.textContainer = svg.text({ 'dominant-baseline': 'hanging', fill:stroke });
-    this.parent.appendChild(this.textContainer);
-    this.text = text("xxxx");
-    this.textContainer.appendChild(this.text);
-  }
-  draw({zoom, x,y,w,h}){
-    update(this.textContainer, {x,y});
-    this.text.nodeValue = `${zoom} ${this.name}`
-  }
-}
-
-class DiagnosticCross {
-  space = 8;
-  name;
-  parent;
-  constructor(name, parent, stroke){
-    this.name = name;
-    this.parent = parent;
-    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.diagonal1);
-    this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.diagonal2);
-    this.centerCircle = svg.circle({style:{'pointer-events': 'none'}, stroke, r: this.space})
-    this.parent.appendChild(this.centerCircle);
-    this.indicatorLine = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.indicatorLine);
-    this.textContainer = svg.text({ 'dominant-baseline': 'middle', fill:stroke });
-    this.parent.appendChild(this.textContainer);
-    this.text = text("xxxx");
-    this.textContainer.appendChild(this.text);
-  }
-  draw({x,y,w,h}){
-    update(this.diagonal1, {x1:x, y1:y, x2:x+w, y2:y+h} );
-    update(this.diagonal2, {x1:x, y1:y+h, x2:x+w, y2:y} );
-    update(this.centerCircle, {cx:x+w/2,cy:y+h/2 } );
-    update(this.indicatorLine, {x1:x+w/2+this.space, y1:y+h/2, x2:x+w/2+this.space*8, y2:y+h/2})
-    update(this.textContainer, {x:x+w/2+this.space*8,y:y+h/2});
-    this.text.nodeValue = `${x+w/2}x ${y+h/2}y ${w}w ${h}h ${this.name}`
-  }
-}
-
-
-
-
-class DiagnosticRuler {
-  mark = 12;
-  marks = [];
-  labels = [];
-  space = 50;
-  name;
-  parent;
-
-  constructor(name, parent, stroke){
-    this.name = name;
-    this.parent = parent;
-    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.diagonal1);
-    for (let markNumber = 0; markNumber <= this.mark; markNumber++) {
-      const mark = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-      this.parent.appendChild(mark);
-      this.marks[markNumber] = mark;
-      //
-      const container = svg.text({ 'dominant-baseline': 'middle', fill:stroke });
-      this.parent.appendChild(container);
-      const label = text(`#${markNumber}`);
-      container.appendChild(label);
-      this.labels[markNumber] = {container, label};
-
-    }
-    this.textContainer = svg.text({fill:stroke });
-    this.parent.appendChild(this.textContainer);
-    this.text = text(this.name);
-    this.textContainer.appendChild(this.text);
-  }
-  draw({x,y},n=0){
-    y=y+n
-    let baseY = y+this.space*8;
-    let deltaY = this.space/3;
-    update(this.diagonal1, {x1:x, y1:baseY, x2:x+(this.mark*this.space), y2:baseY} );
-    for (let markNumber = 0; markNumber <= this.mark; markNumber++) {
-
-      const mark = this.marks[markNumber];
-      update(mark, {x1:markNumber*this.space, y1:baseY-deltaY, x2:markNumber*this.space, y2:baseY+deltaY/4} );
-      //
-      const {container, label} = this.labels[markNumber];
-      update(container, {x:markNumber*this.space, y:baseY-deltaY});
-      label.nodeValue = `${markNumber*this.space}x`;
-    }
-    update(this.textContainer, {x,y:baseY+deltaY});
-
-    this.text.nodeValue = `${this.name}`
-
-
-
-  }
-}
-
-
-
-
-
-class DiagnosticWidth {
-  name;
-  parent;
-  space = 32;
-  constructor(name, parent, stroke){
-    this.name = name;
-    this.parent = parent;
-    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, opacity:.4, stroke, fill:'none'});
-    this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.diagonal1);
-    this.parent.appendChild(this.diagonal2);
-
-    this.textContainer = svg.text({fill:stroke });
-    this.parent.appendChild(this.textContainer);
-    this.text = text(this.name);
-    this.textContainer.appendChild(this.text);
-  }
-  draw({x,y, panX, panY, zoom}, n=0){
-    // update(this.diagonal1, {x1:x, y1:y+panY, x2:x+panX, y2:y+panY} );
-    update(this.diagonal2, {x1:x*zoom, y1:y+(panY*zoom), x2:x+(panX*zoom), y2:y+(panY*zoom)} );
-    update(this.textContainer, {x:x*zoom,y:y+(panY*zoom)});
-    this.text.nodeValue = `${this.name}: ${panX}x (${(panX*zoom).toFixed(4)}x scaled)`
-  }
-}
-
-class DiagnosticHeight {
-  name;
-  parent;
-  space = 32;
-
-  constructor(name, parent, stroke){
-    this.name = name;
-    this.parent = parent;
-    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, opacity:.4, stroke, fill:'none'});
-    this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.diagonal1);
-    this.parent.appendChild(this.diagonal2);
-
-    this.textContainer = svg.text({fill:stroke });
-    this.parent.appendChild(this.textContainer);
-    this.text = text(this.name);
-    this.textContainer.appendChild(this.text);
-  }
-  draw({x,y, panX, panY, zoom}, n=0){
-    // update(this.diagonal1, {x1:panX, y1:y, x2:panX, y2:y+panY} );
-    update(this.diagonal2, {x1:panX*zoom, y1:y, x2:panX*zoom, y2:y+(panY*zoom)} );
-
-    update(this.textContainer, {x:panX*zoom, y:(y+(panY*zoom))/2});
-    this.text.nodeValue = `${this.name}: ${panY}y (${(panY*zoom).toFixed(4)}y scaled)`
-  }
-}
-
-
-class DiagnosticPoint {
-  space = 8;
-  name;
-  parent;
-  constructor(name, parent, stroke){
-    this.name = name;
-    this.parent = parent;
-    this.centerCircle = svg.circle({style:{'pointer-events': 'none'}, stroke, r: this.space})
-    this.parent.appendChild(this.centerCircle);
-    this.indicatorLine = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.indicatorLine);
-    this.textContainer = svg.text({ 'dominant-baseline': 'middle', fill:stroke });
-    this.parent.appendChild(this.textContainer);
-    this.text = text("xxxx");
-    this.textContainer.appendChild(this.text);
-  }
-  draw({x,y}){
-    update(this.centerCircle, {cx:x,cy:y } );
-    update(this.indicatorLine, {x1:x+this.space, y1:y, x2:x+this.space*4, y2:y})
-    update(this.textContainer, {x:x+this.space*4,y:y});
-    this.text.nodeValue = `${x}x ${y}y ${this.name}`
-  }
 }

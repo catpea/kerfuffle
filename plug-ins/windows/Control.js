@@ -88,6 +88,7 @@ export default class Control {
 
 
     createControlAnchor({name, side}){
+      return
       if(!name) throw new Error(`It is not possible to create an anchor without an anchor name.`);
       if(!side===undefined) throw new Error(`It is not possible to create an anchor without specifying a side, 0 or 1.`);
       const id = [name, this.getRootContainer().id].join(':')

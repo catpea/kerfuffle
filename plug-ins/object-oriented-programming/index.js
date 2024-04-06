@@ -277,21 +277,22 @@ export class Instance {
       }
     }
 
-    this.any = function(observables, callback1){
+    this.any = function(observables, ...functions){
       const callback2 = ()=>{
         const entries = observables.map(key => [key, this[key]])
         const packet = Object.fromEntries(entries);
-        callback1(packet);
+        functions.map(ƒ=>ƒ(packet));
       }
       return observables.map(event=>this.on(event, callback2, undefined, {manualDispose: true}));
     }
 
-    this.all = function(observables, callback1){
+    this.all = function(observables, ...functions){
       const callback2 = ()=>{
         const entries = observables.map(key => [key, this[key]])
         const packet = Object.fromEntries(entries);
         const isReady = Object.values(packet).every(value=>value!==undefined)
-        if(isReady) callback1(packet);
+        if(isReady) functions.map(ƒ=>ƒ(packet));
+;
       }
       return observables.map(event=>this.on(event, callback2, undefined, {manualDispose: true}));
     }

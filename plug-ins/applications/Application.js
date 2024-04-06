@@ -9,18 +9,20 @@ export default class Application {
       this.w = 800;
       this.h = 600;
     },
+
     mount(){
       const pane = new Instance(Pane, {url: this.url});
       this.createWindowComponent( pane );
       this.on("node", (node) => {
-        node.on("url", url => imagePicker.url = url);
+        node.on("url", url => pane.url = url);
       });
     },
+
     stop(){
-      console.log('todo: Stopping pane...');
+      console.log('todo: stopping Application pane...');
     },
     destroy(){
-      console.log('todo: Destroying pane...');
+      console.log('todo: destroying Application pane...');
       this.dispose()
     },
   };
