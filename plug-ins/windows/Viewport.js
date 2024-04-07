@@ -40,13 +40,18 @@ export default class Viewport {
 
       // Create the component body, for the purpose of transforming where 0x0 is located - this moves 0x0 into component corner.
       // NOTE: body is in the mask
-      this.body = svg.g()
+      this.body = svg.g({
+        name: 'pane-body',
+        style:{'pointer-events': 'all', },
+
+      })
       this.el.Mask.appendChild(this.body);
       this.any(['x','y'], ({x,y})=>this.body.style.transform = `translate(${x}px, ${y}px)` ) // transform the coordinate system so that 0x0 is always in the corner of this component.
 
       // Give the component a background
-      this.componentBackground = svg.g({name:'component-background', style:{}})
-      this.body.appendChild(this.componentBackground);
+      this.background = svg.rect({name:'component-background', style:{ fill: 'black'}})
+      this.body.appendChild(this.background);
+      this.any(['x','y','w','h'], ({x, y, w:width,h:height})=>update(this.background, {x:0,y:0,width,height}))
 
       if(this.debugBody){
         const p1 = new DiagnosticPoint(`${this.oo.name} body 0x0`, this.body, 45, 64, 'yellow')

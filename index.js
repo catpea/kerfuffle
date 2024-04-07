@@ -1084,6 +1084,7 @@
       draw() {
         this.el.Container = svg.rect({
           name: this.name,
+          style: { "pointer-events": "none" },
           class: "editor-container",
           ry: this.r,
           "stroke-width": 2,
@@ -1881,6 +1882,62 @@
   }
   __name(rotate2, "rotate2");
 
+  // plug-ins/meowse/Drag.js
+  var Pan = class {
+    static {
+      __name(this, "Pan");
+    }
+    area = window;
+    handle = null;
+    before = () => {
+    };
+    movement = () => {
+    };
+    after = () => {
+    };
+    mouseDownHandler;
+    mouseMoveHandler;
+    mouseUpHandler;
+    dragging = false;
+    previousX = 0;
+    previousY = 0;
+    constructor({ handle, area, before, movement, after }) {
+      this.handle = handle;
+      this.area = area;
+      this.before = before;
+      this.movement = movement;
+      this.after = after;
+      this.#mount();
+    }
+    #mount() {
+      this.mouseDownHandler = (e) => {
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+        this.area.addEventListener("mousemove", this.mouseMoveHandler);
+        this.before();
+      };
+      this.mouseMoveHandler = (e) => {
+        console.log("HIT!", e.target);
+        const movementX = this.previousX - e.screenX;
+        const movementY = this.previousY - e.screenY;
+        this.movement({ x: movementX, y: movementY });
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+      };
+      this.mouseUpHandler = (e) => {
+        this.after();
+        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      };
+      this.handle.addEventListener("mousedown", this.mouseDownHandler);
+      this.area.addEventListener("mouseup", this.mouseUpHandler);
+    }
+    destroy() {
+      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      this.area.removeEventListener("mouseup", this.mouseUpHandler);
+    }
+  };
+
   // plug-ins/windows/Viewport.js
   var Viewport = class {
     static {
@@ -1907,11 +1964,15 @@
           update(this.maskRectangle, { x, y, width, height });
         });
         this.el.Mask = svg.g({ "clip-path": `url(#clip-path-${this.id})` });
-        this.body = svg.g();
+        this.body = svg.g({
+          name: "pane-body",
+          style: { "pointer-events": "all" }
+        });
         this.el.Mask.appendChild(this.body);
         this.any(["x", "y"], ({ x, y }) => this.body.style.transform = `translate(${x}px, ${y}px)`);
-        this.componentBackground = svg.g({ name: "component-background", style: {} });
-        this.body.appendChild(this.componentBackground);
+        this.background = svg.rect({ name: "component-background", style: { fill: "black" } });
+        this.body.appendChild(this.background);
+        this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => update(this.background, { x: 0, y: 0, width, height }));
         if (this.debugBody) {
           const p1 = new DiagnosticPoint(`${this.oo.name} body 0x0`, this.body, 45, 64, "yellow");
           this.any(["x", "y"], ({ x, y }) => p1.draw({ x: 0, y: 0 }));
@@ -2146,7 +2207,7 @@
       },
       mount() {
         console.log("Pane Mount", this.url);
-        if (1) {
+        if (0) {
           let v = 0;
           setInterval((x) => {
             ;
@@ -2158,7 +2219,7 @@
             this.panY = 100 * \u0394;
           }, 1e3 / 32);
         }
-        if (1) {
+        if (0) {
           let u = Math.PI / 2;
           let v = 0 - u;
           setInterval((x) => {
@@ -2216,25 +2277,23 @@
         this.appendElements();
         if (1) {
         }
+        const pan = new Pan({
+          area: window,
+          handle: paneBody.background,
+          // component: this,
+          before: () => {
+          },
+          movement: ({ x, y }) => {
+            console.log({ x, y });
+            this.panX -= x;
+            this.panY -= y;
+          },
+          after: () => {
+          }
+        });
+        this.destructable = () => pan.destroy();
         console.warn("these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern");
         if (0) {
-          const pan = new Pan({
-            component: this,
-            handle: paneBody.el.Container,
-            zone: window
-            // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
-          });
-          this.destructable = () => pan.destroy();
-          const zoom = new Zoom({
-            component: this,
-            area: paneBody,
-            element: paneBody.el.Container,
-            zone: paneBody.el.Container,
-            // transformMovement: (v)=>v/globalThis.project.zoom,
-            probe: ({ cursor }) => {
-            }
-          });
-          this.destructable = () => zoom.destroy();
         }
         this.on("url", (url) => this.load(this.url));
       },

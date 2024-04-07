@@ -5,8 +5,9 @@ import { DiagnosticText, DiagnosticRectangle, DiagnosticCross, DiagnosticRuler, 
 import { svg, update, click, text } from "/plug-ins/domek/index.js"
 import {nest} from "/plug-ins/nest/index.js";
 
-import Pan from "/plug-ins/pan/index.js";
-import Zoom from "/plug-ins/zoom/inner.js";
+import Drag from "/plug-ins/meowse/Drag.js";
+// import Pan from "/plug-ins/pan/index.js";
+// import Zoom from "/plug-ins/zoom/inner.js";
 
 import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
@@ -78,7 +79,7 @@ export default class Pane {
 
       console.log('Pane Mount', this.url);
 
-      if(1){
+      if(0){
         let v = 0;
         setInterval(x=>{;
           let Δ = Math.sin(v);
@@ -89,7 +90,7 @@ export default class Pane {
         }, 1_000/32)
       }
 
-      if(1){
+      if(0){
         let u = Math.PI/2;
         let v = 0-u;
         setInterval(x=>{;
@@ -238,31 +239,62 @@ export default class Pane {
       }
 
 
+      const pan = new Drag({
+        area: window,
+        handle: paneBody.background,
+        // component: this,
+        before: ()=>{},
+        movement: ({x,y})=>{
+          console.log({x,y});
+          this.panX -= x;
+          this.panY -= y;
+        },
+        after: ()=>{},
+      });
+      this.destructable = ()=>pan.destroy();
+
+
 
 
       console.warn('these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern');
       if(0){
 
 
-      const pan = new Pan({
-        component: this,
-        handle: paneBody.el.Container,
-        zone: window,
-        // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
-      }); this.destructable = ()=>pan.destroy()
+      // const pan = new Pan({
+      //   component: this,
+      //   handle: paneBody.el.Container,
+      //   zone: window,
+      //   // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
+      // }); this.destructable = ()=>pan.destroy()
+
+      //
+      // const pan = new Pan({
+      //   component: this,
+      //   handle: paneBody.el.Container,
+      //   zone: window,
+      //   // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
+      // }); this.destructable = ()=>pan.destroy()
+      //
+
+
+
+
+
+
+
 
       // const diagnosticPoint1 = new DiagnosticPoint('scrollwheel hit', this.elements, 'yellow')
-
-      const zoom = new Zoom({
-        component: this,
-        area: paneBody,
-        element: paneBody.el.Container,
-        zone: paneBody.el.Container,
-        // transformMovement: (v)=>v/globalThis.project.zoom,
-        probe: ({cursor})=>{
-          // diagnosticPoint1.draw(cursor)
-        },
-      }); this.destructable = ()=>zoom.destroy()
+      //
+      // const zoom = new Zoom({
+      //   component: this,
+      //   area: paneBody,
+      //   element: paneBody.el.Container,
+      //   zone: paneBody.el.Container,
+      //   // transformMovement: (v)=>v/globalThis.project.zoom,
+      //   probe: ({cursor})=>{
+      //     // diagnosticPoint1.draw(cursor)
+      //   },
+      // }); this.destructable = ()=>zoom.destroy()
 
       }
 

@@ -17,6 +17,7 @@ export default class Container {
     draw(){
       this.el.Container = svg.rect({
         name: this.name,
+        style:{'pointer-events': 'none'},
         class: 'editor-container',
         ry: this.r,
         'stroke-width': 2,
