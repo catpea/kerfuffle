@@ -50,8 +50,8 @@ export default class Pane {
   observables = {
     url:null,
 
-    panX: 110,
-    panY: 110,
+    panX: 100,
+    panY: 100,
     zoom: .5,
 
     applications: [],
@@ -118,7 +118,7 @@ export default class Pane {
       */
 
       // Add Menu
-      if(1){
+      if(0){
         const [horizontal, [ addButton, delButton ]] = nest(Horizontal, [
           [Label, {h: 32, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
           [Label, {h: 32, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
@@ -259,8 +259,8 @@ export default class Pane {
         before: ()=>{},
         change: ({x,y,z})=>{
           this.zoom = z;
-          this.panX -= x;
-          this.panY -= y;
+          this.panX = x;
+          this.panY = y;
         },
         after: ()=>{},
       });

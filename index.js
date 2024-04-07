@@ -1958,7 +1958,7 @@
     max;
     constructor({ getter, area = window, handle, before = /* @__PURE__ */ __name(() => {
     }, "before"), change, after = /* @__PURE__ */ __name(() => {
-    }, "after"), magnitude = 0.02, min = 0.1, max = 5 }) {
+    }, "after"), magnitude = 0.2, min = 0.1, max = 5 }) {
       this.area = area;
       this.handle = handle;
       this.getter = getter;
@@ -1972,20 +1972,27 @@
     }
     #mount() {
       this.wheelHandler = (e) => {
+        console.log(e.target);
         e.stopPropagation();
         this.before();
         const zoom0 = this.getter("zoom");
         const panX0 = this.getter("panX");
         const panY0 = this.getter("panY");
+        console.log({ zoom0, panX0, panY0 });
         const INTO = 1;
         const OUTOF = -1;
         let zoomDirection = e.deltaY > 0 ? OUTOF : INTO;
         let zoomCorrection = this.magnitude * zoomDirection;
         const limitZooming = /* @__PURE__ */ __name((v) => Math.min(this.max, Math.max(this.min, v)), "limitZooming");
         let zoom1 = limitZooming(zoom0 + zoomCorrection);
-        console.log(zoom1);
-        let panX1 = panX0;
-        let panY1 = panY0;
+        const scaleRatio = zoom0 / zoom1;
+        const rescale = /* @__PURE__ */ __name((v) => v / scaleRatio, "rescale");
+        const cursorX = e.clientX;
+        const cursorY = e.clientY;
+        let panX1;
+        let panY1;
+        panX1 = cursorX - rescale(cursorX - panX0);
+        panY1 = cursorY - rescale(cursorY - panY0);
         this.change({ x: panX1, y: panY1, z: zoom1 });
         this.after();
       };
@@ -2250,8 +2257,8 @@
     };
     observables = {
       url: null,
-      panX: 110,
-      panY: 110,
+      panX: 100,
+      panY: 100,
       zoom: 0.5,
       applications: [],
       elements: [],
@@ -2294,7 +2301,7 @@
               v = 0 - u;
           }, 1e3 / 32);
         }
-        if (1) {
+        if (0) {
           const [horizontal, [addButton, delButton]] = nest(Horizontal, [
             [Label, { h: 32, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
             [Label, { h: 32, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
@@ -2359,8 +2366,8 @@
           },
           change: ({ x, y, z }) => {
             this.zoom = z;
-            this.panX -= x;
-            this.panY -= y;
+            this.panX = x;
+            this.panY = y;
           },
           after: () => {
           }

@@ -12,7 +12,7 @@ export default class Zoom {
   min;
   max;
 
-  constructor({ getter, area=window, handle, before=()=>{}, change, after=()=>{}, magnitude=.02, min=0.1, max=5, }){
+  constructor({ getter, area=window, handle, before=()=>{}, change, after=()=>{}, magnitude=.2, min=0.1, max=5, }){
 
     this.area = area;
     this.handle = handle;
@@ -30,6 +30,7 @@ export default class Zoom {
   #mount(){
 
     this.wheelHandler = (e) => {
+      console.log(e.target);
       e.stopPropagation();
 
       this.before();
@@ -37,6 +38,7 @@ export default class Zoom {
       const zoom0 = this.getter('zoom');
       const panX0 = this.getter('panX');
       const panY0 = this.getter('panY');
+      console.log({zoom0, panX0, panY0,});
 
       const INTO = +1;
       const OUTOF = -1;
@@ -46,13 +48,22 @@ export default class Zoom {
       const limitZooming = v=>Math.min(this.max, Math.max(this.min, v)); // using `Math.min(max, value)` to ensure the value doesn't exceed the `max` limit and `Math.max(min, ...)` to ensure the result doesn't fall below the `min` limit.
       let zoom1 = limitZooming( zoom0 + zoomCorrection );
 
-      console.log(zoom1);
+      const scaleRatio = zoom0/zoom1;
+      const rescale = v=>v/(scaleRatio); // divide by to translate old coordiante to new
 
-      let panX1 = panX0;
-      let panY1 = panY0;
+      // console.log(e);
+      // const translateCursorFromBackgroundToContent = (v)=>
+      //
+      //
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
+      //
+      let panX1;
+      let panY1;
 
-
-      this.change({ x:panX1, y:panY1, z:zoom1 });
+      panX1 = cursorX - (rescale(cursorX - panX0));
+      panY1 = cursorY - (rescale(cursorY - panY0));
+      this.change({ x:panX1, y:panY1, z:zoom1});
 
       // // calculate pan relative to cursor
       // const scaleRatio = zoom0/zoom1;

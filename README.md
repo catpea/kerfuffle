@@ -3,8 +3,8 @@ Visual Programming Language
 
 ## TODO
 
-- [ ] Add component loading to Root Window
-- [ ] Nested Transforms
+- [x] Add component loading to Root Window
+- [x] Nested Transforms
 - [ ] Labels must monitor transform stack from their placement up.
 
 ## Laws
