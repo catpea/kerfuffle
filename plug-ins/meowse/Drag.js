@@ -1,4 +1,4 @@
-export default class Pan {
+export default class Drag {
 
   area = window;
   handle = null;
@@ -10,7 +10,6 @@ export default class Pan {
   mouseDownHandler;
   mouseMoveHandler;
   mouseUpHandler;
-
 
   dragging = false;
   previousX = 0;

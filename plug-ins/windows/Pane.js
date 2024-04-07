@@ -6,6 +6,7 @@ import { svg, update, click, text } from "/plug-ins/domek/index.js"
 import {nest} from "/plug-ins/nest/index.js";
 
 import Drag from "/plug-ins/meowse/Drag.js";
+import Zoom from "/plug-ins/meowse/Zoom.js";
 // import Pan from "/plug-ins/pan/index.js";
 // import Zoom from "/plug-ins/zoom/inner.js";
 
@@ -242,16 +243,28 @@ export default class Pane {
       const pan = new Drag({
         area: window,
         handle: paneBody.background,
-        // component: this,
         before: ()=>{},
         movement: ({x,y})=>{
-          console.log({x,y});
           this.panX -= x;
           this.panY -= y;
         },
         after: ()=>{},
       });
       this.destructable = ()=>pan.destroy();
+
+      const zoom = new Zoom({
+        area: window,
+        handle: paneBody.background,
+        getter: (key)=>this[key],
+        before: ()=>{},
+        change: ({x,y,z})=>{
+          this.zoom = z;
+          this.panX -= x;
+          this.panY -= y;
+        },
+        after: ()=>{},
+      });
+      this.destructable = ()=>zoom.destroy();
 
 
 

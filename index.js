@@ -1883,9 +1883,9 @@
   __name(rotate2, "rotate2");
 
   // plug-ins/meowse/Drag.js
-  var Pan = class {
+  var Drag = class {
     static {
-      __name(this, "Pan");
+      __name(this, "Drag");
     }
     area = window;
     handle = null;
@@ -1935,6 +1935,67 @@
       this.handle.removeEventListener("mousedown", this.mouseDownHandler);
       this.area.removeEventListener("mousemove", this.mouseMoveHandler);
       this.area.removeEventListener("mouseup", this.mouseUpHandler);
+    }
+  };
+
+  // plug-ins/meowse/Zoom.js
+  var Zoom = class {
+    static {
+      __name(this, "Zoom");
+    }
+    area;
+    handle;
+    getter;
+    before = () => {
+    };
+    change = () => {
+    };
+    after = () => {
+    };
+    magnitude;
+    // magnitude of change
+    min;
+    max;
+    constructor({ getter, area = window, handle, before = /* @__PURE__ */ __name(() => {
+    }, "before"), change, after = /* @__PURE__ */ __name(() => {
+    }, "after"), magnitude = 0.02, min = 0.1, max = 5 }) {
+      this.area = area;
+      this.handle = handle;
+      this.getter = getter;
+      this.before = before;
+      this.change = change;
+      this.after = after;
+      this.magnitude = magnitude;
+      this.min = min;
+      this.max = max;
+      this.#mount();
+    }
+    #mount() {
+      this.wheelHandler = (e) => {
+        e.stopPropagation();
+        this.before();
+        const zoom0 = this.getter("zoom");
+        const panX0 = this.getter("panX");
+        const panY0 = this.getter("panY");
+        const INTO = 1;
+        const OUTOF = -1;
+        let zoomDirection = e.deltaY > 0 ? OUTOF : INTO;
+        let zoomCorrection = this.magnitude * zoomDirection;
+        const limitZooming = /* @__PURE__ */ __name((v) => Math.min(this.max, Math.max(this.min, v)), "limitZooming");
+        let zoom1 = limitZooming(zoom0 + zoomCorrection);
+        console.log(zoom1);
+        let panX1 = panX0;
+        let panY1 = panY0;
+        this.change({ x: panX1, y: panY1, z: zoom1 });
+        this.after();
+      };
+      this.area.addEventListener("wheel", this.wheelHandler, { passive: true });
+      this.handle.addEventListener("wheel", this.wheelHandler, { passive: true });
+    }
+    destroy() {
+      this.removeStartedObserver();
+      this.area.removeEventListener("wheel", this.wheelHandler);
+      this.handle.removeEventListener("wheel", this.wheelHandler);
     }
   };
 
@@ -2260,7 +2321,7 @@
         console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
         this.on("panX", (panX) => paneBody.panX = panX);
         this.on("panY", (panY) => paneBody.panY = panY);
-        this.on("zoom", (zoom) => paneBody.zoom = zoom);
+        this.on("zoom", (zoom2) => paneBody.zoom = zoom2);
         this.on("elements.created", (node) => {
           const Ui = this.types.find((o) => o.name == node.type);
           if (!Ui)
@@ -2277,14 +2338,12 @@
         this.appendElements();
         if (1) {
         }
-        const pan = new Pan({
+        const pan = new Drag({
           area: window,
           handle: paneBody.background,
-          // component: this,
           before: () => {
           },
           movement: ({ x, y }) => {
-            console.log({ x, y });
             this.panX -= x;
             this.panY -= y;
           },
@@ -2292,6 +2351,21 @@
           }
         });
         this.destructable = () => pan.destroy();
+        const zoom = new Zoom({
+          area: window,
+          handle: paneBody.background,
+          getter: (key) => this[key],
+          before: () => {
+          },
+          change: ({ x, y, z }) => {
+            this.zoom = z;
+            this.panX -= x;
+            this.panY -= y;
+          },
+          after: () => {
+          }
+        });
+        this.destructable = () => zoom.destroy();
         console.warn("these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern");
         if (0) {
         }
