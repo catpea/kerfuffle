@@ -639,7 +639,6 @@
         const data = this.data;
         const object = { meta, data };
         for (const [name2, value] of Object.entries(this.oo.specification.properties)) {
-          console.log(this[name2], name2, value);
           if (this[name2] !== value)
             meta[name2] = this[name2];
         }
@@ -1028,13 +1027,21 @@
         }
         return response;
       },
+      getStack(element, list = []) {
+        if (!element)
+          element = this;
+        list.unshift(element);
+        if (element.parent)
+          this.getStack(element.parent, list);
+        return list;
+      },
       getTransforms(element, list = []) {
         if (!element)
           element = this;
         const isTransform = element.hasOwnProperty("panX") && element.hasOwnProperty("panY") && element.hasOwnProperty("zoom");
         if (isTransform) {
-          const { oo: { name: name2 }, panX: x, panY: y, zoom: z } = element;
-          list.unshift({ name: name2, x, y, z, element });
+          const { oo: { name: name2 }, panX, panY, zoom, x, y } = element;
+          list.push({ name: name2, panX, panY, zoom, x, y });
         }
         if (element.parent)
           this.getTransforms(element.parent, list);
@@ -1043,8 +1050,8 @@
       getApplication(element) {
         if (!element)
           element = this;
-        if (element.isApplication) {
-          return this;
+        if (element.isApplication === true) {
+          return element;
         }
         if (element.parent)
           return this.getApplication(element.parent);
@@ -1859,7 +1866,7 @@
       this.parent.appendChild(this.indicatorLine);
       this.textLine = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
       this.parent.appendChild(this.textLine);
-      this.textContainer = svg.text({ "dominant-baseline": "middle", fill: stroke });
+      this.textContainer = svg.text({ style: { "pointer-events": "none" }, "dominant-baseline": "middle", fill: stroke });
       this.parent.appendChild(this.textContainer);
       this.text = text(name2);
       this.textContainer.appendChild(this.text);
@@ -1867,7 +1874,6 @@
     draw({ x, y }) {
       this.text.nodeValue = `${x}x ${y}y ${this.name}`;
       const { x1, y1, x2, y2 } = rotate2({ x1: x, y1: y, x2: x + this.length, y2: y }, this.angle);
-      console.log({ x1, y1, x2, y2 });
       update(this.centerCircle, { cx: x, cy: y });
       update(this.indicatorLine, { x1, y1, x2, y2 });
       update(this.textLine, { x1: x2, y1: y2, x2: x2 + this.length * 0.5, y2 });
@@ -1917,7 +1923,6 @@
         this.before();
       };
       this.mouseMoveHandler = (e) => {
-        console.log("HIT!", e.target);
         const movementX = this.previousX - e.screenX;
         const movementY = this.previousY - e.screenY;
         this.movement({ x: movementX, y: movementY });
@@ -1956,9 +1961,11 @@
     // magnitude of change
     min;
     max;
-    constructor({ getter, area = window, handle, before = /* @__PURE__ */ __name(() => {
+    constructor({ getter, component, transforms, area = window, handle, before = /* @__PURE__ */ __name(() => {
     }, "before"), change, after = /* @__PURE__ */ __name(() => {
     }, "after"), magnitude = 0.2, min = 0.1, max = 5 }) {
+      this.transforms = transforms;
+      this.component = component;
       this.area = area;
       this.handle = handle;
       this.getter = getter;
@@ -1972,29 +1979,36 @@
     }
     #mount() {
       this.wheelHandler = (e) => {
-        console.log(e.target);
         e.stopPropagation();
         this.before();
-        const zoom0 = this.getter("zoom");
-        const panX0 = this.getter("panX");
-        const panY0 = this.getter("panY");
-        console.log({ zoom0, panX0, panY0 });
         const INTO = 1;
         const OUTOF = -1;
         let zoomDirection = e.deltaY > 0 ? OUTOF : INTO;
-        let zoomCorrection = this.magnitude * zoomDirection;
-        const limitZooming = /* @__PURE__ */ __name((v) => Math.min(this.max, Math.max(this.min, v)), "limitZooming");
-        let zoom1 = limitZooming(zoom0 + zoomCorrection);
-        const scaleRatio = zoom0 / zoom1;
-        const rescale = /* @__PURE__ */ __name((v) => v / scaleRatio, "rescale");
-        const cursorX = e.clientX;
-        const cursorY = e.clientY;
-        let panX1;
-        let panY1;
-        panX1 = cursorX - rescale(cursorX - panX0);
-        panY1 = cursorY - rescale(cursorY - panY0);
-        this.change({ x: panX1, y: panY1, z: zoom1 });
-        this.after();
+        let cursorX = e.offsetX;
+        let cursorY = e.offsetY;
+        cursorX = cursorX - this.getter("panX");
+        cursorY = cursorY - this.getter("panY");
+        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 1, cursorY: 1, magnitude: 1 }), { zoom: 2, panX: -1, panY: -1 });
+        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 0, cursorY: 0, magnitude: 1 }), { zoom: 2, panX: 0, panY: 0 });
+        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 2, cursorY: 2, magnitude: 1 }), { zoom: 2, panX: -2, panY: -2 });
+        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: -1, cursorX: 2, cursorY: 2, magnitude: 1, min: 0 }), { zoom: 0, panX: 2, panY: 2 });
+        const transformed = transformZoom({
+          zoom: this.getter("zoom"),
+          panX: this.getter("panX"),
+          panY: this.getter("panY"),
+          deltaZoom: zoomDirection,
+          cursorX,
+          // -this.component.x,
+          cursorY,
+          // -this.component.y,
+          magnitude: 0.01
+          //this.magnitude
+        });
+        this.change(transformed);
+        this.after({}, {
+          cursorX,
+          cursorY
+        });
       };
       this.area.addEventListener("wheel", this.wheelHandler, { passive: true });
       this.handle.addEventListener("wheel", this.wheelHandler, { passive: true });
@@ -2005,6 +2019,21 @@
       this.handle.removeEventListener("wheel", this.wheelHandler);
     }
   };
+  function transformZoom({ zoom, panX, panY, deltaZoom, cursorX, cursorY, magnitude = 0.3, min = 1e-3, max = 1e3 }) {
+    const zoomClamp = /* @__PURE__ */ __name((v) => Math.min(max, Math.max(min, v)), "zoomClamp");
+    let zoom1 = zoomClamp(zoom + deltaZoom * magnitude);
+    const zoomChange = zoom1 - zoom;
+    const panX1 = panX - cursorX * zoomChange / zoom;
+    const panY1 = panY - cursorY * zoomChange / zoom;
+    const response = { zoom: zoom1, panX: panX1, panY: panY1 };
+    return response;
+  }
+  __name(transformZoom, "transformZoom");
+  var checkZoomAlgorithm = /* @__PURE__ */ __name(function(actual, expected) {
+    console.assert(actual.zoom == expected.zoom, `Resulting zoom (${actual.zoom}) level is malformed, expected: ${expected.zoom}`);
+    console.assert(actual.panX == expected.panX, `Resulting x (${actual.panX}) is malformed, expected: ${expected.panX}`);
+    console.assert(actual.panY == expected.panY, `Resulting y (${actual.panY}) is malformed, expected: ${expected.panY}`);
+  }, "checkZoomAlgorithm");
 
   // plug-ins/windows/Viewport.js
   var Viewport = class {
@@ -2017,6 +2046,8 @@
       debugContent: true
     };
     observables = {
+      toX: 0,
+      toY: 0,
       panX: 0,
       panY: 0,
       zoom: 1
@@ -2038,7 +2069,8 @@
         });
         this.el.Mask.appendChild(this.body);
         this.any(["x", "y"], ({ x, y }) => this.body.style.transform = `translate(${x}px, ${y}px)`);
-        this.background = svg.rect({ name: "component-background", style: { fill: "black" } });
+        const bgColor = `hsla(${parseInt(360 * Math.random())}, 30%, 70%, 0.2)`;
+        this.background = svg.rect({ name: "component-background", style: { "transform-origin": "0px 0px", fill: bgColor } });
         this.body.appendChild(this.background);
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => update(this.background, { x: 0, y: 0, width, height }));
         if (this.debugBody) {
@@ -2257,9 +2289,9 @@
     };
     observables = {
       url: null,
-      panX: 100,
-      panY: 100,
-      zoom: 0.5,
+      panX: 110,
+      panY: 110,
+      zoom: 0.2,
       applications: [],
       elements: [],
       anchors: [],
@@ -2343,8 +2375,6 @@
           this.applications.remove(id);
         });
         this.appendElements();
-        if (1) {
-        }
         const pan = new Drag({
           area: window,
           handle: paneBody.background,
@@ -2359,30 +2389,29 @@
         });
         this.destructable = () => pan.destroy();
         const zoom = new Zoom({
-          area: window,
+          magnitude: 1,
+          area: paneBody.background,
+          component: paneBody,
           handle: paneBody.background,
           getter: (key) => this[key],
+          transforms: () => this.getTransforms(this.parent),
           before: () => {
           },
-          change: ({ x, y, z }) => {
-            this.zoom = z;
-            this.panX = x;
-            this.panY = y;
+          change: ({ zoom: zoom2, panX, panY }) => {
+            this.zoom = zoom2;
+            this.panX = panX;
+            this.panY = panY;
           },
-          after: () => {
+          after: (data, debug) => {
           }
         });
         this.destructable = () => zoom.destroy();
-        console.warn("these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern");
-        if (0) {
-        }
         this.on("url", (url) => this.load(this.url));
       },
       async load(url) {
         if (!url)
           return;
         const rehydrated = await (await fetch(url)).json();
-        console.log({ rehydrated });
         this.meta = rehydrated.meta;
         for (const { meta, data } of rehydrated.data) {
           const node = new Instance(Node, { origin: this.getApplication().id });

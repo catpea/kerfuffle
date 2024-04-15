@@ -50,9 +50,9 @@ export default class Pane {
   observables = {
     url:null,
 
-    panX: 100,
-    panY: 100,
-    zoom: .5,
+    panX: 110,
+    panY: 110,
+    zoom: .2,
 
     applications: [],
     elements: [],
@@ -154,14 +154,10 @@ export default class Pane {
       // Based on pan and zoom adjust the viewport.
       console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
 
+      // Send to viewport
       this.on('panX', panX=>paneBody.panX=panX);
       this.on('panY', panY=>paneBody.panY=panY);
       this.on('zoom', zoom=>paneBody.zoom=zoom);
-
-      // this.on('panX', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${(paneBody.x/this.zoom)+(this.panX/this.zoom)}px, ${(paneBody.y/this.zoom)+(this.panY/this.zoom)}px)` }));
-      // this.on('panY', v=> requestAnimationFrame(() => { paneBody.elements.style.transform = `translate(${(paneBody.x/this.zoom)+(this.panX/this.zoom)}px, ${(paneBody.y/this.zoom)+(this.panY/this.zoom)}px)` }));
-      // this.on('zoom', v=> requestAnimationFrame(() => { paneBody.elements.style.scale = this.zoom }));
-
 
       this.on("elements.created", (node) => {
         const Ui = this.types.find(o=>o.name==node.type); // concept as in conceptmap is a component as it is a GUI thing.
@@ -184,61 +180,6 @@ export default class Pane {
 
 
 
-      if(1){
-
-
-        // const diagnosticText1 = new DiagnosticText('zoom', paneBody.elements, 'yellow')
-        // this.any(['panX', 'panY'],coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        // paneBody.any(['x','y'], coordinates=>diagnosticText1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        //
-        //
-        // const diagnosticWidth1 = new DiagnosticWidth('panX', paneBody.background, 'gold')
-        // this.any(['panX', 'panY'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        // paneBody.any(['x','y','w','h'], coordinates=>diagnosticWidth1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        //
-        // const diagnosticHeight1 = new DiagnosticHeight('panY', paneBody.background, 'gold')
-        // this.any(['panX', 'panY'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        // paneBody.any(['x','y','w','h'],coordinates=>diagnosticHeight1.draw(  { zoom: this.zoom, x: paneBody.x, y: paneBody.y, w: paneBody.w, h: paneBody.h, panX: this.panX, panY: this.panY, }));
-        //
-        //
-        // const diagnosticRuler1 = new DiagnosticRuler('scene ruler', this.scene, 'red')
-        // this.any(['x','y','w','h'],coordinates=>diagnosticRuler1.draw(coordinates));
-        //
-        // const diagnosticRuler2 = new DiagnosticRuler('elements/paneBody ruler', paneBody.elements, 'green')
-        // paneBody.any(['x','y','w','h'],coordinates=>diagnosticRuler2.draw(coordinates, -350));
-        //
-        // const diagnosticCross1 = new DiagnosticCross('scene', this.scene, 'red')
-        // this.any(['x','y','w','h'],coordinates=>diagnosticCross1.draw(coordinates));
-        //
-        // const diagnosticCross2 = new DiagnosticCross('elements/paneBody', paneBody.elements, 'green')
-        // paneBody.any(['x','y','w','h'], through(  o=>this.transform(o), o=>diagnosticCross2.draw(o) ) );
-        //
-        //
-        // const centerCircle = svg.circle({style:{'pointer-events': 'none'}, stroke:'red', r:5})
-        // paneBody.elements.appendChild(centerCircle);
-        // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(centerCircle, {cx:x+w/2,cy:y+h/2 }))
-
-        // const outlineRectangle1 = svg.rect({style:{'pointer-events': 'none'}, stroke:'blue', fill:'none'})
-        // paneBody.componentBackground.appendChild(outlineRectangle1);
-        // // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
-        // // paneBody.any(['x','y','w','h'], through( o=>console.log(o), o=>this.transform(o, ['x','y','w','h']), o=>console.log(o), ({x,y,w,h})=>({x,y,width:w,height:h}), o=>update(outlineRectangle, o) ) )
-        // paneBody.any(['x','y','w','h'], through( ({x,y,w,h})=>({x:0,y:0,width:w,height:h}), o=>update(outlineRectangle1, o) ) )
-        //
-        //
-        // const outlineRectangle2 = svg.rect({style:{'pointer-events': 'none'}, stroke:'red', fill:'none'})
-        // paneBody.elements.appendChild(outlineRectangle2);
-        // // paneBody.any(['x','y','w','h'], ({x,y,w,h})=>update(outlineRectangle, {x,y,width:w,height:h}))
-        // // paneBody.any(['x','y','w','h'], through( o=>console.log(o), o=>this.transform(o, ['x','y','w','h']), o=>console.log(o), ({x,y,w,h})=>({x,y,width:w,height:h}), o=>update(outlineRectangle, o) ) )
-        // paneBody.any(['x','y','w','h'], through( ({x,y,w,h})=>({x:0,y:0,width:w,height:h}), o=>update(outlineRectangle2, o) ) )
-
-
-        // const diagnosticRectangle1 = new DiagnosticRectangle('viewport background', paneBody.componentBackground, 'green')
-        // paneBody.any(['x','y','w','h'], through(  o=>this.transform(o), o=>diagnosticRectangle1.draw(o) ) );
-        //
-
-
-      }
-
 
       const pan = new Drag({
         area: window,
@@ -252,87 +193,41 @@ export default class Pane {
       });
       this.destructable = ()=>pan.destroy();
 
+      // const showCursorPosition = new DiagnosticPoint('wheel cursor', paneBody.body, 15, 32, 'red')
+
       const zoom = new Zoom({
-        area: window,
+        magnitude: 1,
+        area: paneBody.background,
+        component: paneBody,
         handle: paneBody.background,
         getter: (key)=>this[key],
-        before: ()=>{},
-        change: ({x,y,z})=>{
-          this.zoom = z;
-          this.panX = x;
-          this.panY = y;
+        transforms: ()=>this.getTransforms(this.parent),
+        before: ()=>{
+          // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
         },
-        after: ()=>{},
+        change: ({zoom,panX,panY})=>{
+          this.zoom = zoom;
+          this.panX = panX;
+          this.panY = panY;
+          // console.log({zoom,panX,panY});
+        },
+        after: (data,debug)=>{
+          // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
+          // console.log({debug});
+          // showCursorPosition.draw({x:debug.cursorX, y:debug.cursorY})
+          // console.log(this.panX);
+        },
       });
       this.destructable = ()=>zoom.destroy();
 
-
-
-
-      console.warn('these must be configured properly as elemnts are more responsible now. mouse wheel is tracked via the transformed g background rectangle that should have a grid or dot pattern');
-      if(0){
-
-
-      // const pan = new Pan({
-      //   component: this,
-      //   handle: paneBody.el.Container,
-      //   zone: window,
-      //   // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
-      // }); this.destructable = ()=>pan.destroy()
-
-      //
-      // const pan = new Pan({
-      //   component: this,
-      //   handle: paneBody.el.Container,
-      //   zone: window,
-      //   // XXX: transformMovement: (v)=>v/globalThis.project.zoom,
-      // }); this.destructable = ()=>pan.destroy()
-      //
-
-
-
-
-
-
-
-
-      // const diagnosticPoint1 = new DiagnosticPoint('scrollwheel hit', this.elements, 'yellow')
-      //
-      // const zoom = new Zoom({
-      //   component: this,
-      //   area: paneBody,
-      //   element: paneBody.el.Container,
-      //   zone: paneBody.el.Container,
-      //   // transformMovement: (v)=>v/globalThis.project.zoom,
-      //   probe: ({cursor})=>{
-      //     // diagnosticPoint1.draw(cursor)
-      //   },
-      // }); this.destructable = ()=>zoom.destroy()
-
-      }
-
-
-
-
-
       this.on('url', url=>this.load(this.url));
-
-
-
-
-
-
-
-
-
-
 
     },
 
     async load(url){
       if(!url) return;
       const rehydrated = await (await fetch(url)).json();
-      console.log({rehydrated});
+      // console.log({rehydrated});
       this.meta = rehydrated.meta;
       for (const {meta, data} of rehydrated.data) {
         const node = new Instance(Node, {origin: this.getApplication().id});

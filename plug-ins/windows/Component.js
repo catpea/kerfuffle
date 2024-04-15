@@ -146,13 +146,24 @@ export default class Component {
 
 
 
+    getStack(element, list=[]) {
+      if(!element) element = this;
+      // const isTransform = !((element.panX??true)&&(element.panY??true)&&(element.zoom??true));
+
+      list.unshift(element);
+      if(element.parent) this.getStack(element.parent, list);
+      return list;
+    },
+
     getTransforms(element, list=[]) {
       if(!element) element = this;
       // const isTransform = !((element.panX??true)&&(element.panY??true)&&(element.zoom??true));
       const isTransform = element.hasOwnProperty('panX')&&element.hasOwnProperty('panY')&&element.hasOwnProperty('zoom');
       if(isTransform){
-        const {oo:{name}, panX:x, panY:y, zoom:z} = element;
-        list.unshift({name, x, y, z, element});
+
+
+        const {oo:{name}, panX, panY, zoom, x,y} = element;
+        list.push({name, panX, panY, zoom, x,y });
       }
       if(element.parent) this.getTransforms(element.parent, list);
       return list;
@@ -160,8 +171,8 @@ export default class Component {
 
     getApplication(element) {
       if(!element) element = this;
-      if(element.isApplication){
-        return this;
+      if(element.isApplication===true){
+        return element;
       }
       if(element.parent) return this.getApplication(element.parent);
     },

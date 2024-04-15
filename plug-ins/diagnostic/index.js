@@ -200,15 +200,17 @@ export class DiagnosticPoint {
     this.textLine = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
     this.parent.appendChild(this.textLine);
 
-    this.textContainer = svg.text({ 'dominant-baseline': 'middle', fill:stroke });
+    this.textContainer = svg.text({style:{'pointer-events': 'none'}, 'dominant-baseline': 'middle', fill:stroke });
     this.parent.appendChild(this.textContainer);
     this.text = text(name);
     this.textContainer.appendChild(this.text);
   }
   draw({x,y}){
+
+    // console.log(`draw({${x},${y}})`);
     this.text.nodeValue = `${x}x ${y}y ${this.name}`
     const {x1,y1,x2,y2} = rotate2({x1:x, y1:y, x2:x+this.length, y2:y}, this.angle);
-    console.log({x1,y1,x2,y2});
+    // console.log({x1,y1,x2,y2});
     update(this.centerCircle, {cx:x,cy:y } );
     // update(this.indicatorLine, {x1:x+this.space, y1:y, x2:x+200, y2:y})
     update(this.indicatorLine, {x1,y1,x2,y2})

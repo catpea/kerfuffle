@@ -16,6 +16,8 @@ export default class Viewport {
   };
 
   observables = {
+    toX: 0,
+    toY: 0,
     panX: 0,
     panY: 0,
     zoom: 1,
@@ -49,7 +51,9 @@ export default class Viewport {
       this.any(['x','y'], ({x,y})=>this.body.style.transform = `translate(${x}px, ${y}px)` ) // transform the coordinate system so that 0x0 is always in the corner of this component.
 
       // Give the component a background
-      this.background = svg.rect({name:'component-background', style:{ fill: 'black'}})
+      const bgColor = `hsla(${parseInt(360*Math.random())}, 30%, 70%, 0.2)`;
+      // console.log(bgColor);
+      this.background = svg.rect({name:'component-background', style:{ 'transform-origin': '0px 0px', fill: bgColor}})
       this.body.appendChild(this.background);
       this.any(['x','y','w','h'], ({x, y, w:width,h:height})=>update(this.background, {x:0,y:0,width,height}))
 

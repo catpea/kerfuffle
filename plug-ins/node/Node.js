@@ -70,7 +70,7 @@ export default class Node {
       const object = {meta, data};
 
       for (const [name, value] of Object.entries(this.oo.specification.properties)) {
-        console.log(this[name], name, value);
+        // console.log(this[name], name, value);
         if(this[name] !== value) meta[name] = this[name]
       }
 
