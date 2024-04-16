@@ -1986,8 +1986,12 @@
         let zoomDirection = e.deltaY > 0 ? OUTOF : INTO;
         let cursorX = e.offsetX;
         let cursorY = e.offsetY;
-        cursorX = cursorX - this.getter("panX");
-        cursorY = cursorY - this.getter("panY");
+        const lol1 = this.transforms().reduce((a, c) => ({ zoom: a.zoom + c.zoom, panX: a.panX + c.panX, panY: a.panY + c.panY, x: a.x + c.x, y: a.y + c.y }), { zoom: 1, panX: 0, panY: 0, x: 0, y: 0 });
+        const lol = this.component.getApplication();
+        cursorX = cursorX - lol1.x;
+        cursorY = cursorY - lol1.y;
+        cursorX = cursorX - lol1.panX;
+        cursorY = cursorY - lol1.panY;
         checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 1, cursorY: 1, magnitude: 1 }), { zoom: 2, panX: -1, panY: -1 });
         checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 0, cursorY: 0, magnitude: 1 }), { zoom: 2, panX: 0, panY: 0 });
         checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 2, cursorY: 2, magnitude: 1 }), { zoom: 2, panX: -2, panY: -2 });
@@ -2289,9 +2293,9 @@
     };
     observables = {
       url: null,
-      panX: 110,
-      panY: 110,
-      zoom: 0.2,
+      panX: 150,
+      panY: 150,
+      zoom: 1,
       applications: [],
       elements: [],
       anchors: [],
@@ -2388,13 +2392,14 @@
           }
         });
         this.destructable = () => pan.destroy();
+        const showCursorPosition = new DiagnosticPoint("wheel cursor", paneBody.body, 15, 32, "red");
         const zoom = new Zoom({
           magnitude: 1,
           area: paneBody.background,
           component: paneBody,
           handle: paneBody.background,
           getter: (key) => this[key],
-          transforms: () => this.getTransforms(this.parent),
+          transforms: () => this.getTransforms(this),
           before: () => {
           },
           change: ({ zoom: zoom2, panX, panY }) => {
@@ -2403,6 +2408,7 @@
             this.panY = panY;
           },
           after: (data, debug) => {
+            showCursorPosition.draw({ x: debug.cursorX, y: debug.cursorY });
           }
         });
         this.destructable = () => zoom.destroy();

@@ -64,19 +64,44 @@ export default class Zoom {
       //cursorX=cursorX-this.getter('panX');//-this.component.x;
       //cursorY=cursorY-this.getter('panY');//-this.component.y;
 
-      // // const quux = this.component.getApplication();
       // console.log(lol);
       // cursorX = cursorX - lol.x;
       // cursorY = cursorY - lol.y;
       let cursorX = e.offsetX;
       let cursorY = e.offsetY;
 
-      cursorX = cursorX-this.getter('panX');//-this.component.x;
-      cursorY = cursorY-this.getter('panY');//-this.component.y;
+      // cursorX = cursorX-this.getter('panX');//-this.component.x;
+      // cursorY = cursorY-this.getter('panY');//-this.component.y;
 
-      // const lol1 = this.transforms().reduce((a,c)=>({zoom:a.zoom+c.zoom, panX:a.panX+c.panX, panY:a.panY+c.panY, x:a.x+c.x,y:a.y+c.y,    }), {zoom:0, panX:0, panY:0, x:0,y:0});
-      //const lol = this.transforms().pop()||{zoom:1, panX:0, panY:0, x:0,y:0};
+      const lol1 = this.transforms().reduce((a,c)=>({zoom:a.zoom+c.zoom, panX:a.panX+c.panX, panY:a.panY+c.panY, x:a.x+c.x,y:a.y+c.y,    }), {zoom:1, panX:0, panY:0, x:0,y:0});
+      // const lol = this.transforms().pop()||{zoom:1, panX:0, panY:0, x:0,y:0};
+      const lol = this.component.getApplication();
 
+      // LEVEL 2 experiment undex zoom - required cursorX-this.getter('panX')
+      //   cursorX = cursorX - lol.x - 150 - 24;
+      //   cursorY = cursorY - lol.y - 150 - 24;
+      // ///////////////////////////////////////////
+
+      // A
+      cursorX = cursorX - lol1.x;
+      cursorY = cursorY - lol1.y;
+
+      //B
+      cursorX = cursorX - lol1.panX;
+      cursorY = cursorY - lol1.panY;
+
+      //C
+      //c requires taking zoom under consideration
+
+      // console.log(lol1.panX, lol1.panY);
+
+      // let captions = this.transforms().length * 24
+      // cursorX = cursorX - captions -  captions -  captions -  captions
+      // cursorY = cursorY - captions -  captions -  captions -  captions
+
+
+      // console.log(lol1);
+      // console.log(lol1.x, lol.y);
 
      //TODO: expand these tests with real world scenatios to test oanning
 

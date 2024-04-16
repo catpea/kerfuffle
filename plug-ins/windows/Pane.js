@@ -50,9 +50,9 @@ export default class Pane {
   observables = {
     url:null,
 
-    panX: 110,
-    panY: 110,
-    zoom: .2,
+    panX: 150,
+    panY: 150,
+    zoom: 1,
 
     applications: [],
     elements: [],
@@ -193,7 +193,7 @@ export default class Pane {
       });
       this.destructable = ()=>pan.destroy();
 
-      // const showCursorPosition = new DiagnosticPoint('wheel cursor', paneBody.body, 15, 32, 'red')
+      const showCursorPosition = new DiagnosticPoint('wheel cursor', paneBody.body, 15, 32, 'red')
 
       const zoom = new Zoom({
         magnitude: 1,
@@ -201,7 +201,7 @@ export default class Pane {
         component: paneBody,
         handle: paneBody.background,
         getter: (key)=>this[key],
-        transforms: ()=>this.getTransforms(this.parent),
+        transforms: ()=>this.getTransforms(this),
         before: ()=>{
           // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
         },
@@ -214,7 +214,7 @@ export default class Pane {
         after: (data,debug)=>{
           // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
           // console.log({debug});
-          // showCursorPosition.draw({x:debug.cursorX, y:debug.cursorY})
+          showCursorPosition.draw({x:debug.cursorX, y:debug.cursorY})
           // console.log(this.panX);
         },
       });
