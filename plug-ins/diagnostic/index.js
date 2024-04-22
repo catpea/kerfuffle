@@ -128,30 +128,75 @@ export class DiagnosticRuler {
   }
 }
 
-export class DiagnosticWidth {
-  name;
-  parent;
-  space = 32;
-  constructor(name, parent, stroke){
-    this.name = name;
-    this.parent = parent;
-    this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, opacity:.4, stroke, fill:'none'});
-    this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
-    this.parent.appendChild(this.diagonal1);
-    this.parent.appendChild(this.diagonal2);
 
-    this.textContainer = svg.text({fill:stroke });
-    this.parent.appendChild(this.textContainer);
-    this.text = text(this.name);
+export class DiagnosticWidth {
+  container;
+  label;
+  x;
+  y;
+  length;
+  color;
+
+  constructor({container, label, x, y, length, color='magenta', }){
+
+    this.container = container;
+    this.label = label;
+    this.x = x;
+    this.y = y;
+    this.length = length;
+    this.color = color;
+
+    this.line = svg.line({style:{'pointer-events': 'none'}, stroke:this.color, fill:'none'});
+    this.container.appendChild(this.line);
+
+    this.lineStart = svg.line({style:{'pointer-events': 'none'}, stroke:this.color, fill:'none'});
+    this.container.appendChild(this.lineStart);
+
+    this.lineEnd = svg.line({style:{'pointer-events': 'none'}, stroke:this.color, fill:'none'});
+    this.container.appendChild(this.lineEnd);
+
+    this.textContainer = svg.text({style:{'pointer-events': 'none'}, fill:color });
+    this.container.appendChild(this.textContainer);
+
+    this.text = text(this.label);
     this.textContainer.appendChild(this.text);
   }
-  draw({x,y, panX, panY, zoom}, n=0){
-    // update(this.diagonal1, {x1:x, y1:y+panY, x2:x+panX, y2:y+panY} );
-    update(this.diagonal2, {x1:x*zoom, y1:y+(panY*zoom), x2:x+(panX*zoom), y2:y+(panY*zoom)} );
-    update(this.textContainer, {x:x*zoom,y:y+(panY*zoom)});
-    this.text.nodeValue = `${this.name}: ${panX}x (${(panX*zoom).toFixed(4)}x scaled)`
+
+  update({x,y,length,label}){
+
+    update(this.line,{x1:x, y1:y, x2:x+length, y2:y});
+    update(this.lineStart,{x1:x, y1:y-10, x2:x, y2:y+10});
+    update(this.lineEnd,{x1:x+length, y1:y-10, x2:x+length, y2:y+10});
+    update(this.textContainer, {x:x+2,y:y});
+    this.text.nodeValue = `${label}: ${x}x${y}>${length}`
+
   }
+
 }
+// export class DiagnosticWidth {
+//   name;
+//   parent;
+//   space = 32;
+//   constructor(name, parent, stroke){
+//     this.name = name;
+//     this.parent = parent;
+//     this.diagonal1 = svg.line({style:{'pointer-events': 'none'}, opacity:.4, stroke, fill:'none'});
+//     this.diagonal2 = svg.line({style:{'pointer-events': 'none'}, stroke, fill:'none'});
+//     this.parent.appendChild(this.diagonal1);
+//     this.parent.appendChild(this.diagonal2);
+//
+//     this.textContainer = svg.text({fill:stroke });
+//     this.parent.appendChild(this.textContainer);
+//     this.text = text(this.name);
+//     this.textContainer.appendChild(this.text);
+//   }
+//   draw({x,y, panX, panY, zoom}, n=0){
+//     // update(this.diagonal1, {x1:x, y1:y+panY, x2:x+panX, y2:y+panY} );
+//     update(this.diagonal2, {x1:x*zoom, y1:y+(panY*zoom), x2:x+(panX*zoom), y2:y+(panY*zoom)} );
+//     update(this.textContainer, {x:x*zoom,y:y+(panY*zoom)});
+//     this.text.nodeValue = `${this.name}: ${panX}x (${(panX*zoom).toFixed(4)}x scaled)`
+//   }
+// }
 
 export class DiagnosticHeight {
   name;
@@ -205,10 +250,10 @@ export class DiagnosticPoint {
     this.text = text(name);
     this.textContainer.appendChild(this.text);
   }
-  draw({x,y}){
+  draw({x,y, text}){
 
     // console.log(`draw({${x},${y}})`);
-    this.text.nodeValue = `${x}x ${y}y ${this.name}`
+    this.text.nodeValue = `${x}x ${y}y ${text||this.name}`
     const {x1,y1,x2,y2} = rotate2({x1:x, y1:y, x2:x+this.length, y2:y}, this.angle);
     // console.log({x1,y1,x2,y2});
     update(this.centerCircle, {cx:x,cy:y } );
@@ -216,6 +261,7 @@ export class DiagnosticPoint {
     update(this.indicatorLine, {x1,y1,x2,y2})
     update(this.textLine, {x1:x2,y1:y2,x2:x2+this.length*0.5,y2})
     update(this.textContainer, {x:x2+this.length*0.5,y:y2});
+
   }
 }
 

@@ -1,5 +1,7 @@
 // import deepEqual from 'deep-equal';
 
+let segmentDb = {};
+
 import { DiagnosticText, DiagnosticRectangle, DiagnosticCross, DiagnosticRuler, DiagnosticWidth, DiagnosticHeight, DiagnosticPoint } from "/plug-ins/diagnostic/index.js"
 
 import { svg, update, click, text } from "/plug-ins/domek/index.js"
@@ -52,7 +54,7 @@ export default class Pane {
 
     panX: 150,
     panY: 150,
-    zoom: 1,
+    zoom: .5,
 
     applications: [],
     elements: [],
@@ -193,10 +195,18 @@ export default class Pane {
       });
       this.destructable = ()=>pan.destroy();
 
-      const showCursorPosition = new DiagnosticPoint('wheel cursor', paneBody.body, 15, 32, 'red')
+      // const showCursorPosition = new DiagnosticPoint('wheel cursor', paneBody.body, 45, 100, 'red')
+      function segmentHandler(requests, {container}){
+        for (const [key, request] of requests) {
+          let lineExists = segmentDb[key];
+          if(!lineExists) segmentDb[key] = new DiagnosticWidth({...request, container});
+          segmentDb[key].update(request);
+        }
+      }
+
 
       const zoom = new Zoom({
-        magnitude: 1,
+        magnitude: 0.1,
         area: paneBody.background,
         component: paneBody,
         handle: paneBody.background,
@@ -206,16 +216,26 @@ export default class Pane {
           // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
         },
         change: ({zoom,panX,panY})=>{
+
           this.zoom = zoom;
           this.panX = panX;
           this.panY = panY;
-          // console.log({zoom,panX,panY});
+
+        },
+        feedback: (debug) => {
+          // showCursorPosition.draw({x:debug.cursorX, y:debug.cursorY, text: `cursor @${debug.zoom}/${this.zoom}` })
+          // segmentHandler(debug.segments, {container: globalThis.scene})
+
         },
         after: (data,debug)=>{
-          // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
-          // console.log({debug});
-          showCursorPosition.draw({x:debug.cursorX, y:debug.cursorY})
-          // console.log(this.panX);
+          // lineHandler(debug.lines, {container: globalThis.scene})
+          // // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
+          // // console.log({debug});
+          // lineA.update({ x:debug.lineA.x, y:debug.lineA.y, length:debug.lineA.length, label: debug.lineA.label })
+          // lineB.update({ x:debug.lineB.x, y:debug.lineB.y, length:debug.lineB.length, label: debug.lineB.label })
+          // lineC.update({ x:debug.lineC.x, y:debug.lineC.y, length:debug.lineC.length, label: debug.lineC.label })
+          // lineD.update(debug.lineD)
+          // // console.log(this.panX);
         },
       });
       this.destructable = ()=>zoom.destroy();

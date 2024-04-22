@@ -8,7 +8,7 @@
   "data": [
     {
       "meta": {
-        "id": "a",
+        "id": "a2",
         "type": "TestWindow",
         "x": 100,
         "y": 100,
@@ -22,7 +22,7 @@
     },
     {
       "meta": {
-        "id": "b",
+        "id": "b2",
         "type": "TestWindow",
         "x": 1000,
         "y": 100,
@@ -34,7 +34,7 @@
     },
     {
       "meta": {
-        "id": "c",
+        "id": "c2",
         "type": "TestWindow",
         "x": 1900,
         "y": 100,

@@ -155,17 +155,31 @@ export default class Component {
       return list;
     },
 
-    getTransforms(element, list=[]) {
+    getTransforms(element, list=[], root=true) {
+
       if(!element) element = this;
       // const isTransform = !((element.panX??true)&&(element.panY??true)&&(element.zoom??true));
       const isTransform = element.hasOwnProperty('panX')&&element.hasOwnProperty('panY')&&element.hasOwnProperty('zoom');
       if(isTransform){
-
-
         const {oo:{name}, panX, panY, zoom, x,y} = element;
-        list.push({name, panX, panY, zoom, x,y });
+        list.unshift({name, panX, panY, zoom, x,y , element});
       }
-      if(element.parent) this.getTransforms(element.parent, list);
+      if(element.parent) this.getTransforms(element.parent, list, false);
+
+
+      if(root){
+
+        let parent = false
+        for (const [index, item] of list.entries()) {
+          item.index = index;
+          item.parent = parent;
+          parent = item;
+        }
+
+
+      }
+
+
       return list;
     },
 

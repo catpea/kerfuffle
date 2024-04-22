@@ -1,6 +1,8 @@
-
+const segments = new Map(); // for debug
 
 export default class Zoom {
+
+  event = 'wheel';
 
   area;
   handle;
@@ -9,12 +11,13 @@ export default class Zoom {
   before = ()=>{};
   change = ()=>{};
   after = ()=>{};
+  feedback = ()=>{};
 
   magnitude; // magnitude of change
   min;
   max;
 
-  constructor({ getter, component, transforms, area=window, handle, before=()=>{}, change, after=()=>{}, magnitude=.2, min=0.1, max=5, }){
+  constructor({ getter, component, transforms, area=window, handle, before=()=>{}, change, after=()=>{}, feedback=()=>{}, magnitude=1, min=0.1, max=5, }){
 
     this.transforms = transforms;
     this.component = component;
@@ -24,6 +27,7 @@ export default class Zoom {
     this.before = before;
     this.change = change;
     this.after = after;
+    this.feedback = feedback;
     this.magnitude = magnitude;
     this.min = min;
     this.max = max;
@@ -31,130 +35,162 @@ export default class Zoom {
     this.#mount();
   }
 
+  /*
+  MouseEvent.clientX = The X coordinate of the mouse pointer in viewport coordinates.
+  MouseEvent.offsetX = The X coordinate of the mouse pointer relative to the position of the padding edge of the target node.
+  MouseEvent.pageY = The Y coordinate of the mouse pointer relative to the whole document.
+  MouseEvent.screenY = The Y coordinate of the mouse pointer in screen coordinates.
+  */
+
   #mount(){
+
+    this.translateCursor = (x0,y0) => {
+
+      const localList = this.transforms();
+
+
+      let x1 = x0;
+      let y1 = y0;
+
+
+      let parentZoom = 1;
+      let localZoom = 1;
+
+      let comX = 0;
+      let comY = 0;
+
+      let panX = 0;
+      let panY = 0;
+
+      let allX = 0
+      let allY = 0
+
+      let allComX = 0
+      let allComY = 0
+
+      let allPanX = 0
+      let allPanY = 0
+
+      // Inner Movement
+      let locationX = 0;
+      let locationY = 0;
+
+
+      let hue = 0;
+      let hueIncrement = 60;
+      for (const [i,t] of localList.entries()) {
+        hue = hue + hueIncrement;
+
+        // Position of component x (initialy this will be 0+0)
+        let curX = t.x * parentZoom;
+        comX = comX + curX;
+        segments.set(`x${i}`, {color:`hsl(${hue},90%,50%)`, x:locationX,y:y0+0+24*i*(localList.length), length:curX, label: `x of component ${t.element.parent.id}`});
+        locationX = locationX + curX;
+
+        // Position of component x (initialy this will be 0+0)
+        let curY = t.y * parentZoom;
+        comY = comY + curY;
+        locationY = locationY + curY;
+
+        // Position of parent's x pan
+        let curPanX = t.panX * parentZoom;
+        panX = panX + curPanX;
+        segments.set(`xp${i}`,{color:`hsl(${hue},90%,50%)`, x:locationX ,y:y0+24+24*i*(localList.length), length:curPanX, label: `px`});
+        locationX = locationX + curPanX;
+
+        // Position of parent's y pan
+        let curPanY = t.panY * parentZoom;
+        panY = panY + curPanY;
+        locationY = locationY + curPanY;
+
+        parentZoom = parentZoom * t.zoom;
+      }
+
+      x1 = x1 - locationX;
+      y1 = y1 - locationY;
+
+      const f = localList[localList.length-1];
+      const finalZoom = localList.map(o=>o.zoom).reduce((a,c)=>a*c,1)/f.zoom;
+      const zoomChange = parentZoom - finalZoom;
+      x1 = x1/finalZoom
+      y1 = y1/finalZoom
+
+      segments.set(`c`,{color:`hsl(300,90%,50%)`, x:locationX ,y:y0 , length:x1, label: `px`});
+
+      return [x1, y1, localZoom, segments];
+    },
+
+    this.movelHandler = (e) => {
+      const [cursorX, cursorY, zoom, segments] = this.translateCursor(e.clientX, e.clientY);
+
+      this.feedback({
+        cursorX, cursorY, zoom,
+        // debug:
+        segments
+      });
+
+    }
 
     this.wheelHandler = (e) => {
 
       e.stopPropagation();
 
-      this.before();
+      this.before(this);
 
       const INTO = +1;
       const OUTOF = -1;
       let zoomDirection = e.deltaY>0?OUTOF:INTO;
 
-      /*
-      MouseEvent.clientX = The X coordinate of the mouse pointer in viewport coordinates.
-      MouseEvent.offsetX = The X coordinate of the mouse pointer relative to the position of the padding edge of the target node.
-      MouseEvent.pageY = The Y coordinate of the mouse pointer relative to the whole document.
-      MouseEvent.screenY = The Y coordinate of the mouse pointer in screen coordinates.
-      */
+     const [cursorX, cursorY] = this.translateCursor(e.clientX, e.clientY);
 
-
-      //
-      // cursorX=cursorX - (this.component.x*this.getter('zoom'));
-      // cursorY=cursorY - (this.component.y*this.getter('zoom'));
-      // console.log(`component ${this.component.y}x${this.component.y}`);
-      // adjust "imaginary dot" to take existing pan under consideration
-      // cursorX=cursorX-this.component.x;
-      // cursorY=cursorY-this.component.y;
-
-
-      // TODO: take under consideration not just pan but window position
-      //cursorX=cursorX-this.getter('panX');//-this.component.x;
-      //cursorY=cursorY-this.getter('panY');//-this.component.y;
-
-      // console.log(lol);
-      // cursorX = cursorX - lol.x;
-      // cursorY = cursorY - lol.y;
-      let cursorX = e.offsetX;
-      let cursorY = e.offsetY;
-
-      // cursorX = cursorX-this.getter('panX');//-this.component.x;
-      // cursorY = cursorY-this.getter('panY');//-this.component.y;
-
-      const lol1 = this.transforms().reduce((a,c)=>({zoom:a.zoom+c.zoom, panX:a.panX+c.panX, panY:a.panY+c.panY, x:a.x+c.x,y:a.y+c.y,    }), {zoom:1, panX:0, panY:0, x:0,y:0});
-      // const lol = this.transforms().pop()||{zoom:1, panX:0, panY:0, x:0,y:0};
-      const lol = this.component.getApplication();
-
-      // LEVEL 2 experiment undex zoom - required cursorX-this.getter('panX')
-      //   cursorX = cursorX - lol.x - 150 - 24;
-      //   cursorY = cursorY - lol.y - 150 - 24;
-      // ///////////////////////////////////////////
-
-      // A
-      cursorX = cursorX - lol1.x;
-      cursorY = cursorY - lol1.y;
-
-      //B
-      cursorX = cursorX - lol1.panX;
-      cursorY = cursorY - lol1.panY;
-
-      //C
-      //c requires taking zoom under consideration
-
-      // console.log(lol1.panX, lol1.panY);
-
-      // let captions = this.transforms().length * 24
-      // cursorX = cursorX - captions -  captions -  captions -  captions
-      // cursorY = cursorY - captions -  captions -  captions -  captions
-
-
-      // console.log(lol1);
-      // console.log(lol1.x, lol.y);
-
-     //TODO: expand these tests with real world scenatios to test oanning
-
-     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 1, cursorY: 1, magnitude: 1, }),       {zoom: 2, panX: -1, panY: -1});
-     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 0, cursorY: 0, magnitude: 1, }),       {zoom: 2, panX:  0, panY:  0});
-     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 2, cursorY: 2, magnitude: 1, }),       {zoom: 2, panX: -2, panY: -2});
-     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: -1, cursorX: 2, cursorY: 2, magnitude: 1, min:0}), {zoom: 0, panX:  2, panY:  2});
+     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1,  cursorX: 1, cursorY: 1, magnitude: 1, }),       {zoom: 2, panX: -1, panY: -1});
+     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1,  cursorX: 0, cursorY: 0, magnitude: 1, }),       {zoom: 2, panX:  0, panY:  0});
+     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1,  cursorX: 2, cursorY: 2, magnitude: 1, }),       {zoom: 2, panX: -2, panY: -2});
+     checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: -1, cursorX: 2, cursorY: 2, magnitude: 1, min:0}),  {zoom: 0, panX:  2, panY:  2});
 
      const transformed = transformZoom({
        zoom: this.getter('zoom'),
        panX: this.getter('panX'),
        panY: this.getter('panY'),
+
+       cursorX,
+       cursorY,
+
        deltaZoom: zoomDirection,
-       cursorX: cursorX,// -this.component.x,
-       cursorY: cursorY,// -this.component.y,
-       magnitude: 0.01 //this.magnitude
+       magnitude: this.magnitude
      });
 
       this.change(transformed);
-      this.after({}, {
-        cursorX, cursorY,
-      });
+      this.after({});
+
     };
 
-    this.area.addEventListener('wheel', this.wheelHandler, {passive: true});
-    this.handle.addEventListener('wheel', this.wheelHandler, {passive: true});
+    this.area.addEventListener(this.event, this.wheelHandler, {passive: true});
+    this.handle.addEventListener(this.event, this.wheelHandler, {passive: true});
+    this.area.addEventListener('mousemove', this.movelHandler, {passive: true});
   }
 
   destroy(){
     this.removeStartedObserver();
-    this.area.removeEventListener('wheel', this.wheelHandler);
-    this.handle.removeEventListener('wheel', this.wheelHandler);
+    this.area.removeEventListener(this.event, this.wheelHandler);
+    this.handle.removeEventListener(this.event, this.wheelHandler);
+    this.area.removeEventListener('mousemove', this.movelHandler);
   }
 
 }
 
 
 
-function transformZoom({zoom, panX, panY,   deltaZoom, cursorX, cursorY,   magnitude=0.3, min=0.001, max=1_000}){
+function transformZoom({zoom, panX, panY,   deltaZoom, cursorX, cursorY,   magnitude=1, min=0.001, max=1_000}){
   // This Algorithm Is Correct - Do Not Edit
   const zoomClamp = v=>Math.min(max, Math.max(min, v)); // using `Math.min(max, value)` to ensure the value doesn't exceed the `max` limit and `Math.max(min, ...)` to ensure the result doesn't fall below the `min` limit.
   let zoom1 = zoomClamp(zoom + (deltaZoom * magnitude));
-
   const zoomChange = zoom1 - zoom;
-
   const panX1 = panX - (cursorX * zoomChange) / zoom;
   const panY1 = panY - (cursorY * zoomChange) / zoom;
-
   const response = { zoom: zoom1, panX: panX1, panY: panY1 };
   return response;
-
 }
-
 
 const checkZoomAlgorithm = function(actual, expected){
  console.assert(actual.zoom==expected.zoom, `Resulting zoom (${actual.zoom}) level is malformed, expected: ${expected.zoom}`);

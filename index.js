@@ -1035,16 +1035,24 @@
           this.getStack(element.parent, list);
         return list;
       },
-      getTransforms(element, list = []) {
+      getTransforms(element, list = [], root = true) {
         if (!element)
           element = this;
         const isTransform = element.hasOwnProperty("panX") && element.hasOwnProperty("panY") && element.hasOwnProperty("zoom");
         if (isTransform) {
           const { oo: { name: name2 }, panX, panY, zoom, x, y } = element;
-          list.push({ name: name2, panX, panY, zoom, x, y });
+          list.unshift({ name: name2, panX, panY, zoom, x, y, element });
         }
         if (element.parent)
-          this.getTransforms(element.parent, list);
+          this.getTransforms(element.parent, list, false);
+        if (root) {
+          let parent = false;
+          for (const [index, item] of list.entries()) {
+            item.index = index;
+            item.parent = parent;
+            parent = item;
+          }
+        }
         return list;
       },
       getApplication(element) {
@@ -1846,47 +1854,42 @@
       this.text.nodeValue = `${this.name}`;
     }
   };
-  var DiagnosticPoint = class {
+  var DiagnosticWidth = class {
     static {
-      __name(this, "DiagnosticPoint");
+      __name(this, "DiagnosticWidth");
     }
-    space = 8;
-    name;
-    parent;
-    angle;
+    container;
+    label;
+    x;
+    y;
     length;
-    constructor(name2, parent, angle = 0, length = 10, stroke = "blue") {
-      this.name = name2;
-      this.parent = parent;
-      this.angle = angle;
+    color;
+    constructor({ container, label, x, y, length, color = "magenta" }) {
+      this.container = container;
+      this.label = label;
+      this.x = x;
+      this.y = y;
       this.length = length;
-      this.centerCircle = svg.circle({ style: { "pointer-events": "none" }, stroke, fill: stroke, r: 5 });
-      this.parent.appendChild(this.centerCircle);
-      this.indicatorLine = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
-      this.parent.appendChild(this.indicatorLine);
-      this.textLine = svg.line({ style: { "pointer-events": "none" }, stroke, fill: "none" });
-      this.parent.appendChild(this.textLine);
-      this.textContainer = svg.text({ style: { "pointer-events": "none" }, "dominant-baseline": "middle", fill: stroke });
-      this.parent.appendChild(this.textContainer);
-      this.text = text(name2);
+      this.color = color;
+      this.line = svg.line({ style: { "pointer-events": "none" }, stroke: this.color, fill: "none" });
+      this.container.appendChild(this.line);
+      this.lineStart = svg.line({ style: { "pointer-events": "none" }, stroke: this.color, fill: "none" });
+      this.container.appendChild(this.lineStart);
+      this.lineEnd = svg.line({ style: { "pointer-events": "none" }, stroke: this.color, fill: "none" });
+      this.container.appendChild(this.lineEnd);
+      this.textContainer = svg.text({ style: { "pointer-events": "none" }, fill: color });
+      this.container.appendChild(this.textContainer);
+      this.text = text(this.label);
       this.textContainer.appendChild(this.text);
     }
-    draw({ x, y }) {
-      this.text.nodeValue = `${x}x ${y}y ${this.name}`;
-      const { x1, y1, x2, y2 } = rotate2({ x1: x, y1: y, x2: x + this.length, y2: y }, this.angle);
-      update(this.centerCircle, { cx: x, cy: y });
-      update(this.indicatorLine, { x1, y1, x2, y2 });
-      update(this.textLine, { x1: x2, y1: y2, x2: x2 + this.length * 0.5, y2 });
-      update(this.textContainer, { x: x2 + this.length * 0.5, y: y2 });
+    update({ x, y, length, label }) {
+      update(this.line, { x1: x, y1: y, x2: x + length, y2: y });
+      update(this.lineStart, { x1: x, y1: y - 10, x2: x, y2: y + 10 });
+      update(this.lineEnd, { x1: x + length, y1: y - 10, x2: x + length, y2: y + 10 });
+      update(this.textContainer, { x: x + 2, y });
+      this.text.nodeValue = `${label}: ${x}x${y}>${length}`;
     }
   };
-  function rotate2({ x1, y1, x2, y2 }, d) {
-    let r = Math.PI * 2 / 360 * d;
-    const newX = Math.cos(r) * (x2 - x1) - Math.sin(r) * (y2 - y1) + x1;
-    const newY = Math.sin(r) * (x2 - x1) + Math.cos(r) * (y2 - y1) + y1;
-    return { x1, y1, x2: newX, y2: newY };
-  }
-  __name(rotate2, "rotate2");
 
   // plug-ins/meowse/Drag.js
   var Drag = class {
@@ -1944,10 +1947,12 @@
   };
 
   // plug-ins/meowse/Zoom.js
+  var segments = /* @__PURE__ */ new Map();
   var Zoom = class {
     static {
       __name(this, "Zoom");
     }
+    event = "wheel";
     area;
     handle;
     getter;
@@ -1957,13 +1962,16 @@
     };
     after = () => {
     };
+    feedback = () => {
+    };
     magnitude;
     // magnitude of change
     min;
     max;
     constructor({ getter, component, transforms, area = window, handle, before = /* @__PURE__ */ __name(() => {
     }, "before"), change, after = /* @__PURE__ */ __name(() => {
-    }, "after"), magnitude = 0.2, min = 0.1, max = 5 }) {
+    }, "after"), feedback = /* @__PURE__ */ __name(() => {
+    }, "feedback"), magnitude = 1, min = 0.1, max = 5 }) {
       this.transforms = transforms;
       this.component = component;
       this.area = area;
@@ -1972,26 +1980,83 @@
       this.before = before;
       this.change = change;
       this.after = after;
+      this.feedback = feedback;
       this.magnitude = magnitude;
       this.min = min;
       this.max = max;
       this.#mount();
     }
+    /*
+    MouseEvent.clientX = The X coordinate of the mouse pointer in viewport coordinates.
+    MouseEvent.offsetX = The X coordinate of the mouse pointer relative to the position of the padding edge of the target node.
+    MouseEvent.pageY = The Y coordinate of the mouse pointer relative to the whole document.
+    MouseEvent.screenY = The Y coordinate of the mouse pointer in screen coordinates.
+    */
     #mount() {
+      this.translateCursor = (x0, y0) => {
+        const localList = this.transforms();
+        let x1 = x0;
+        let y1 = y0;
+        let parentZoom = 1;
+        let localZoom = 1;
+        let comX = 0;
+        let comY = 0;
+        let panX = 0;
+        let panY = 0;
+        let allX = 0;
+        let allY = 0;
+        let allComX = 0;
+        let allComY = 0;
+        let allPanX = 0;
+        let allPanY = 0;
+        let locationX = 0;
+        let locationY = 0;
+        let hue = 0;
+        let hueIncrement = 60;
+        for (const [i, t] of localList.entries()) {
+          hue = hue + hueIncrement;
+          let curX = t.x * parentZoom;
+          comX = comX + curX;
+          segments.set(`x${i}`, { color: `hsl(${hue},90%,50%)`, x: locationX, y: y0 + 0 + 24 * i * localList.length, length: curX, label: `x of component ${t.element.parent.id}` });
+          locationX = locationX + curX;
+          let curY = t.y * parentZoom;
+          comY = comY + curY;
+          locationY = locationY + curY;
+          let curPanX = t.panX * parentZoom;
+          panX = panX + curPanX;
+          segments.set(`xp${i}`, { color: `hsl(${hue},90%,50%)`, x: locationX, y: y0 + 24 + 24 * i * localList.length, length: curPanX, label: `px` });
+          locationX = locationX + curPanX;
+          let curPanY = t.panY * parentZoom;
+          panY = panY + curPanY;
+          locationY = locationY + curPanY;
+          parentZoom = parentZoom * t.zoom;
+        }
+        x1 = x1 - locationX;
+        y1 = y1 - locationY;
+        const f = localList[localList.length - 1];
+        const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / f.zoom;
+        const zoomChange = parentZoom - finalZoom;
+        x1 = x1 / finalZoom;
+        y1 = y1 / finalZoom;
+        segments.set(`c`, { color: `hsl(300,90%,50%)`, x: locationX, y: y0, length: x1, label: `px` });
+        return [x1, y1, localZoom, segments];
+      }, this.movelHandler = (e) => {
+        const [cursorX, cursorY, zoom, segments2] = this.translateCursor(e.clientX, e.clientY);
+        this.feedback({
+          cursorX,
+          cursorY,
+          zoom,
+          // debug:
+          segments: segments2
+        });
+      };
       this.wheelHandler = (e) => {
         e.stopPropagation();
-        this.before();
+        this.before(this);
         const INTO = 1;
         const OUTOF = -1;
         let zoomDirection = e.deltaY > 0 ? OUTOF : INTO;
-        let cursorX = e.offsetX;
-        let cursorY = e.offsetY;
-        const lol1 = this.transforms().reduce((a, c) => ({ zoom: a.zoom + c.zoom, panX: a.panX + c.panX, panY: a.panY + c.panY, x: a.x + c.x, y: a.y + c.y }), { zoom: 1, panX: 0, panY: 0, x: 0, y: 0 });
-        const lol = this.component.getApplication();
-        cursorX = cursorX - lol1.x;
-        cursorY = cursorY - lol1.y;
-        cursorX = cursorX - lol1.panX;
-        cursorY = cursorY - lol1.panY;
+        const [cursorX, cursorY] = this.translateCursor(e.clientX, e.clientY);
         checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 1, cursorY: 1, magnitude: 1 }), { zoom: 2, panX: -1, panY: -1 });
         checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 0, cursorY: 0, magnitude: 1 }), { zoom: 2, panX: 0, panY: 0 });
         checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 2, cursorY: 2, magnitude: 1 }), { zoom: 2, panX: -2, panY: -2 });
@@ -2000,30 +2065,26 @@
           zoom: this.getter("zoom"),
           panX: this.getter("panX"),
           panY: this.getter("panY"),
-          deltaZoom: zoomDirection,
           cursorX,
-          // -this.component.x,
           cursorY,
-          // -this.component.y,
-          magnitude: 0.01
-          //this.magnitude
+          deltaZoom: zoomDirection,
+          magnitude: this.magnitude
         });
         this.change(transformed);
-        this.after({}, {
-          cursorX,
-          cursorY
-        });
+        this.after({});
       };
-      this.area.addEventListener("wheel", this.wheelHandler, { passive: true });
-      this.handle.addEventListener("wheel", this.wheelHandler, { passive: true });
+      this.area.addEventListener(this.event, this.wheelHandler, { passive: true });
+      this.handle.addEventListener(this.event, this.wheelHandler, { passive: true });
+      this.area.addEventListener("mousemove", this.movelHandler, { passive: true });
     }
     destroy() {
       this.removeStartedObserver();
-      this.area.removeEventListener("wheel", this.wheelHandler);
-      this.handle.removeEventListener("wheel", this.wheelHandler);
+      this.area.removeEventListener(this.event, this.wheelHandler);
+      this.handle.removeEventListener(this.event, this.wheelHandler);
+      this.area.removeEventListener("mousemove", this.movelHandler);
     }
   };
-  function transformZoom({ zoom, panX, panY, deltaZoom, cursorX, cursorY, magnitude = 0.3, min = 1e-3, max = 1e3 }) {
+  function transformZoom({ zoom, panX, panY, deltaZoom, cursorX, cursorY, magnitude = 1, min = 1e-3, max = 1e3 }) {
     const zoomClamp = /* @__PURE__ */ __name((v) => Math.min(max, Math.max(min, v)), "zoomClamp");
     let zoom1 = zoomClamp(zoom + deltaZoom * magnitude);
     const zoomChange = zoom1 - zoom;
@@ -2046,8 +2107,8 @@
     }
     static extends = [Container];
     properties = {
-      debugBody: true,
-      debugContent: true
+      debugBody: false,
+      debugContent: false
     };
     observables = {
       toX: 0,
@@ -2078,8 +2139,6 @@
         this.body.appendChild(this.background);
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => update(this.background, { x: 0, y: 0, width, height }));
         if (this.debugBody) {
-          const p1 = new DiagnosticPoint(`${this.oo.name} body 0x0`, this.body, 45, 64, "yellow");
-          this.any(["x", "y"], ({ x, y }) => p1.draw({ x: 0, y: 0 }));
           const r1 = new DiagnosticRectangle(`${this.oo.name} body`, this.body, "red");
           this.any(["w", "h"], ({ w: width, h: height }) => r1.draw({ x: 0, y: 0, width, height }));
         }
@@ -2095,8 +2154,6 @@
           this.content.style.scale = this.zoom;
         }));
         if (this.debugContent) {
-          const p1 = new DiagnosticPoint(`${this.oo.name} content 0x0`, this.content, 24, 64, "yellow");
-          this.any(["x", "y"], ({ x, y }) => p1.draw({ x: 0, y: 0 }));
           const r1 = new DiagnosticRectangle(`${this.oo.name} content`, this.content, "green");
           this.any(["w", "h"], ({ w: width, h: height }) => r1.draw({ x: 0, y: 0, width, height }));
         }
@@ -2282,6 +2339,7 @@
   };
 
   // plug-ins/windows/Pane.js
+  var segmentDb = {};
   var uuid3 = bundle["uuid"];
   var Pane = class {
     static {
@@ -2295,7 +2353,7 @@
       url: null,
       panX: 150,
       panY: 150,
-      zoom: 1,
+      zoom: 0.5,
       applications: [],
       elements: [],
       anchors: [],
@@ -2392,9 +2450,17 @@
           }
         });
         this.destructable = () => pan.destroy();
-        const showCursorPosition = new DiagnosticPoint("wheel cursor", paneBody.body, 15, 32, "red");
+        function segmentHandler(requests, { container }) {
+          for (const [key, request] of requests) {
+            let lineExists = segmentDb[key];
+            if (!lineExists)
+              segmentDb[key] = new DiagnosticWidth({ ...request, container });
+            segmentDb[key].update(request);
+          }
+        }
+        __name(segmentHandler, "segmentHandler");
         const zoom = new Zoom({
-          magnitude: 1,
+          magnitude: 0.1,
           area: paneBody.background,
           component: paneBody,
           handle: paneBody.background,
@@ -2407,8 +2473,9 @@
             this.panX = panX;
             this.panY = panY;
           },
+          feedback: (debug) => {
+          },
           after: (data, debug) => {
-            showCursorPosition.draw({ x: debug.cursorX, y: debug.cursorY });
           }
         });
         this.destructable = () => zoom.destroy();
@@ -2565,6 +2632,8 @@
   var system = new Instance(System);
   globalThis.system = system;
   globalThis.project = system;
+  globalThis.scene = document.querySelector("#editor-scene");
+  globalThis.svg = document.querySelector("#editor-svg");
   system.name = "Hello World System";
   system.svg = document.querySelector("#editor-svg");
   system.scene = document.querySelector("#editor-scene");

@@ -11,8 +11,8 @@ export default class Viewport {
   static extends = [Container];
 
   properties = {
-    debugBody: true,
-    debugContent: true,
+    debugBody: false,
+    debugContent: false,
   };
 
   observables = {
@@ -58,8 +58,8 @@ export default class Viewport {
       this.any(['x','y','w','h'], ({x, y, w:width,h:height})=>update(this.background, {x:0,y:0,width,height}))
 
       if(this.debugBody){
-        const p1 = new DiagnosticPoint(`${this.oo.name} body 0x0`, this.body, 45, 64, 'yellow')
-        this.any(['x','y'], ({x,y})=>p1.draw({x:0,y:0}) );
+        /////////////////// const p1 = new DiagnosticPoint(`${this.oo.name} body 0x0`, this.body, 45, 64, 'yellow')
+        /////////////////// this.any(['x','y'], ({x,y})=>p1.draw({x:0,y:0}) );
         const r1 = new DiagnosticRectangle(`${this.oo.name} body`, this.body, 'red')
         this.any(['w','h'], ({w:width,h:height})=>r1.draw({x:0,y:0,width,height}) );
       }
@@ -74,8 +74,8 @@ export default class Viewport {
       this.on('zoom', v=> requestAnimationFrame(() => { this.content.style.scale = this.zoom }));
 
       if(this.debugContent){
-        const p1 = new DiagnosticPoint(`${this.oo.name} content 0x0`, this.content, 24, 64, 'yellow')
-        this.any(['x','y'], ({x,y})=>p1.draw({x:0,y:0}) );
+        /////////////////// const p1 = new DiagnosticPoint(`${this.oo.name} content 0x0`, this.content, 24, 64, 'yellow')
+        /////////////////// this.any(['x','y'], ({x,y})=>p1.draw({x:0,y:0}) );
 
         const r1 = new DiagnosticRectangle(`${this.oo.name} content`, this.content, 'green')
         this.any(['w','h'], ({w:width,h:height})=>r1.draw({x:0,y:0,width,height}) );
