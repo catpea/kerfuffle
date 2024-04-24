@@ -1947,7 +1947,6 @@
   };
 
   // plug-ins/meowse/Zoom.js
-  var segments = /* @__PURE__ */ new Map();
   var Zoom = class {
     static {
       __name(this, "Zoom");
@@ -1986,69 +1985,10 @@
       this.max = max;
       this.#mount();
     }
-    /*
-    MouseEvent.clientX = The X coordinate of the mouse pointer in viewport coordinates.
-    MouseEvent.offsetX = The X coordinate of the mouse pointer relative to the position of the padding edge of the target node.
-    MouseEvent.pageY = The Y coordinate of the mouse pointer relative to the whole document.
-    MouseEvent.screenY = The Y coordinate of the mouse pointer in screen coordinates.
-    */
     #mount() {
-      this.translateCursor = (x0, y0) => {
-        const localList = this.transforms();
-        let x1 = x0;
-        let y1 = y0;
-        let parentZoom = 1;
-        let localZoom = 1;
-        let comX = 0;
-        let comY = 0;
-        let panX = 0;
-        let panY = 0;
-        let allX = 0;
-        let allY = 0;
-        let allComX = 0;
-        let allComY = 0;
-        let allPanX = 0;
-        let allPanY = 0;
-        let locationX = 0;
-        let locationY = 0;
-        let hue = 0;
-        let hueIncrement = 60;
-        for (const [i, t] of localList.entries()) {
-          hue = hue + hueIncrement;
-          let curX = t.x * parentZoom;
-          comX = comX + curX;
-          segments.set(`x${i}`, { color: `hsl(${hue},90%,50%)`, x: locationX, y: y0 + 0 + 24 * i * localList.length, length: curX, label: `x of component ${t.element.parent.id}` });
-          locationX = locationX + curX;
-          let curY = t.y * parentZoom;
-          comY = comY + curY;
-          locationY = locationY + curY;
-          let curPanX = t.panX * parentZoom;
-          panX = panX + curPanX;
-          segments.set(`xp${i}`, { color: `hsl(${hue},90%,50%)`, x: locationX, y: y0 + 24 + 24 * i * localList.length, length: curPanX, label: `px` });
-          locationX = locationX + curPanX;
-          let curPanY = t.panY * parentZoom;
-          panY = panY + curPanY;
-          locationY = locationY + curPanY;
-          parentZoom = parentZoom * t.zoom;
-        }
-        x1 = x1 - locationX;
-        y1 = y1 - locationY;
-        const f = localList[localList.length - 1];
-        const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / f.zoom;
-        const zoomChange = parentZoom - finalZoom;
-        x1 = x1 / finalZoom;
-        y1 = y1 / finalZoom;
-        segments.set(`c`, { color: `hsl(300,90%,50%)`, x: locationX, y: y0, length: x1, label: `px` });
-        return [x1, y1, localZoom, segments];
-      }, this.movelHandler = (e) => {
-        const [cursorX, cursorY, zoom, segments2] = this.translateCursor(e.clientX, e.clientY);
-        this.feedback({
-          cursorX,
-          cursorY,
-          zoom,
-          // debug:
-          segments: segments2
-        });
+      this.movelHandler = (e) => {
+        const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
+        this.feedback({ cursorX, cursorY });
       };
       this.wheelHandler = (e) => {
         e.stopPropagation();
@@ -2056,22 +1996,10 @@
         const INTO = 1;
         const OUTOF = -1;
         let zoomDirection = e.deltaY > 0 ? OUTOF : INTO;
-        const [cursorX, cursorY] = this.translateCursor(e.clientX, e.clientY);
-        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 1, cursorY: 1, magnitude: 1 }), { zoom: 2, panX: -1, panY: -1 });
-        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 0, cursorY: 0, magnitude: 1 }), { zoom: 2, panX: 0, panY: 0 });
-        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: 1, cursorX: 2, cursorY: 2, magnitude: 1 }), { zoom: 2, panX: -2, panY: -2 });
-        checkZoomAlgorithm(transformZoom({ zoom: 1, panX: 0, panY: 0, deltaZoom: -1, cursorX: 2, cursorY: 2, magnitude: 1, min: 0 }), { zoom: 0, panX: 2, panY: 2 });
-        const transformed = transformZoom({
-          zoom: this.getter("zoom"),
-          panX: this.getter("panX"),
-          panY: this.getter("panY"),
-          cursorX,
-          cursorY,
-          deltaZoom: zoomDirection,
-          magnitude: this.magnitude
-        });
+        const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
+        const transformed = this.#translateZoom({ zoom: this.getter("zoom"), panX: this.getter("panX"), panY: this.getter("panY"), cursorX, cursorY, deltaZoom: zoomDirection, magnitude: this.magnitude });
         this.change(transformed);
-        this.after({});
+        this.after(this);
       };
       this.area.addEventListener(this.event, this.wheelHandler, { passive: true });
       this.handle.addEventListener(this.event, this.wheelHandler, { passive: true });
@@ -2083,22 +2011,42 @@
       this.handle.removeEventListener(this.event, this.wheelHandler);
       this.area.removeEventListener("mousemove", this.movelHandler);
     }
+    #translateZoom({ zoom, panX, panY, deltaZoom, cursorX, cursorY, magnitude = 1, min = 1e-3, max = 1e3 }) {
+      const zoomClamp = /* @__PURE__ */ __name((v) => Math.min(max, Math.max(min, v)), "zoomClamp");
+      let zoom1 = zoomClamp(zoom + deltaZoom * magnitude);
+      const zoomChange = zoom1 - zoom;
+      const panX1 = panX - cursorX * zoomChange / zoom;
+      const panY1 = panY - cursorY * zoomChange / zoom;
+      const response = { zoom: zoom1, panX: panX1, panY: panY1 };
+      return response;
+    }
+    #translateCursor(x0, y0) {
+      const localList = this.transforms();
+      let x1 = x0;
+      let y1 = y0;
+      let parentZoom = 1;
+      let locationX = 0;
+      let locationY = 0;
+      for (const [i, t] of localList.entries()) {
+        let curX = t.x * parentZoom;
+        locationX = locationX + curX;
+        let curY = t.y * parentZoom;
+        locationY = locationY + curY;
+        let curPanX = t.panX * parentZoom;
+        locationX = locationX + curPanX;
+        let curPanY = t.panY * parentZoom;
+        locationY = locationY + curPanY;
+        parentZoom = parentZoom * t.zoom;
+      }
+      x1 = x1 - locationX;
+      y1 = y1 - locationY;
+      const self = localList[localList.length - 1];
+      const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / self.zoom;
+      x1 = x1 / finalZoom;
+      y1 = y1 / finalZoom;
+      return [x1, y1];
+    }
   };
-  function transformZoom({ zoom, panX, panY, deltaZoom, cursorX, cursorY, magnitude = 1, min = 1e-3, max = 1e3 }) {
-    const zoomClamp = /* @__PURE__ */ __name((v) => Math.min(max, Math.max(min, v)), "zoomClamp");
-    let zoom1 = zoomClamp(zoom + deltaZoom * magnitude);
-    const zoomChange = zoom1 - zoom;
-    const panX1 = panX - cursorX * zoomChange / zoom;
-    const panY1 = panY - cursorY * zoomChange / zoom;
-    const response = { zoom: zoom1, panX: panX1, panY: panY1 };
-    return response;
-  }
-  __name(transformZoom, "transformZoom");
-  var checkZoomAlgorithm = /* @__PURE__ */ __name(function(actual, expected) {
-    console.assert(actual.zoom == expected.zoom, `Resulting zoom (${actual.zoom}) level is malformed, expected: ${expected.zoom}`);
-    console.assert(actual.panX == expected.panX, `Resulting x (${actual.panX}) is malformed, expected: ${expected.panX}`);
-    console.assert(actual.panY == expected.panY, `Resulting y (${actual.panY}) is malformed, expected: ${expected.panY}`);
-  }, "checkZoomAlgorithm");
 
   // plug-ins/windows/Viewport.js
   var Viewport = class {
@@ -2134,7 +2082,7 @@
         });
         this.el.Mask.appendChild(this.body);
         this.any(["x", "y"], ({ x, y }) => this.body.style.transform = `translate(${x}px, ${y}px)`);
-        const bgColor = `hsla(${parseInt(360 * Math.random())}, 30%, 70%, 0.2)`;
+        const bgColor = `hsla(${parseInt(360 * Math.random())}, 25%, 30%, 0.2)`;
         this.background = svg.rect({ name: "component-background", style: { "transform-origin": "0px 0px", fill: bgColor } });
         this.body.appendChild(this.background);
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => update(this.background, { x: 0, y: 0, width, height }));
