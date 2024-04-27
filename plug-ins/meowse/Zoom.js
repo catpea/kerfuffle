@@ -72,10 +72,13 @@ export default class Zoom {
     this.area.removeEventListener('mousemove', this.movelHandler);
   }
 
-  #translateZoom({zoom, panX, panY,   deltaZoom, cursorX, cursorY,   magnitude=1, min=0.001, max=1_000}){
+  #translateZoom({zoom, panX, panY,   deltaZoom, cursorX, cursorY,   magnitude=1, min=0.01, max=1_000}){
     // This Algorithm Is Correct - Do Not Edit
     const zoomClamp = v=>Math.min(max, Math.max(min, v)); // using `Math.min(max, value)` to ensure the value doesn't exceed the `max` limit and `Math.max(min, ...)` to ensure the result doesn't fall below the `min` limit.
-    let zoom1 = zoomClamp(zoom + (deltaZoom * magnitude));
+
+    const controledMagnitude = magnitude*zoom // adjust magnitude to slow it down;
+    
+    let zoom1 = zoomClamp(zoom + (deltaZoom * controledMagnitude));
     const zoomChange = zoom1 - zoom;
     const panX1 = panX - (cursorX * zoomChange) / zoom;
     const panY1 = panY - (cursorY * zoomChange) / zoom;
@@ -84,7 +87,7 @@ export default class Zoom {
   }
 
   #translateCursor(x0,y0){
-  
+
 
     const localList = this.transforms();
 

@@ -79,52 +79,14 @@ export default class Pane {
     },
 
     mount(){
-
-
       console.log('Pane Mount', this.url);
-
-      if(0){
-        let v = 0;
-        setInterval(x=>{;
-          let Δ = Math.sin(v);
-          v=v+0.001;
-          if(v>=Math.PI) v = 0
-          this.panX = (100*Δ);
-          this.panY = (100*Δ);
-        }, 1_000/32)
-      }
-
-      if(0){
-        let u = Math.PI/2;
-        let v = 0-u;
-        setInterval(x=>{;
-          let Δ = Math.sin(v);
-          v=v+0.01;
-          let z = 1.5+Δ
-          this.zoom = (z);
-          console.log(this.zoom);
-          // console.log(v);
-          // console.log(Δ);
-
-            if(v>=Math.PI+u) v = 0-u
-        }, 1_000/32)
-
-      }
-
-
-
-      /*
-      - standard scene set by parent
-        - Horizontal based menu
-          - some Label buttons
-        - Viewport paneBody (container for UI elements)
-      */
+      // console.log(Δ);
 
       // Add Menu
       if(1){
         const [horizontal, [ addButton, delButton ]] = nest(Horizontal, [
-          [Label, {h: 32, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
-          [Label, {h: 32, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, {h: 24, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, {h: 24, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
         ], (c)=>this.children.create(c));
 
         // Add Menu Listeners
@@ -141,6 +103,24 @@ export default class Pane {
       this.viewport = paneBody;
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
+
+
+
+      const [horizontal, [ statusBar ]] = nest(Horizontal, [
+        [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
+      ], (c)=>this.children.create(c));
+
+      this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)}`);
+
+
+
+
+
+
+
+
+
+
 
       // CODE ANOMALY FOR ROOT EDGECASE
       if(this.parent.isRootWindow){
@@ -228,7 +208,6 @@ export default class Pane {
           this.panX = panX;
           this.panY = panY;
 
-          console.log('XX', paneBody.y);
 
         },
         feedback: (debug) => {

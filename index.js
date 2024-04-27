@@ -1995,9 +1995,10 @@
       this.handle.removeEventListener(this.event, this.wheelHandler);
       this.area.removeEventListener("mousemove", this.movelHandler);
     }
-    #translateZoom({ zoom, panX, panY, deltaZoom, cursorX, cursorY, magnitude = 1, min = 1e-3, max = 1e3 }) {
+    #translateZoom({ zoom, panX, panY, deltaZoom, cursorX, cursorY, magnitude = 1, min = 0.01, max = 1e3 }) {
       const zoomClamp = /* @__PURE__ */ __name((v) => Math.min(max, Math.max(min, v)), "zoomClamp");
-      let zoom1 = zoomClamp(zoom + deltaZoom * magnitude);
+      const controledMagnitude = magnitude * zoom;
+      let zoom1 = zoomClamp(zoom + deltaZoom * controledMagnitude);
       const zoomChange = zoom1 - zoom;
       const panX1 = panX - cursorX * zoomChange / zoom;
       const panY1 = panY - cursorY * zoomChange / zoom;
@@ -2398,36 +2399,10 @@
       },
       mount() {
         console.log("Pane Mount", this.url);
-        if (0) {
-          let v = 0;
-          setInterval((x) => {
-            ;
-            let \u0394 = Math.sin(v);
-            v = v + 1e-3;
-            if (v >= Math.PI)
-              v = 0;
-            this.panX = 100 * \u0394;
-            this.panY = 100 * \u0394;
-          }, 1e3 / 32);
-        }
-        if (0) {
-          let u = Math.PI / 2;
-          let v = 0 - u;
-          setInterval((x) => {
-            ;
-            let \u0394 = Math.sin(v);
-            v = v + 0.01;
-            let z = 1.5 + \u0394;
-            this.zoom = z;
-            console.log(this.zoom);
-            if (v >= Math.PI + u)
-              v = 0 - u;
-          }, 1e3 / 32);
-        }
         if (1) {
-          const [horizontal, [addButton, delButton]] = nest(Horizontal, [
-            [Label, { h: 32, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
-            [Label, { h: 32, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
+          const [horizontal2, [addButton, delButton]] = nest(Horizontal, [
+            [Label, { h: 24, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
+            [Label, { h: 24, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
           ], (c) => this.children.create(c));
           this.disposable = click(addButton.handle, (e) => {
             const id = uuid3();
@@ -2439,6 +2414,10 @@
         this.viewport = paneBody;
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
+        const [horizontal, [statusBar]] = nest(Horizontal, [
+          [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)]
+        ], (c) => this.children.create(c));
+        this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)}`);
         if (this.parent.isRootWindow) {
           this.parent.on("h", (parentH) => {
             const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
@@ -2504,7 +2483,6 @@
             this.zoom = zoom2;
             this.panX = panX;
             this.panY = panY;
-            console.log("XX", paneBody.y);
           },
           feedback: (debug) => {
           },
