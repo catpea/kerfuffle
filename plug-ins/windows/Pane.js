@@ -186,6 +186,7 @@ export default class Pane {
       const pan = new Drag({
         area: window,
         handle: paneBody.background,
+        transforms: ()=>this.getTransforms(this),
         before: ()=>{},
         movement: ({x,y})=>{
           this.panX -= x;
