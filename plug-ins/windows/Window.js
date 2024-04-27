@@ -5,9 +5,8 @@ import Control from "/plug-ins/windows/Control.js";
 import Caption from "/plug-ins/windows/Caption.js";
 
 import Move from "/plug-ins/meowse/Move.js";
+import Focus from "/plug-ins/meowse/Focus.js";
 
-// import Move from "/plug-ins/move/index.js";
-// import Focus from "/plug-ins/focus/index.js";
 // import Select from "/plug-ins/select/index.js";
 
 
@@ -66,10 +65,17 @@ export default class Window {
       });
       this.destructable = ()=>move.destroy();
 
-      // const focus = new Focus({
-      //   component: this,
-      //   handle: this.scene, // set to caption above to react to window captions only
-      // }); this.destructable = ()=>focus.destroy()
+      const focus = new Focus({
+        handle: this.scene, // TIP: set to caption above to react to window captions only
+        component: this,
+
+        element: ()=>{
+          console.log('TODO// MAKE FOCUS WORK', this.getApplication());
+          return this.getApplication().scene;
+        },
+
+      });
+      this.destructable = ()=>focus.destroy()
 
       // const select = new Select({
       //   component: this,

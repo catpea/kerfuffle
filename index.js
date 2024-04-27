@@ -884,6 +884,7 @@
   }, "text");
   function front(element) {
     const parentElement = element.parentNode;
+    console.log(parentElement);
     parentElement.removeChild(element);
     parentElement.appendChild(element);
   }
@@ -1108,7 +1109,7 @@
     traits = {
       draw() {
         this.el.Container = svg.rect({
-          name: this.name,
+          name: this.oo.name,
           style: { "pointer-events": "none" },
           class: "editor-container",
           ry: this.r,
@@ -1764,6 +1765,40 @@
   };
   var Move_default = Move;
 
+  // plug-ins/meowse/Focus.js
+  var Focus = class {
+    static {
+      __name(this, "Focus");
+    }
+    component;
+    handle;
+    element = () => {
+    };
+    // handlers
+    mouseDownHandler;
+    mouseUpHandler;
+    constructor({ component, handle, element }) {
+      if (!component)
+        throw new Error("component is required");
+      if (!handle)
+        throw new Error("handle is required");
+      this.component = component;
+      this.element = element;
+      this.handle = handle;
+      this.mount();
+    }
+    mount() {
+      this.mouseDownHandler = (e) => {
+        e.stopPropagation();
+        front(this.element());
+      };
+      this.handle.addEventListener("mousedown", this.mouseDownHandler);
+    }
+    destroy() {
+      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+    }
+  };
+
   // plug-ins/windows/Window.js
   var Window = class {
     static {
@@ -1804,6 +1839,16 @@
           }
         });
         this.destructable = () => move.destroy();
+        const focus2 = new Focus({
+          handle: this.scene,
+          // TIP: set to caption above to react to window captions only
+          component: this,
+          element: () => {
+            console.log("TODO// MAKE FOCUS WORK", this.getApplication());
+            return this.getApplication().scene;
+          }
+        });
+        this.destructable = () => focus2.destroy();
       },
       createWindowComponent(component) {
         component.parent = this;
@@ -2005,28 +2050,33 @@
       initialize() {
       },
       mount() {
-        this.el.ClipPath = svg.clipPath({ id: `clip-path-${this.id}` });
+        this.el.Viewport = svg.g({
+          name: "viewport"
+        });
+        this.clipPath = svg.clipPath({ id: `viewport-clip-path-${this.id}` });
         this.maskRectangle = svg.rect();
-        this.el.ClipPath.appendChild(this.maskRectangle);
+        this.clipPath.appendChild(this.maskRectangle);
+        this.el.Viewport.appendChild(this.clipPath);
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => {
           update(this.maskRectangle, { x, y, width, height });
         });
-        this.el.Mask = svg.g({ "clip-path": `url(#clip-path-${this.id})` });
+        this.mask = svg.g({ name: "viewport-mask", "clip-path": `url(#viewport-clip-path-${this.id})` });
+        this.el.Viewport.appendChild(this.mask);
         this.body = svg.g({
-          name: "pane-body",
+          name: "viewport-body",
           style: { "pointer-events": "all" }
         });
-        this.el.Mask.appendChild(this.body);
+        this.mask.appendChild(this.body);
         this.any(["x", "y"], ({ x, y }) => this.body.style.transform = `translate(${x}px, ${y}px)`);
         const bgColor = `hsla(${parseInt(360 * Math.random())}, 25%, 30%, 0.2)`;
-        this.background = svg.rect({ name: "component-background", style: { "transform-origin": "0px 0px", fill: bgColor } });
+        this.background = svg.rect({ name: "viewport-background", style: { "transform-origin": "0px 0px", fill: bgColor } });
         this.body.appendChild(this.background);
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => update(this.background, { x: 0, y: 0, width, height }));
         if (this.debugBody) {
           const r1 = new DiagnosticRectangle(`${this.oo.name} body`, this.body, "red");
           this.any(["w", "h"], ({ w: width, h: height }) => r1.draw({ x: 0, y: 0, width, height }));
         }
-        this.content = svg.g({ name: "elements", style: {} });
+        this.content = svg.g({ name: "viewport-elements", style: {} });
         this.body.appendChild(this.content);
         this.on("panX", (v) => requestAnimationFrame(() => {
           this.content.style.transform = `translate(${this.panX / this.zoom}px, ${this.panY / this.zoom}px)`;
@@ -2109,7 +2159,7 @@
   };
 
   // plug-ins/focus/index.js
-  var Focus = class {
+  var Focus2 = class {
     static {
       __name(this, "Focus");
     }
@@ -2182,7 +2232,7 @@
           zone: window
         });
         this.destructable = () => move.destroy();
-        const focus2 = new Focus({
+        const focus2 = new Focus2({
           component: this,
           handle: this.scene
           // set to caption above to react to window captions only
@@ -2337,6 +2387,7 @@
     };
     methods = {
       initialize() {
+        this.name = "pane";
         if (this.getRootContainer().isRootWindow)
           return;
         console.info("Line must detect the g it should be placed into");
@@ -2384,7 +2435,6 @@
         const paneBody = new Instance(Viewport, { h: 700, parent: this });
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
-        console.log("hhh this.getRootContainer().isRootWindow", this.getRootContainer().isRootWindow);
         if (this.parent.isRootWindow) {
           this.parent.on("h", (parentH) => {
             const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
@@ -2402,7 +2452,9 @@
           const Ui = this.types.find((o) => o.name == node.type);
           if (!Ui)
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-          const ui = new Instance(Ui, { id: node.id, node, scene: paneBody.content, parent: this });
+          let root = svg.g({ name: "element" });
+          paneBody.content.appendChild(root);
+          const ui = new Instance(Ui, { id: node.id, node, scene: root, parent: this });
           this.applications.create(ui);
           ui.start();
         }, { replay: true });
@@ -2511,7 +2563,6 @@
   };
 
   // plug-ins/applications/TestWindow.js
-  console.log(Application);
   var TestWindow = class {
     static {
       __name(this, "TestWindow");

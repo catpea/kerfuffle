@@ -16,7 +16,7 @@ export default class Container {
   traits = {
     draw(){
       this.el.Container = svg.rect({
-        name: this.name,
+        name: this.oo.name,
         style:{'pointer-events': 'none'},
         class: 'editor-container',
         ry: this.r,

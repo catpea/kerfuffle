@@ -110,6 +110,7 @@ function back(element) {
 function front(element) {
 	const parentElement = element.parentNode;
 
+	console.log(parentElement);
 	// Remove element from its current position...
 	parentElement.removeChild(element);
 
@@ -183,7 +184,7 @@ export {
 	front,
 
 	keyboard,
- 
+
 
 	click,
 	dblclick,

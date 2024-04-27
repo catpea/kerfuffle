@@ -66,6 +66,7 @@ export default class Pane {
   methods = {
 
     initialize(){
+      this.name = 'pane';
       // console.assert(deepEqual({X:200,Y:200},this.transform({X:100, Y:100}, null, 2)), 'this.transform calculations are incorrect.')
       // console.assert(deepEqual({X:50,Y:50},this.transform({X:100, Y:100}, null, .5)), 'this.transform calculations are incorrect.')
 
@@ -136,10 +137,9 @@ export default class Pane {
 
       // Add Viewport
 
-      const paneBody = new Instance(Viewport, {h: 700,   parent: this});
+      const paneBody = new Instance(Viewport, {h: 700,   parent: this} );
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
-      console.log('hhh this.getRootContainer().isRootWindow', this.getRootContainer().isRootWindow);
 
       // CODE ANOMALY FOR ROOT EDGECASE
       if(this.parent.isRootWindow){
@@ -164,7 +164,11 @@ export default class Pane {
       this.on("elements.created", (node) => {
         const Ui = this.types.find(o=>o.name==node.type); // concept as in conceptmap is a component as it is a GUI thing.
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-        const ui = new Instance(Ui, {id:node.id, node, scene: paneBody.content, parent: this});
+
+        let root = svg.g({ name: 'element' });
+        paneBody.content.appendChild(root);
+
+        const ui = new Instance(Ui, {id:node.id, node, scene: root, parent: this});
         this.applications.create(ui);
         ui.start()
       }, {replay:true});
