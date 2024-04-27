@@ -170,9 +170,14 @@ export default class Component {
       if(!element) element = this;
       const isTransform = element.hasOwnProperty('panX')&&element.hasOwnProperty('panY')&&element.hasOwnProperty('zoom');
       if(isTransform){
+        let offsetX = element.viewport.x - element.x;
+        let offsetY = element.viewport.y - element.y;
+        // console.log('XXX paneY', element.oo.name, element.y, element.viewport.y, offsetY);
+
         const {oo:{name}, panX, panY, zoom, x,y} = element;
-        list.unshift({name, panX, panY, zoom, x,y , element});
+        list.unshift({name, panX, panY, zoom, x:element.x+offsetX,y:element.y+offsetY , element:element.scene, offsetX:0, offsetY:0});
       }
+     
       if(element.parent) this.getTransforms(element.parent, list, false);
       if(root){
         let parent = false
@@ -182,6 +187,7 @@ export default class Component {
           parent = item;
         }
       }
+      console.log(list);
       return list;
     },
 

@@ -121,7 +121,7 @@ export default class Pane {
       */
 
       // Add Menu
-      if(0){
+      if(1){
         const [horizontal, [ addButton, delButton ]] = nest(Horizontal, [
           [Label, {h: 32, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
           [Label, {h: 32, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
@@ -138,6 +138,7 @@ export default class Pane {
       // Add Viewport
 
       const paneBody = new Instance(Viewport, {h: 700,   parent: this} );
+      this.viewport = paneBody;
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
@@ -217,6 +218,7 @@ export default class Pane {
         handle: paneBody.background,
         getter: (key)=>this[key],
         transforms: ()=>this.getTransforms(this),
+
         before: ()=>{
           // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
         },
@@ -225,6 +227,8 @@ export default class Pane {
           this.zoom = zoom;
           this.panX = panX;
           this.panY = panY;
+
+          console.log('XX', paneBody.y);
 
         },
         feedback: (debug) => {

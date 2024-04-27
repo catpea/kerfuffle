@@ -84,6 +84,7 @@ export default class Zoom {
   }
 
   #translateCursor(x0,y0){
+  
 
     const localList = this.transforms();
 
@@ -93,14 +94,16 @@ export default class Zoom {
     let locationX = 0;
     let locationY = 0;
 
+    // console.log(locationX, locationY);
+
     for (const [i,t] of localList.entries()) {
 
       // Position of component x
-      let curX = t.x * parentZoom;
+      let curX = (t.x) * parentZoom;
       locationX = locationX + curX;
 
       // Position of component y
-      let curY = t.y * parentZoom;
+      let curY = (t.y) * parentZoom;
       locationY = locationY + curY;
 
       // Position of parent's x pan

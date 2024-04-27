@@ -1051,8 +1051,10 @@
           element = this;
         const isTransform = element.hasOwnProperty("panX") && element.hasOwnProperty("panY") && element.hasOwnProperty("zoom");
         if (isTransform) {
+          let offsetX = element.viewport.x - element.x;
+          let offsetY = element.viewport.y - element.y;
           const { oo: { name: name2 }, panX, panY, zoom, x, y } = element;
-          list.unshift({ name: name2, panX, panY, zoom, x, y, element });
+          list.unshift({ name: name2, panX, panY, zoom, x: element.x + offsetX, y: element.y + offsetY, element: element.scene, offsetX: 0, offsetY: 0 });
         }
         if (element.parent)
           this.getTransforms(element.parent, list, false);
@@ -1064,6 +1066,7 @@
             parent = item;
           }
         }
+        console.log(list);
         return list;
       },
       getApplication(element) {
@@ -2421,7 +2424,7 @@
               v = 0 - u;
           }, 1e3 / 32);
         }
-        if (0) {
+        if (1) {
           const [horizontal, [addButton, delButton]] = nest(Horizontal, [
             [Label, { h: 32, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
             [Label, { h: 32, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
@@ -2433,6 +2436,7 @@
           });
         }
         const paneBody = new Instance(Viewport, { h: 700, parent: this });
+        this.viewport = paneBody;
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
         if (this.parent.isRootWindow) {
@@ -2500,6 +2504,7 @@
             this.zoom = zoom2;
             this.panX = panX;
             this.panY = panY;
+            console.log("XX", paneBody.y);
           },
           feedback: (debug) => {
           },
