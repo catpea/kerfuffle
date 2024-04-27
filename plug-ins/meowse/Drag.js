@@ -3,7 +3,7 @@ export default class Drag {
   area = window;
   handle = null;
 
-  transforms;
+  scale;
 
   before = ()=>{};
   movement = ()=>{};
@@ -17,14 +17,14 @@ export default class Drag {
   previousX = 0;
   previousY = 0;
 
-  constructor({handle, area, before, movement, after, transforms}){
+  constructor({handle, area, before, movement, after, scale}){
     this.handle = handle;
     this.area = area;
     this.before = before;
     this.movement = movement;
     this.after = after;
 
-    this.transforms = transforms;
+    this.scale = scale;
 
 
     this.#mount();
@@ -46,13 +46,15 @@ export default class Drag {
       // e.stopPropagation();
       let movementX = this.previousX - e.screenX;
       let movementY = this.previousY - e.screenY;
-      
+
       // correct drag speed
-      const localList = this.transforms();
-      const self = localList[localList.length-1];
-      const finalZoom = localList.map(o=>o.zoom).reduce((a,c)=>a*c,1)/self.zoom;
-      movementX = movementX/finalZoom;
-      movementY = movementY/finalZoom;
+      // const localList = this.transforms();
+      // const self = localList[localList.length-1];
+      // const finalZoom = localList.map(o=>o.zoom).reduce((a,c)=>a*c,1)/self.zoom;
+      const scale = this.scale();
+      console.log({scale});
+      movementX = movementX/scale;
+      movementY = movementY/scale;
       // correct drag speed
 
       this.movement({ x:movementX, y:movementY })

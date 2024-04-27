@@ -4,9 +4,11 @@ import Vertical from "/plug-ins/windows/Vertical.js";
 import Control from "/plug-ins/windows/Control.js";
 import Caption from "/plug-ins/windows/Caption.js";
 
-import Move from "/plug-ins/move/index.js";
-import Focus from "/plug-ins/focus/index.js";
-import Select from "/plug-ins/select/index.js";
+import Move from "/plug-ins/meowse/Move.js";
+
+// import Move from "/plug-ins/move/index.js";
+// import Focus from "/plug-ins/focus/index.js";
+// import Select from "/plug-ins/select/index.js";
 
 
 export default class Window {
@@ -42,23 +44,38 @@ export default class Window {
         if(node.caption) node.on("caption", caption => this.caption = caption);
       });
 
+      // const move = new Move({
+      //   component: this,
+      //   handle: caption.handle,
+      //   window: this,
+      //   zone: window,
+      // }); this.destructable = ()=>move.destroy()
+
+
+
       const move = new Move({
-        component: this,
+        area: window,
         handle: caption.handle,
-        window: this,
-        zone: window,
-      }); this.destructable = ()=>move.destroy()
+        scale: ()=>this.getScale(this),
+        before: ()=>{},
+        movement: ({x,y})=>{
+          this.node.x -= x;
+          this.node.y -= y;
+        },
+        after: ()=>{},
+      });
+      this.destructable = ()=>move.destroy();
 
-      const focus = new Focus({
-        component: this,
-        handle: this.scene, // set to caption above to react to window captions only
-      }); this.destructable = ()=>focus.destroy()
+      // const focus = new Focus({
+      //   component: this,
+      //   handle: this.scene, // set to caption above to react to window captions only
+      // }); this.destructable = ()=>focus.destroy()
 
-      const select = new Select({
-        component: this,
-        handle: caption.handle,
-      }); this.destructable = ()=>focus.destroy()
-      this.on("selected", selected => caption.selected = selected);
+      // const select = new Select({
+      //   component: this,
+      //   handle: caption.handle,
+      // }); this.destructable = ()=>focus.destroy()
+      // this.on("selected", selected => caption.selected = selected);
 
 
 

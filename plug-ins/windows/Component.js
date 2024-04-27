@@ -155,31 +155,33 @@ export default class Component {
       return list;
     },
 
-    getTransforms(element, list=[], root=true) {
+    getParentScale(component){
+      const list = this.getTransforms(component).slice(0, -1); // NOTE: removal of last entry, hence parent scale
+      const scale = list.map(o=>o.zoom).reduce((a,c)=>a*c, 1) ;
+      return scale;
+    },
+    getScale(component){
+      const list = this.getTransforms(component);
+      const scale = list.map(o=>o.zoom).reduce((a,c)=>a*c, 1) ;
+      return scale;
+    },
 
+    getTransforms(element, list=[], root=true) {
       if(!element) element = this;
-      // const isTransform = !((element.panX??true)&&(element.panY??true)&&(element.zoom??true));
       const isTransform = element.hasOwnProperty('panX')&&element.hasOwnProperty('panY')&&element.hasOwnProperty('zoom');
       if(isTransform){
         const {oo:{name}, panX, panY, zoom, x,y} = element;
         list.unshift({name, panX, panY, zoom, x,y , element});
       }
       if(element.parent) this.getTransforms(element.parent, list, false);
-
-
       if(root){
-
         let parent = false
         for (const [index, item] of list.entries()) {
           item.index = index;
           item.parent = parent;
           parent = item;
         }
-
-
       }
-
-
       return list;
     },
 

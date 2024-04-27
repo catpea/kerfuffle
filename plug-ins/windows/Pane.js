@@ -7,7 +7,7 @@ import { DiagnosticText, DiagnosticRectangle, DiagnosticCross, DiagnosticRuler, 
 import { svg, update, click, text } from "/plug-ins/domek/index.js"
 import {nest} from "/plug-ins/nest/index.js";
 
-import Drag from "/plug-ins/meowse/Drag.js";
+import Pan from "/plug-ins/meowse/Pan.js";
 import Zoom from "/plug-ins/meowse/Zoom.js";
 // import Pan from "/plug-ins/pan/index.js";
 // import Zoom from "/plug-ins/zoom/inner.js";
@@ -183,10 +183,10 @@ export default class Pane {
 
 
 
-      const pan = new Drag({
+      const pan = new Pan({
         area: window,
         handle: paneBody.background,
-        transforms: ()=>this.getTransforms(this),
+        scale: ()=>this.getParentScale(this),
         before: ()=>{},
         movement: ({x,y})=>{
           this.panX -= x;

@@ -1035,6 +1035,16 @@
           this.getStack(element.parent, list);
         return list;
       },
+      getParentScale(component) {
+        const list = this.getTransforms(component).slice(0, -1);
+        const scale = list.map((o) => o.zoom).reduce((a, c) => a * c, 1);
+        return scale;
+      },
+      getScale(component) {
+        const list = this.getTransforms(component);
+        const scale = list.map((o) => o.zoom).reduce((a, c) => a * c, 1);
+        return scale;
+      },
       getTransforms(element, list = [], root = true) {
         if (!element)
           element = this;
@@ -1685,96 +1695,74 @@
     };
   };
 
-  // plug-ins/move/index.js
-  var Move = class {
+  // plug-ins/meowse/Drag.js
+  var Drag = class {
     static {
-      __name(this, "Move");
+      __name(this, "Drag");
     }
-    component;
-    window;
-    handle;
-    zone;
+    area = window;
+    handle = null;
+    scale;
+    before = () => {
+    };
+    movement = () => {
+    };
+    after = () => {
+    };
     mouseDownHandler;
     mouseMoveHandler;
     mouseUpHandler;
+    dragging = false;
     previousX = 0;
     previousY = 0;
-    dragging = false;
-    constructor({ component, window: window2, handle, zone }) {
-      if (!component)
-        throw new Error("component is required");
-      if (!handle)
-        throw new Error("handle is required");
-      if (!window2)
-        throw new Error("window is required");
-      if (!zone)
-        throw new Error("zone is required");
-      this.component = component;
+    constructor({ handle, area, before, movement, after, scale }) {
       this.handle = handle;
-      this.window = window2;
-      this.zone = zone;
-      this.mount();
+      this.area = area;
+      this.before = before;
+      this.movement = movement;
+      this.after = after;
+      this.scale = scale;
+      this.#mount();
     }
-    mount() {
+    #mount() {
       this.mouseDownHandler = (e) => {
         this.previousX = e.screenX;
         this.previousY = e.screenY;
-        this.dragging = true;
-        globalThis.project.iframe = false;
-        this.zone.addEventListener("mousemove", this.mouseMoveHandler);
+        this.area.addEventListener("mousemove", this.mouseMoveHandler);
+        this.before();
       };
       this.mouseMoveHandler = (e) => {
-        const movementX = this.previousX - e.screenX;
-        const movementY = this.previousY - e.screenY;
-        this.component.node.x = this.component.node.x - movementX / globalThis.project.zoom;
-        this.component.node.y = this.component.node.y - movementY / globalThis.project.zoom;
+        let movementX = this.previousX - e.screenX;
+        let movementY = this.previousY - e.screenY;
+        const scale = this.scale();
+        console.log({ scale });
+        movementX = movementX / scale;
+        movementY = movementY / scale;
+        this.movement({ x: movementX, y: movementY });
         this.previousX = e.screenX;
         this.previousY = e.screenY;
       };
       this.mouseUpHandler = (e) => {
-        this.dragging = false;
-        globalThis.project.iframe = true;
-        this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
+        this.after();
+        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
       };
       this.handle.addEventListener("mousedown", this.mouseDownHandler);
-      this.zone.addEventListener("mouseup", this.mouseUpHandler);
+      this.area.addEventListener("mouseup", this.mouseUpHandler);
     }
     destroy() {
       this.handle.removeEventListener("mousedown", this.mouseDownHandler);
-      this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
-      this.zone.removeEventListener("mouseup", this.mouseUpHandler);
+      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      this.area.removeEventListener("mouseup", this.mouseUpHandler);
     }
   };
 
-  // plug-ins/focus/index.js
-  var Focus = class {
+  // plug-ins/meowse/Move.js
+  var Move = class extends Drag {
     static {
-      __name(this, "Focus");
-    }
-    component;
-    handle;
-    // handlers
-    mouseDownHandler;
-    mouseUpHandler;
-    constructor({ component, handle }) {
-      if (!component)
-        throw new Error("component is required");
-      if (!handle)
-        throw new Error("handle is required");
-      this.component = component;
-      this.handle = handle;
-      this.mount();
-    }
-    mount() {
-      this.mouseDownHandler = (e) => {
-        front(this.component.scene);
-      };
-      this.handle.addEventListener("mousedown", this.mouseDownHandler);
-    }
-    destroy() {
-      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+      __name(this, "Move");
     }
   };
+  var Move_default = Move;
 
   // plug-ins/windows/Window.js
   var Window = class {
@@ -1802,25 +1790,20 @@
           if (node.caption)
             node.on("caption", (caption2) => this.caption = caption2);
         });
-        const move = new Move({
-          component: this,
+        const move = new Move_default({
+          area: window,
           handle: caption.handle,
-          window: this,
-          zone: window
+          scale: () => this.getScale(this),
+          before: () => {
+          },
+          movement: ({ x, y }) => {
+            this.node.x -= x;
+            this.node.y -= y;
+          },
+          after: () => {
+          }
         });
         this.destructable = () => move.destroy();
-        const focus2 = new Focus({
-          component: this,
-          handle: this.scene
-          // set to caption above to react to window captions only
-        });
-        this.destructable = () => focus2.destroy();
-        const select = new Select({
-          component: this,
-          handle: caption.handle
-        });
-        this.destructable = () => focus2.destroy();
-        this.on("selected", (selected) => caption.selected = selected);
       },
       createWindowComponent(component) {
         component.parent = this;
@@ -1891,67 +1874,13 @@
     }
   };
 
-  // plug-ins/meowse/Drag.js
-  var Drag = class {
+  // plug-ins/meowse/Pan.js
+  var Pan = class extends Drag {
     static {
-      __name(this, "Drag");
-    }
-    area = window;
-    handle = null;
-    transforms;
-    before = () => {
-    };
-    movement = () => {
-    };
-    after = () => {
-    };
-    mouseDownHandler;
-    mouseMoveHandler;
-    mouseUpHandler;
-    dragging = false;
-    previousX = 0;
-    previousY = 0;
-    constructor({ handle, area, before, movement, after, transforms }) {
-      this.handle = handle;
-      this.area = area;
-      this.before = before;
-      this.movement = movement;
-      this.after = after;
-      this.transforms = transforms;
-      this.#mount();
-    }
-    #mount() {
-      this.mouseDownHandler = (e) => {
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-        this.area.addEventListener("mousemove", this.mouseMoveHandler);
-        this.before();
-      };
-      this.mouseMoveHandler = (e) => {
-        let movementX = this.previousX - e.screenX;
-        let movementY = this.previousY - e.screenY;
-        const localList = this.transforms();
-        const self = localList[localList.length - 1];
-        const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / self.zoom;
-        movementX = movementX / finalZoom;
-        movementY = movementY / finalZoom;
-        this.movement({ x: movementX, y: movementY });
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-      };
-      this.mouseUpHandler = (e) => {
-        this.after();
-        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
-      };
-      this.handle.addEventListener("mousedown", this.mouseDownHandler);
-      this.area.addEventListener("mouseup", this.mouseUpHandler);
-    }
-    destroy() {
-      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
-      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
-      this.area.removeEventListener("mouseup", this.mouseUpHandler);
+      __name(this, "Pan");
     }
   };
+  var Pan_default = Pan;
 
   // plug-ins/meowse/Zoom.js
   var Zoom = class {
@@ -2118,6 +2047,97 @@
     };
   };
 
+  // plug-ins/move/index.js
+  var Move2 = class {
+    static {
+      __name(this, "Move");
+    }
+    component;
+    window;
+    handle;
+    zone;
+    mouseDownHandler;
+    mouseMoveHandler;
+    mouseUpHandler;
+    previousX = 0;
+    previousY = 0;
+    dragging = false;
+    constructor({ component, window: window2, handle, zone }) {
+      if (!component)
+        throw new Error("component is required");
+      if (!handle)
+        throw new Error("handle is required");
+      if (!window2)
+        throw new Error("window is required");
+      if (!zone)
+        throw new Error("zone is required");
+      this.component = component;
+      this.handle = handle;
+      this.window = window2;
+      this.zone = zone;
+      this.mount();
+    }
+    mount() {
+      this.mouseDownHandler = (e) => {
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+        this.dragging = true;
+        globalThis.project.iframe = false;
+        this.zone.addEventListener("mousemove", this.mouseMoveHandler);
+      };
+      this.mouseMoveHandler = (e) => {
+        const movementX = this.previousX - e.screenX;
+        const movementY = this.previousY - e.screenY;
+        this.component.node.x = this.component.node.x - movementX / globalThis.project.zoom;
+        this.component.node.y = this.component.node.y - movementY / globalThis.project.zoom;
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+      };
+      this.mouseUpHandler = (e) => {
+        this.dragging = false;
+        globalThis.project.iframe = true;
+        this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
+      };
+      this.handle.addEventListener("mousedown", this.mouseDownHandler);
+      this.zone.addEventListener("mouseup", this.mouseUpHandler);
+    }
+    destroy() {
+      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+      this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
+      this.zone.removeEventListener("mouseup", this.mouseUpHandler);
+    }
+  };
+
+  // plug-ins/focus/index.js
+  var Focus = class {
+    static {
+      __name(this, "Focus");
+    }
+    component;
+    handle;
+    // handlers
+    mouseDownHandler;
+    mouseUpHandler;
+    constructor({ component, handle }) {
+      if (!component)
+        throw new Error("component is required");
+      if (!handle)
+        throw new Error("handle is required");
+      this.component = component;
+      this.handle = handle;
+      this.mount();
+    }
+    mount() {
+      this.mouseDownHandler = (e) => {
+        front(this.component.scene);
+      };
+      this.handle.addEventListener("mousedown", this.mouseDownHandler);
+    }
+    destroy() {
+      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+    }
+  };
+
   // plug-ins/windows/Junction.js
   var Junction = class {
     static {
@@ -2155,7 +2175,7 @@
           cy: this.y
         });
         this.on("selected", (selected) => selected ? this.el.Primary.classList.add("selected") : this.el.Primary.classList.remove("selected"));
-        const move = new Move({
+        const move = new Move2({
           component: this,
           handle: this.el.Primary,
           window: this,
@@ -2392,10 +2412,10 @@
           this.applications.remove(id);
         });
         this.appendElements();
-        const pan = new Drag({
+        const pan = new Pan_default({
           area: window,
           handle: paneBody.background,
-          transforms: () => this.getTransforms(this),
+          scale: () => this.getParentScale(this),
           before: () => {
           },
           movement: ({ x, y }) => {
