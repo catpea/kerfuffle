@@ -89,9 +89,6 @@ export default class Viewport {
         this.any(['w','h'], ({w:width,h:height})=>r1.draw({x:0,y:0,width,height}) );
       }
 
-
-      console.warn(`this.elements needs a background to track actusl x and y of mouse wheel hits`)
-
       this.appendElements(); // Just this.el.Viewport
 
     },

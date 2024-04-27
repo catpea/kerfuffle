@@ -148,8 +148,6 @@ export default class Component {
 
     getStack(element, list=[]) {
       if(!element) element = this;
-      // const isTransform = !((element.panX??true)&&(element.panY??true)&&(element.zoom??true));
-
       list.unshift(element);
       if(element.parent) this.getStack(element.parent, list);
       return list;
@@ -177,7 +175,7 @@ export default class Component {
         const {oo:{name}, panX, panY, zoom, x,y} = element;
         list.unshift({name, panX, panY, zoom, x:element.x+offsetX,y:element.y+offsetY , element:element.scene, offsetX:0, offsetY:0});
       }
-     
+
       if(element.parent) this.getTransforms(element.parent, list, false);
       if(root){
         let parent = false
@@ -187,7 +185,6 @@ export default class Component {
           parent = item;
         }
       }
-      console.log(list);
       return list;
     },
 

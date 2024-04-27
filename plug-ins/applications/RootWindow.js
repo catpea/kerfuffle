@@ -15,7 +15,6 @@ export default class RootWindow {
     mount(){
       const pane = new Instance(Pane);
       this.on("node", (node) => {
-        console.log('nnn', node);
         node.on("url", url => pane.url = url);
       });
       this.createWindowComponent( pane );

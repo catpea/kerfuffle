@@ -884,7 +884,6 @@
   }, "text");
   function front(element) {
     const parentElement = element.parentNode;
-    console.log(parentElement);
     parentElement.removeChild(element);
     parentElement.appendChild(element);
   }
@@ -1066,7 +1065,6 @@
             parent = item;
           }
         }
-        console.log(list);
         return list;
       },
       getApplication(element) {
@@ -1452,6 +1450,7 @@
         origin.root.pipes.remove(id);
       },
       createControlAnchor({ name: name2, side }) {
+        console.log("TODO: createControlAnchor is disabled");
         return;
         if (!name2)
           throw new Error(`It is not possible to create an anchor without an anchor name.`);
@@ -1554,7 +1553,6 @@
             update(el, standardAttributes);
           }
         }, "updateZUI");
-        console.warn("Label is not monitoring global zoom becasue it is not yet programmed to use the transforms");
         if (0) {
           globalThis.project.on("zoom", (v) => requestAnimationFrame(() => {
             updateZUI(this.el.Caption, { style: { scale: 1 / globalThis.project.zoom }, x: (this.x + this.s) * globalThis.project.zoom, y: (this.y + this.s) * globalThis.project.zoom }, { style: { scale: 1 }, x: this.x + this.s, y: this.y + this.s });
@@ -1739,7 +1737,6 @@
         let movementX = this.previousX - e.screenX;
         let movementY = this.previousY - e.screenY;
         const scale = this.scale();
-        console.log({ scale });
         movementX = movementX / scale;
         movementY = movementY / scale;
         this.movement({ x: movementX, y: movementY });
@@ -1846,10 +1843,7 @@
           handle: this.scene,
           // TIP: set to caption above to react to window captions only
           component: this,
-          element: () => {
-            console.log("TODO// MAKE FOCUS WORK", this.getApplication());
-            return this.getApplication().scene;
-          }
+          element: () => this.getApplication().scene
         });
         this.destructable = () => focus2.destroy();
       },
@@ -2095,7 +2089,6 @@
           const r1 = new DiagnosticRectangle(`${this.oo.name} content`, this.content, "green");
           this.any(["w", "h"], ({ w: width, h: height }) => r1.draw({ x: 0, y: 0, width, height }));
         }
-        console.warn(`this.elements needs a background to track actusl x and y of mouse wheel hits`);
         this.appendElements();
       }
     };
@@ -2394,11 +2387,9 @@
         this.name = "pane";
         if (this.getRootContainer().isRootWindow)
           return;
-        console.info("Line must detect the g it should be placed into");
         this.h = 400;
       },
       mount() {
-        console.log("Pane Mount", this.url);
         if (1) {
           const [horizontal2, [addButton, delButton]] = nest(Horizontal, [
             [Label, { h: 24, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
@@ -2427,7 +2418,6 @@
           });
         }
         ;
-        console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
         this.on("panX", (panX) => paneBody.panX = panX);
         this.on("panY", (panY) => paneBody.panY = panY);
         this.on("zoom", (zoom2) => paneBody.zoom = zoom2);
@@ -2583,7 +2573,6 @@
       mount() {
         const pane = new Instance(Pane);
         this.on("node", (node) => {
-          console.log("nnn", node);
           node.on("url", (url) => pane.url = url);
         });
         this.createWindowComponent(pane);

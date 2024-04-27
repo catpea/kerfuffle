@@ -67,19 +67,11 @@ export default class Pane {
 
     initialize(){
       this.name = 'pane';
-      // console.assert(deepEqual({X:200,Y:200},this.transform({X:100, Y:100}, null, 2)), 'this.transform calculations are incorrect.')
-      // console.assert(deepEqual({X:50,Y:50},this.transform({X:100, Y:100}, null, .5)), 'this.transform calculations are incorrect.')
-
       if(this.getRootContainer().isRootWindow) return;
-
-
-      console.info('Line must detect the g it should be placed into');
       this.h = 400;
-
     },
 
     mount(){
-      console.log('Pane Mount', this.url);
       // console.log(Δ);
 
       // Add Menu
@@ -135,7 +127,6 @@ export default class Pane {
 
 
       // Based on pan and zoom adjust the viewport.
-      console.warn(`viewport is moved down by .25 of menu?.. this is a bug`);
 
       // Send to viewport
       this.on('panX', panX=>paneBody.panX=panX);

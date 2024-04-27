@@ -77,7 +77,6 @@ export default class Label {
       }
 
 
-      console.warn('Label is not monitoring global zoom becasue it is not yet programmed to use the transforms')
       if(0){
         globalThis.project.on('zoom', v=> requestAnimationFrame(() => {
           updateZUI(this.el.Caption, { style: {scale:1/globalThis.project.zoom}, x: (this.x+this.s)*globalThis.project.zoom, y: (this.y+this.s)*globalThis.project.zoom, }, {style: {scale:1}, x: (this.x+this.s), y: (this.y+this.s), })

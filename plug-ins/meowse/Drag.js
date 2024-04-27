@@ -52,7 +52,6 @@ export default class Drag {
       // const self = localList[localList.length-1];
       // const finalZoom = localList.map(o=>o.zoom).reduce((a,c)=>a*c,1)/self.zoom;
       const scale = this.scale();
-      console.log({scale});
       movementX = movementX/scale;
       movementY = movementY/scale;
       // correct drag speed

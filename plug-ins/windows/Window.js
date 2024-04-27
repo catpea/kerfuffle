@@ -68,12 +68,7 @@ export default class Window {
       const focus = new Focus({
         handle: this.scene, // TIP: set to caption above to react to window captions only
         component: this,
-
-        element: ()=>{
-          console.log('TODO// MAKE FOCUS WORK', this.getApplication());
-          return this.getApplication().scene;
-        },
-
+        element: ()=> this.getApplication().scene,
       });
       this.destructable = ()=>focus.destroy()
 
