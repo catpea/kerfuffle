@@ -7,6 +7,8 @@ Visual Programming Language
 - [x] Nested Transforms
 - [ ] Labels must monitor transform stack from their placement up.
 
+- [ ] Switch from JSON to XML
+
 ## Laws
 - Parent Components Sets The Scene: the child must ass it's .g to the scene (add its svg group to scene set by parent)
 - All Controls Have Ports: a control no matter how large or small can paint ports.

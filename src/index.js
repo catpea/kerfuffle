@@ -22,5 +22,5 @@ system.name = 'Hello World System';
 system.svg = document.querySelector('#editor-svg');
 system.scene = document.querySelector('#editor-scene');
 system.background = document.querySelector('#editor-background');
-system.url = 'templates/hello-system.json';
+system.url = 'templates/test.json';
 system.start();

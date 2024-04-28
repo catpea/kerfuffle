@@ -84,6 +84,10 @@ export class VerticalLayout extends Layout {
 		this.parent.on('y', () => child.y = this.calculateChildY(child) );
 		this.parent.on('w', () => child.w = this.calculateChildW(child) );
 
+		this.parent.on('h', () => {
+			if(child.flexible) child.h = this.calculateGrowChildH(child);
+		});
+
 		// child.properties.observe('H', () => this.parent.h = this.calculateH() );
 		// this.parent.on('H', () => child.y = this.calculateChildY(child) );
 
@@ -161,7 +165,25 @@ export class VerticalLayout extends Layout {
 		return response;
 	}
 
- 
+	calculateGrowChildH(flexibleChild){
+		let response = flexibleChild.h;
+		console.log(`${flexibleChild.oo.name} is flexible`);
+
+
+		const childrenHeight = this.parent.children.filter(c=>c!==flexibleChild).reduce((total, c) => total + (c.h), 0);
+	  // console.log({childrenHeight});
+	  const freeSpace = this.parent.h - childrenHeight;
+	  // console.log({freeSpace});
+	  console.log(flexibleChild.h, freeSpace);
+	 //
+	     if(freeSpace){
+				 return freeSpace;
+			 }
+	 //     viewport.H = freeSpace;
+
+
+		return response;
+	}
 
 
 
@@ -240,33 +262,14 @@ export class HorizontalLayout extends Layout {
 
 
 	calculateChildW(child){
-		// let debug = this.parent.parent.oo.name == 'Caption';
-		// if (debug) {
-		// 	console.log(this.parent, this.parent.w);
-		// }
-
-		// console.log('Parent Width', this.parent.w);
-		// console.log(this.parent.parent.oo.name);
 		if(!(child.W===undefined)) return (child.W<1?this.parent.w*child.W:child.W);
 		const children = this.parent[this.source];
-
 		let softElements = children.filter(child=>child.W===undefined);
 		let hardElements = children.filter(child=>!(child.W===undefined));
-
-		// console.log(softElements, hardElements);
-
 		let hardSpace = hardElements.reduce((total, child) => total + (child.W<1?this.parent.w*child.W:child.W), 0);
-		// console.log({hardSpace});
 		let availableSoftSpace = this.parent.w - hardSpace;
-		// let freeSpace = softElements.reduce((total, child) => total + child.w, 0);
-
-		// console.log( hardSpace, softSpace );
-
  		let softUnit = availableSoftSpace / (softElements.length||1);
-		// console.log( availableSoftSpace, softUnit  );
-
 		return softUnit;
-
 	}
 
 

@@ -20,6 +20,7 @@ export default class Component {
 
     name:  'un-named',
 
+
     x: 0,
     y: 0,
 
@@ -32,6 +33,7 @@ export default class Component {
     b: 0, // border
     p: 0, // padding
     s: 0, // spacer/gap
+    flexible: false, // whether or not component fills all available x,y space in ceratin situations
 
   };
 
@@ -72,16 +74,7 @@ export default class Component {
     },
 
     appendElements(){
-
-      // if(!this.g){
-      //   this.g = svg.g({class:'component'});
-      //   this.scene.appendChild(this.g)
-      // }
-      //
-      // Object.values(this.el).forEach(el => this.g.appendChild(el));
-
       Object.values(this.el).forEach(el => this.scene.appendChild(el));
-
     },
 
     removeElements(){
@@ -101,31 +94,31 @@ export default class Component {
       return pipe;
     },
 
+    // getRootContainer() {
+    //   let response = null;
+    //
+    //   if(!this.parent){
+    //     // console.log(`Object ${this.oo.name} did not have a parent`);
+    //     response = this;
+    //   } else if(!this.parent.getRootContainer){
+    //     // console.log(`Object ${this.oo.name} did not have a getRootContainer`);
+    //     response = this;
+    //   } else if(this.contain){
+    //     // console.log(`Object ${this.oo.name} had a .contain directive`);
+    //     response = this;
+    //   }else{
+    //     response = this.parent.getRootContainer();
+    //   }
+    //
+    //   return response;
+    // },
+
     getRootContainer() {
       let response = null;
-
       if(!this.parent){
-        // console.log(`Object ${this.oo.name} did not have a parent`);
-        response = this;
-      } else if(!this.parent.getRootContainer){
-        // console.log(`Object ${this.oo.name} did not have a getRootContainer`);
-        response = this;
-      } else if(this.contain){
-        // console.log(`Object ${this.oo.name} had a .contain directive`);
         response = this;
       }else{
         response = this.parent.getRootContainer();
-      }
-
-      return response;
-    },
-
-    getAbsoluteRoot() {
-      let response = null;
-      if(!this.parent){
-        response = this;
-      }else{
-        response = this.parent.getAbsoluteRoot();
       }
       return response;
     },

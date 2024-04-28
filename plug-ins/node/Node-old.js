@@ -28,8 +28,6 @@ export default class Node {
 
   observables = {
 
-    // some common/required properties
-
 
     x:0,
     y:0,
@@ -48,7 +46,6 @@ export default class Node {
 
     url: undefined, // JSON url
     src: undefined, // JSON url
-
     data: undefined, // JSON data
 
   }
@@ -73,6 +70,7 @@ export default class Node {
       const object = {meta, data};
 
       for (const [name, value] of Object.entries(this.oo.specification.properties)) {
+        // console.log(this[name], name, value);
         if(this[name] !== value) meta[name] = this[name]
       }
 

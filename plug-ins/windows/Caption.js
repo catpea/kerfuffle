@@ -5,6 +5,7 @@ import Control from "/plug-ins/windows/Control.js";
 import Label from "/plug-ins/windows/Label.js";
 import Anchor from "/plug-ins/windows/Anchor.js";
 
+import debounce from "/plug-ins/debounce/index.js";
 import { svg, update, click } from "/plug-ins/domek/index.js"
 import {nest} from "/plug-ins/nest/index.js";
 
@@ -37,9 +38,9 @@ export default class Caption {
       this.createControlAnchor({ name: 'input', side: 0 });
       this.createControlAnchor({ name: 'output', side: 1 });
 
-      const [horizontal, [ info1, info2 ]] = nest(Horizontal, { parent:this, scene:this.scene }, [
+      const [horizontal, [ info1, maximizeButton ]] = nest(Horizontal, { parent:this, scene:this.scene }, [
         [Label, {h: 24,       text: this.text, parent:this}, (c,p)=>p.children.create(c)],
-        [Label, {h: 24, W:24, text: '^', parent:this}, (c,p)=>p.children.create(c)],
+        // [Label, {h: 24, W:24, text: 'M', parent:this}, (c,p)=>p.children.create(c)],
       ], (c)=>{
         this.destructable = ()=>{c.stop(); c.destroy();}
       })
@@ -49,55 +50,138 @@ export default class Caption {
       this.on("selected", selected => selected?info1.el.Container.classList.add('selected'):info1.el.Container.classList.remove('selected'));
       this.on('text',  text=>info1.text=text, );
       this.any(['x','y','w','h',  ],  ({x,y,w,h})=>Object.assign(horizontal, {x,y,w,h }));
+      // 
+      // let win = this.getApplication();
+      // win.any([  'h',  ],  ({ h})=>{
+      //
+      //   const viewport = win.pane?.viewport;
+      //   if(!viewport) return;
+      //   const childrenHeight = win.pane.children.filter(c=>c!==viewport).reduce((total, c) => total + (c.h), 0);
+      //   console.log({childrenHeight});
+      //   const freeSpace = win.h - childrenHeight;
+      //   console.log({freeSpace});
+      //
+      //     viewport.h = freeSpace;
+      //     viewport.H = freeSpace;
+      //
+      // });
+
+        // win.on('h', parentH=>{
+        //
+        //   const childrenHeight = win.pane.children.filter(c=>c!==viewport).reduce((total, c) => total + (c.h), 0);
+        //   console.log({childrenHeight}, win.pane.children);
+        //   const freeSpace = parentH - childrenHeight;
+        //   console.log({freeSpace});
+        //   // viewport.h = freeSpace;
+        //   // viewport.H = freeSpace;
+        // })
 
 
-      let maximizer;
-      let maximized = false;
-      let restoreWindow = {};
-      let restoreZoomPan = {};
-      this.disposable = click(info2.handle, e=>{
-        console.log('maximized', maximized);
-        if(maximized){
-          console.log('MINIMIZE', maximizer);
-          maximizer.map(a=>a())
-          maximized = false;
-          Object.assign(this.getRootContainer(),restoreWindow)
-          Object.assign(globalThis.project,restoreZoomPan)
-        }else{
-          console.log('MAXIMIZE!');
-          restoreWindow = {
-            x:this.getRootContainer().x,
-            y:this.getRootContainer().y,
-            w:this.getRootContainer().w,
-            h:this.getRootContainer().h,
-          };
-          restoreZoomPan = {
-            panX: globalThis.project.panX,
-            panY: globalThis.project.panY,
-            zoom: globalThis.project.zoom,
-          };
-
-          const handler = ()=>{
-            this.getRootContainer().x = 0 - (globalThis.project.panX / globalThis.project.zoom);
-            this.getRootContainer().y = 0 - (globalThis.project.panY / globalThis.project.zoom);
-            this.getRootContainer().w = globalThis.project.w / globalThis.project.zoom;
-            this.getRootContainer().h = globalThis.project.h / globalThis.project.zoom;
-          };
-          maximizer = globalThis.project.any(['zoom', 'panX', 'panY', 'w', 'h'], handler);
-          handler()
-          console.log('maximizer', maximizer);
-          maximized = true;
-        }
-
-
-
-        console.log({
-          x:this.getRootContainer().x,
-          y:this.getRootContainer().y,
-          w:this.getRootContainer().w,
-          h:this.getRootContainer().h,
-        });
-      });
+      // this.disposable = click(maximizeButton.handle, e=>{
+      //   // return;
+      //   e.stopPropagation();
+      //
+      //   const parent = this.getApplication().parent?this.getApplication().parent.getApplication():this.getRootContainer();
+      //   const current = this.getApplication();
+      //
+      //   this.getRootContainer().svg.appendChild(current.scene)
+      //   current.parent = this.getRootContainer();
+      //
+      //
+      //   console.log(parent, current);
+      //   // parent.pane.zoom = 1;
+      //   // parent.pane.panX = 0;
+      //   // parent.pane.panY = 0;
+      //
+      //   // current.pane.zoom = 1;
+      //   // current.pane.panX = 0;
+      //   // current.pane.panY = 0;
+      //   //
+      //   current.x = parent.x;
+      //   current.y = parent.y;
+      //   current.w = parent.w;
+      //   current.h = parent.h;
+      //
+      //   const viewport = current.pane.viewport;
+      //
+      //   parent.on('h', parentH=>{
+      //
+      //     const childrenHeight = current.pane.children.filter(c=>c!==viewport).reduce((total, c) => total + (c.h), 0);
+      //     console.log({childrenHeight}, current.pane.children);
+      //     const freeSpace = parentH - childrenHeight;
+      //     console.log({freeSpace});
+      //     viewport.h = freeSpace;
+      //     viewport.H = freeSpace;
+      //   })
+      //
+      //
+      //
+      //   //
+      //   // current.pane.zoom = 1;
+      //
+      //   //
+      //   // console.log(`Maximizing ${wind.id}`, wind.scene, root.scene, wind.viewport.body);
+      //   // wind.x = 0;
+      //   // wind.y = 0;
+      //   // wind.panX = 0;
+      //   // wind.panY = 0;
+      //   // wind.zoom = 1;
+      //   //
+      //   // root.svg.appendChild(wind.scene)
+      //   // // move the vieport-body into root
+      //   //
+      //   //
+      //   // const viewport = wind.pane.viewport;
+      //   //
+      //   //
+      //   // const onResize = () => {
+      //   //   wind.w = root.svg.clientWidth;
+      //   //   wind.h = root.svg.clientHeight;
+      //   //   wind.H = root.svg.clientHeight;
+      //   //
+      //   //   //
+      //   //   // const allChildren = item.children
+      //   //   // .map(c=>c.oo.name);
+      //   //   //
+      //   //   // const otherChildren = item.children
+      //   //   //   .filter(c=>c.oo.name!='Pane')
+      //   //   //
+      //   //   //   console.log('otherChildren', allChildren, otherChildren);
+      //   //   //
+      //   //   // const childrenHeight = otherChildren
+      //   //   //   .reduce((total, c) => total + (c.h), 0);
+      //   //   //
+      //   //   // const freeSpace = root.svg.clientHeight - childrenHeight;
+      //   //   //
+      //   //   // paneBody.h = freeSpace;
+      //   //   // paneBody.H = freeSpace;
+      //   //
+      //   // };
+      //   //
+      //   // this.debouncedOnResize = debounce(onResize, 10);
+      //   // window.addEventListener('resize', this.debouncedOnResize);
+      //   // onResize();
+      //   //
+      //   //
+      //   // wind.on('h', parentH=>{
+      //   //   console.log(viewport.id, wind.pane.children.map(o=>o.id));
+      //   //
+      //   //
+      //   //   const childrenHeight = wind.pane.children.filter(c=>c!==viewport).reduce((total, c) => total + (c.h), 0);
+      //   //   console.log({childrenHeight});
+      //   //   const freeSpace = parentH - childrenHeight;
+      //   //   console.log({freeSpace});
+      //   //   viewport.h = freeSpace;
+      //   //   viewport.H = freeSpace;
+      //   // })
+      //   //
+      //   //
+      //   //
+      //   //
+      //   //
+      //   //
+      //
+      // });
 
     },
 

@@ -9,6 +9,7 @@ import {nest} from "/plug-ins/nest/index.js";
 
 import Pan from "/plug-ins/meowse/Pan.js";
 import Zoom from "/plug-ins/meowse/Zoom.js";
+import Resize from "/plug-ins/meowse/Resize.js";
 // import Pan from "/plug-ins/pan/index.js";
 // import Zoom from "/plug-ins/zoom/inner.js";
 
@@ -52,9 +53,9 @@ export default class Pane {
   observables = {
     url:null,
 
-    panX: 150,
-    panY: 150,
-    zoom: .5,
+    panX: 100,
+    panY: 100,
+    zoom: .4,
 
     applications: [],
     elements: [],
@@ -69,17 +70,20 @@ export default class Pane {
       this.name = 'pane';
       if(this.getRootContainer().isRootWindow) return;
       this.h = 400;
+      this.flexible = true;
+
     },
 
     mount(){
       // console.log(Δ);
 
       // Add Menu
-      if(1){
-        const [horizontal, [ addButton, delButton ]] = nest(Horizontal, [
+
+        const [horizontal1, [ addButton, delButton ]] = nest(Horizontal, [
           [Label, {h: 24, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
           [Label, {h: 24, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
         ], (c)=>this.children.create(c));
+
 
         // Add Menu Listeners
         this.disposable = click(addButton.handle, e=>{
@@ -87,22 +91,26 @@ export default class Pane {
           const node = new Instance( Node, {id, origin:this.getRootContainer().id, type: "Junction", x: 300, y: 300, data:{}} );
           this.elements.create(node);
         })
-      }
+
 
       // Add Viewport
 
       const paneBody = new Instance(Viewport, {h: 700,   parent: this} );
       this.viewport = paneBody;
+      this.getApplication().viewport = paneBody;
+
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
 
 
-      const [horizontal, [ statusBar ]] = nest(Horizontal, [
+      const [horizontal, [ statusBar, resizeHandle ]] = nest(Horizontal, [
         [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
+        [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
+
       ], (c)=>this.children.create(c));
 
-      this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)}`);
+      this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
 
 
 
@@ -134,6 +142,7 @@ export default class Pane {
       this.on('zoom', zoom=>paneBody.zoom=zoom);
 
       this.on("elements.created", (node) => {
+
         const Ui = this.types.find(o=>o.name==node.type); // concept as in conceptmap is a component as it is a GUI thing.
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
 
@@ -142,7 +151,8 @@ export default class Pane {
 
         const ui = new Instance(Ui, {id:node.id, node, scene: root, parent: this});
         this.applications.create(ui);
-        ui.start()
+        ui.start();
+
       }, {replay:true});
 
       this.on("elements.removed", ({id}) => {
@@ -156,6 +166,33 @@ export default class Pane {
 
       this.appendElements();
 
+
+
+
+      const resize = new Resize({
+        area: window,
+        handle: resizeHandle.el.Container,
+        scale: ()=>this.getParentScale(this),
+        before: ()=>{},
+        movement: ({x,y, stop})=>{
+          let win = this.getApplication();
+
+          if(win.w - x > 256){
+            win.w -= x;
+          }else{
+            stop()
+          }
+
+          if(win.h - y > 256){
+            win.h -= y;
+          }else{
+            stop()
+          }
+
+        },
+        after: ()=>{},
+      });
+      this.destructable = ()=>resize.destroy();
 
 
 
@@ -226,7 +263,7 @@ export default class Pane {
     async load(url){
       if(!url) return;
       const rehydrated = await (await fetch(url)).json();
-      // console.log({rehydrated});
+
       this.meta = rehydrated.meta;
       for (const {meta, data} of rehydrated.data) {
         const node = new Instance(Node, {origin: this.getApplication().id});

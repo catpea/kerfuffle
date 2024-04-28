@@ -604,6 +604,7 @@
       type: null
     };
     observables = {
+      // some common/required properties
       x: 0,
       y: 0,
       w: 0,
@@ -706,6 +707,10 @@
       this.parent.on("x", () => child.x = this.calculateChildX(child));
       this.parent.on("y", () => child.y = this.calculateChildY(child));
       this.parent.on("w", () => child.w = this.calculateChildW(child));
+      this.parent.on("h", () => {
+        if (child.flexible)
+          child.h = this.calculateGrowChildH(child);
+      });
       child.on("h", () => this.parent.h = this.calculateH());
       this.parent.on("h", () => child.y = this.calculateChildY(child));
     }
@@ -732,6 +737,17 @@
     }
     calculateChildY(child) {
       const response = this.parent.y + this.parent.b + this.parent.p + this.above(this.parent, child).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
+      return response;
+    }
+    calculateGrowChildH(flexibleChild) {
+      let response = flexibleChild.h;
+      console.log(`${flexibleChild.oo.name} is flexible`);
+      const childrenHeight = this.parent.children.filter((c) => c !== flexibleChild).reduce((total, c) => total + c.h, 0);
+      const freeSpace = this.parent.h - childrenHeight;
+      console.log(flexibleChild.h, freeSpace);
+      if (freeSpace) {
+        return freeSpace;
+      }
       return response;
     }
   };
@@ -933,8 +949,10 @@
       // border
       p: 0,
       // padding
-      s: 0
+      s: 0,
       // spacer/gap
+      flexible: false
+      // whether or not component fills all available x,y space in ceratin situations
     };
     constraints = {
       scene: {
@@ -996,25 +1014,30 @@
         const pipe = origin.root.pipes.get(id);
         return pipe;
       },
+      // getRootContainer() {
+      //   let response = null;
+      //
+      //   if(!this.parent){
+      //     // console.log(`Object ${this.oo.name} did not have a parent`);
+      //     response = this;
+      //   } else if(!this.parent.getRootContainer){
+      //     // console.log(`Object ${this.oo.name} did not have a getRootContainer`);
+      //     response = this;
+      //   } else if(this.contain){
+      //     // console.log(`Object ${this.oo.name} had a .contain directive`);
+      //     response = this;
+      //   }else{
+      //     response = this.parent.getRootContainer();
+      //   }
+      //
+      //   return response;
+      // },
       getRootContainer() {
         let response = null;
         if (!this.parent) {
           response = this;
-        } else if (!this.parent.getRootContainer) {
-          response = this;
-        } else if (this.contain) {
-          response = this;
         } else {
           response = this.parent.getRootContainer();
-        }
-        return response;
-      },
-      getAbsoluteRoot() {
-        let response = null;
-        if (!this.parent) {
-          response = this;
-        } else {
-          response = this.parent.getAbsoluteRoot();
         }
         return response;
       },
@@ -1633,9 +1656,9 @@
       mount() {
         this.createControlAnchor({ name: "input", side: 0 });
         this.createControlAnchor({ name: "output", side: 1 });
-        const [horizontal, [info1, info2]] = nest(Horizontal, { parent: this, scene: this.scene }, [
-          [Label, { h: 24, text: this.text, parent: this }, (c, p2) => p2.children.create(c)],
-          [Label, { h: 24, W: 24, text: "^", parent: this }, (c, p2) => p2.children.create(c)]
+        const [horizontal, [info1, maximizeButton]] = nest(Horizontal, { parent: this, scene: this.scene }, [
+          [Label, { h: 24, text: this.text, parent: this }, (c, p2) => p2.children.create(c)]
+          // [Label, {h: 24, W:24, text: 'M', parent:this}, (c,p)=>p.children.create(c)],
         ], (c) => {
           this.destructable = () => {
             c.stop();
@@ -1647,49 +1670,6 @@
         this.on("selected", (selected) => selected ? info1.el.Container.classList.add("selected") : info1.el.Container.classList.remove("selected"));
         this.on("text", (text2) => info1.text = text2);
         this.any(["x", "y", "w", "h"], ({ x, y, w, h }) => Object.assign(horizontal, { x, y, w, h }));
-        let maximizer;
-        let maximized = false;
-        let restoreWindow = {};
-        let restoreZoomPan = {};
-        this.disposable = click(info2.handle, (e) => {
-          console.log("maximized", maximized);
-          if (maximized) {
-            console.log("MINIMIZE", maximizer);
-            maximizer.map((a) => a());
-            maximized = false;
-            Object.assign(this.getRootContainer(), restoreWindow);
-            Object.assign(globalThis.project, restoreZoomPan);
-          } else {
-            console.log("MAXIMIZE!");
-            restoreWindow = {
-              x: this.getRootContainer().x,
-              y: this.getRootContainer().y,
-              w: this.getRootContainer().w,
-              h: this.getRootContainer().h
-            };
-            restoreZoomPan = {
-              panX: globalThis.project.panX,
-              panY: globalThis.project.panY,
-              zoom: globalThis.project.zoom
-            };
-            const handler = /* @__PURE__ */ __name(() => {
-              this.getRootContainer().x = 0 - globalThis.project.panX / globalThis.project.zoom;
-              this.getRootContainer().y = 0 - globalThis.project.panY / globalThis.project.zoom;
-              this.getRootContainer().w = globalThis.project.w / globalThis.project.zoom;
-              this.getRootContainer().h = globalThis.project.h / globalThis.project.zoom;
-            }, "handler");
-            maximizer = globalThis.project.any(["zoom", "panX", "panY", "w", "h"], handler);
-            handler();
-            console.log("maximizer", maximizer);
-            maximized = true;
-          }
-          console.log({
-            x: this.getRootContainer().x,
-            y: this.getRootContainer().y,
-            w: this.getRootContainer().w,
-            h: this.getRootContainer().h
-          });
-        });
       },
       destroy() {
         this.removeElements();
@@ -1739,9 +1719,20 @@
         const scale = this.scale();
         movementX = movementX / scale;
         movementY = movementY / scale;
-        this.movement({ x: movementX, y: movementY });
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
+        let cancelX = false;
+        let cancelY = false;
+        this.movement({
+          x: movementX,
+          y: movementY,
+          cancelX: () => cancelX = true,
+          cancelY: () => cancelY = true,
+          destroy: () => this.destroy(),
+          stop: () => this.area.removeEventListener("mousemove", this.mouseMoveHandler)
+        });
+        if (!cancelX)
+          this.previousX = e.screenX;
+        if (!cancelY)
+          this.previousY = e.screenY;
       };
       this.mouseUpHandler = (e) => {
         this.after();
@@ -2027,6 +2018,14 @@
     }
   };
 
+  // plug-ins/meowse/Resize.js
+  var Resize = class extends Drag {
+    static {
+      __name(this, "Resize");
+    }
+  };
+  var Resize_default = Resize;
+
   // plug-ins/windows/Viewport.js
   var Viewport = class {
     static {
@@ -2046,6 +2045,7 @@
     };
     methods = {
       initialize() {
+        this.flexible = true;
       },
       mount() {
         this.el.Viewport = svg.g({
@@ -2373,9 +2373,9 @@
     };
     observables = {
       url: null,
-      panX: 150,
-      panY: 150,
-      zoom: 0.5,
+      panX: 100,
+      panY: 100,
+      zoom: 0.4,
       applications: [],
       elements: [],
       anchors: [],
@@ -2388,27 +2388,28 @@
         if (this.getRootContainer().isRootWindow)
           return;
         this.h = 400;
+        this.flexible = true;
       },
       mount() {
-        if (1) {
-          const [horizontal2, [addButton, delButton]] = nest(Horizontal, [
-            [Label, { h: 24, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
-            [Label, { h: 24, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
-          ], (c) => this.children.create(c));
-          this.disposable = click(addButton.handle, (e) => {
-            const id = uuid3();
-            const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
-            this.elements.create(node);
-          });
-        }
+        const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
+          [Label, { h: 24, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
+          [Label, { h: 24, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
+        ], (c) => this.children.create(c));
+        this.disposable = click(addButton.handle, (e) => {
+          const id = uuid3();
+          const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
+          this.elements.create(node);
+        });
         const paneBody = new Instance(Viewport, { h: 700, parent: this });
         this.viewport = paneBody;
+        this.getApplication().viewport = paneBody;
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
-        const [horizontal, [statusBar]] = nest(Horizontal, [
-          [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)]
+        const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
+          [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
+          [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
         ], (c) => this.children.create(c));
-        this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)}`);
+        this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
         if (this.parent.isRootWindow) {
           this.parent.on("h", (parentH) => {
             const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
@@ -2437,6 +2438,29 @@
           this.applications.remove(id);
         });
         this.appendElements();
+        const resize = new Resize_default({
+          area: window,
+          handle: resizeHandle.el.Container,
+          scale: () => this.getParentScale(this),
+          before: () => {
+          },
+          movement: ({ x, y, stop }) => {
+            let win = this.getApplication();
+            if (win.w - x > 256) {
+              win.w -= x;
+            } else {
+              stop();
+            }
+            if (win.h - y > 256) {
+              win.h -= y;
+            } else {
+              stop();
+            }
+          },
+          after: () => {
+          }
+        });
+        this.destructable = () => resize.destroy();
         const pan = new Pan_default({
           area: window,
           handle: paneBody.background,
@@ -2544,11 +2568,11 @@
     properties = {};
     methods = {
       mount() {
-        const pane = new Instance(Pane);
+        this.pane = new Instance(Pane);
         this.on("node", (node) => {
-          node.on("url", (url) => pane.url = url);
+          node.on("url", (url) => this.pane.url = url);
         });
-        this.createWindowComponent(pane);
+        this.createWindowComponent(this.pane);
       },
       stop() {
         console.log("todo: stopping root application");
@@ -2571,11 +2595,11 @@
     };
     methods = {
       mount() {
-        const pane = new Instance(Pane);
+        this.pane = new Instance(Pane);
         this.on("node", (node) => {
-          node.on("url", (url) => pane.url = url);
+          node.on("url", (url) => this.pane.url = url);
         });
-        this.createWindowComponent(pane);
+        this.createWindowComponent(this.pane);
       },
       stop() {
         console.log("todo: stopping root application");
@@ -2607,7 +2631,7 @@
       },
       mount() {
         const node = new Instance(Node, { id: "0", origin: "0", url: this.url, data: {} });
-        this.rootWindow = new Instance(RootWindow, { id: node.id, node, scene: this.scene, parent: null, origins: this.origins, isRootWindow: true });
+        this.rootWindow = new Instance(RootWindow, { id: node.id, node, svg: this.svg, scene: this.scene, parent: null, origins: this.origins, isRootWindow: true });
         this.rootWindow.start();
         const onResize = /* @__PURE__ */ __name(() => {
           this.rootWindow.w = this.svg.clientWidth;
@@ -2637,6 +2661,6 @@
   system.svg = document.querySelector("#editor-svg");
   system.scene = document.querySelector("#editor-scene");
   system.background = document.querySelector("#editor-background");
-  system.url = "templates/hello-system.json";
+  system.url = "templates/test.json";
   system.start();
 })();

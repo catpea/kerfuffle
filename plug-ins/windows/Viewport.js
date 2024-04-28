@@ -27,6 +27,8 @@ export default class Viewport {
 
     initialize(){
       // this.layout = new VerticalLayout(this);
+      this.flexible = true;
+      
     },
 
     mount(){

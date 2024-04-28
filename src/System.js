@@ -36,7 +36,7 @@ export default class System {
 
 
       const node = new Instance(Node, {id:'0', origin:'0', url:this.url, data:{}});
-      this.rootWindow = new Instance(RootWindow, {id:node.id, node, scene:this.scene, parent:null, origins:this.origins, isRootWindow: true});
+      this.rootWindow = new Instance(RootWindow, {id:node.id, node, svg:this.svg, scene:this.scene, parent:null, origins:this.origins, isRootWindow: true});
       this.rootWindow.start()
 
       const onResize = () => {
@@ -48,7 +48,6 @@ export default class System {
       this.debouncedOnResize = debounce(onResize, 10);
       window.addEventListener('resize', this.debouncedOnResize);
       onResize();
-
     },
 
     destroy(){

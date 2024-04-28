@@ -56,9 +56,19 @@ export default class Drag {
       movementY = movementY/scale;
       // correct drag speed
 
-      this.movement({ x:movementX, y:movementY })
-      this.previousX = e.screenX;
-      this.previousY = e.screenY;
+      let cancelX = false;
+      let cancelY = false;
+      this.movement({ x:movementX, y:movementY,
+
+        cancelX:()=>cancelX=true,
+        cancelY:()=>cancelY=true,
+        destroy:()=>this.destroy(),
+        stop:()=>this.area.removeEventListener('mousemove', this.mouseMoveHandler)
+
+      })
+      if(!cancelX) this.previousX = e.screenX
+      if(!cancelY) this.previousY = e.screenY
+
      };
 
     this.mouseUpHandler = (e) => {
