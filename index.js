@@ -194,6 +194,7 @@
           const packet = Object.fromEntries(entries);
           functions.map((\u0192) => \u0192(packet));
         }, "callback2");
+        console.info("must manually dispose!");
         return observables.map((event) => this.on(event, callback2, void 0, { manualDispose: true }));
       };
       this.all = function(observables, ...functions) {
@@ -205,6 +206,7 @@
             functions.map((\u0192) => \u0192(packet));
           ;
         }, "callback2");
+        console.info("must manually dispose!");
         return observables.map((event) => this.on(event, callback2, void 0, { manualDispose: true }));
       };
       const stateConstraints = {};
@@ -1657,8 +1659,8 @@
         this.createControlAnchor({ name: "input", side: 0 });
         this.createControlAnchor({ name: "output", side: 1 });
         const [horizontal, [info1, maximizeButton]] = nest(Horizontal, { parent: this, scene: this.scene }, [
-          [Label, { h: 24, text: this.text, parent: this }, (c, p2) => p2.children.create(c)]
-          // [Label, {h: 24, W:24, text: 'M', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, { h: 24, text: this.text, parent: this }, (c, p2) => p2.children.create(c)],
+          [Label, { h: 24, W: 24, text: "[ ]", parent: this }, (c, p2) => p2.children.create(c)]
         ], (c) => {
           this.destructable = () => {
             c.stop();
@@ -1670,6 +1672,44 @@
         this.on("selected", (selected) => selected ? info1.el.Container.classList.add("selected") : info1.el.Container.classList.remove("selected"));
         this.on("text", (text2) => info1.text = text2);
         this.any(["x", "y", "w", "h"], ({ x, y, w, h }) => Object.assign(horizontal, { x, y, w, h }));
+        let maximized = false;
+        const parent = this.getApplication().parent ? this.getApplication().parent.getApplication() : this.getRootContainer();
+        const current = this.getApplication();
+        const bottle = [
+          [parent.pane, "zoom", null],
+          [parent.pane, "panX", null],
+          [parent.pane, "panY", null],
+          [current, "x", null],
+          [current, "y", null],
+          [current, "w", null],
+          [current, "h", null]
+        ];
+        let unwatch;
+        this.disposable = click(maximizeButton.handle, (e) => {
+          e.stopPropagation();
+          front(current.scene);
+          if (maximized) {
+            unwatch.map((x) => x());
+            for (const [i, [o, k, v]] of bottle.entries()) {
+              o[k] = v;
+            }
+            maximized = false;
+          } else {
+            for (const [i, [o, k, v]] of bottle.entries()) {
+              bottle[i][2] = o[k];
+            }
+            parent.pane.zoom = 1;
+            parent.pane.panX = 0;
+            parent.pane.panY = 0;
+            current.x = 0;
+            current.y = 0;
+            unwatch = parent.pane.viewport.any(["w", "h"], ({ w, h }) => {
+              current.w = parent.pane.viewport.w / parent.pane.viewport.zoom;
+              current.h = parent.pane.viewport.h / parent.pane.viewport.zoom;
+            });
+            maximized = true;
+          }
+        });
       },
       destroy() {
         this.removeElements();
@@ -2405,11 +2445,36 @@
         this.getApplication().viewport = paneBody;
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
-        const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
-          [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
-          [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
-        ], (c) => this.children.create(c));
-        this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+        if (!this.parent.isRootWindow) {
+          const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
+            [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
+            [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
+          ], (c) => this.children.create(c));
+          this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+          const resize = new Resize_default({
+            area: window,
+            handle: resizeHandle.el.Container,
+            scale: () => this.getParentScale(this),
+            before: () => {
+            },
+            movement: ({ x, y, stop }) => {
+              let win = this.getApplication();
+              if (win.w - x > 256) {
+                win.w -= x;
+              } else {
+                stop();
+              }
+              if (win.h - y > 256) {
+                win.h -= y;
+              } else {
+                stop();
+              }
+            },
+            after: () => {
+            }
+          });
+          this.destructable = () => resize.destroy();
+        }
         if (this.parent.isRootWindow) {
           this.parent.on("h", (parentH) => {
             const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
@@ -2438,29 +2503,6 @@
           this.applications.remove(id);
         });
         this.appendElements();
-        const resize = new Resize_default({
-          area: window,
-          handle: resizeHandle.el.Container,
-          scale: () => this.getParentScale(this),
-          before: () => {
-          },
-          movement: ({ x, y, stop }) => {
-            let win = this.getApplication();
-            if (win.w - x > 256) {
-              win.w -= x;
-            } else {
-              stop();
-            }
-            if (win.h - y > 256) {
-              win.h -= y;
-            } else {
-              stop();
-            }
-          },
-          after: () => {
-          }
-        });
-        this.destructable = () => resize.destroy();
         const pan = new Pan_default({
           area: window,
           handle: paneBody.background,

@@ -1,4 +1,5 @@
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
+import { front } from "/plug-ins/domek/index.js"
 
 import Horizontal from "/plug-ins/windows/Horizontal.js";
 import Control from "/plug-ins/windows/Control.js";
@@ -40,7 +41,7 @@ export default class Caption {
 
       const [horizontal, [ info1, maximizeButton ]] = nest(Horizontal, { parent:this, scene:this.scene }, [
         [Label, {h: 24,       text: this.text, parent:this}, (c,p)=>p.children.create(c)],
-        // [Label, {h: 24, W:24, text: 'M', parent:this}, (c,p)=>p.children.create(c)],
+        [Label, {h: 24, W:24, text: '[ ]', parent:this}, (c,p)=>p.children.create(c)],
       ], (c)=>{
         this.destructable = ()=>{c.stop(); c.destroy();}
       })
@@ -50,7 +51,68 @@ export default class Caption {
       this.on("selected", selected => selected?info1.el.Container.classList.add('selected'):info1.el.Container.classList.remove('selected'));
       this.on('text',  text=>info1.text=text, );
       this.any(['x','y','w','h',  ],  ({x,y,w,h})=>Object.assign(horizontal, {x,y,w,h }));
-      // 
+
+      let maximized = false;
+
+      const parent = this.getApplication().parent?this.getApplication().parent.getApplication():this.getRootContainer();
+      const current = this.getApplication();
+
+      const bottle = [
+        [parent.pane, 'zoom', null],
+        [parent.pane, 'panX', null],
+        [parent.pane, 'panY', null],
+        [current, 'x', null],
+        [current, 'y', null],
+        [current, 'w', null],
+        [current, 'h', null],
+      ];
+      let unwatch;
+
+      this.disposable = click(maximizeButton.handle, e=>{
+        e.stopPropagation();
+
+        front(current.scene)
+
+        if(maximized){ // restore/minimize
+          unwatch.map(x=>x())
+          for (const [i,[o,k,v]] of bottle.entries()) {
+            o[k] = v;
+          }
+          maximized = false;
+        }else{ // save/maximize
+
+          for (const [i,[o,k,v]] of bottle.entries()) {
+            bottle[i][2] = o[k];
+          }
+
+          // maximization protocol
+            parent.pane.zoom = 1;
+            parent.pane.panX = 0;
+            parent.pane.panY = 0;
+            current.x = 0;
+            current.y = 0;
+
+            // current.w = parent.pane.viewport.w/parent.pane.viewport.zoom;
+            // current.h = parent.pane.viewport.h/parent.pane.viewport.zoom;
+
+            unwatch = parent.pane.viewport.any(['w','h'], ({w,h})=>{
+              current.w = parent.pane.viewport.w/parent.pane.viewport.zoom;
+              current.h = parent.pane.viewport.h/parent.pane.viewport.zoom;
+            })
+
+          // maximization protocol
+
+          maximized = true;
+        }
+
+
+
+
+
+      });
+
+
+      //
       // let win = this.getApplication();
       // win.any([  'h',  ],  ({ h})=>{
       //

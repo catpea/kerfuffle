@@ -103,14 +103,44 @@ export default class Pane {
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
 
+      if(!this.parent.isRootWindow){
 
-      const [horizontal, [ statusBar, resizeHandle ]] = nest(Horizontal, [
-        [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
-        [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
+        const [horizontal, [ statusBar, resizeHandle ]] = nest(Horizontal, [
+          [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
 
-      ], (c)=>this.children.create(c));
+        ], (c)=>this.children.create(c));
 
-      this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+        this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+
+
+        const resize = new Resize({
+          area: window,
+          handle: resizeHandle.el.Container,
+          scale: ()=>this.getParentScale(this),
+          before: ()=>{},
+          movement: ({x,y, stop})=>{
+            let win = this.getApplication();
+
+            if(win.w - x > 256){
+              win.w -= x;
+            }else{
+              stop()
+            }
+
+            if(win.h - y > 256){
+              win.h -= y;
+            }else{
+              stop()
+            }
+
+          },
+          after: ()=>{},
+        });
+        this.destructable = ()=>resize.destroy();
+
+      }
+
 
 
 
@@ -169,30 +199,7 @@ export default class Pane {
 
 
 
-      const resize = new Resize({
-        area: window,
-        handle: resizeHandle.el.Container,
-        scale: ()=>this.getParentScale(this),
-        before: ()=>{},
-        movement: ({x,y, stop})=>{
-          let win = this.getApplication();
 
-          if(win.w - x > 256){
-            win.w -= x;
-          }else{
-            stop()
-          }
-
-          if(win.h - y > 256){
-            win.h -= y;
-          }else{
-            stop()
-          }
-
-        },
-        after: ()=>{},
-      });
-      this.destructable = ()=>resize.destroy();
 
 
 

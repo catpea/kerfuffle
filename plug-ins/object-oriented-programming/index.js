@@ -283,6 +283,7 @@ export class Instance {
         const packet = Object.fromEntries(entries);
         functions.map(ƒ=>ƒ(packet));
       }
+      console.info('must manually dispose!');
       return observables.map(event=>this.on(event, callback2, undefined, {manualDispose: true}));
     }
 
@@ -294,6 +295,7 @@ export class Instance {
         if(isReady) functions.map(ƒ=>ƒ(packet));
 ;
       }
+      console.info('must manually dispose!');
       return observables.map(event=>this.on(event, callback2, undefined, {manualDispose: true}));
     }
 
