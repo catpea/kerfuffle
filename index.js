@@ -743,10 +743,8 @@
     }
     calculateGrowChildH(flexibleChild) {
       let response = flexibleChild.h;
-      console.log(`${flexibleChild.oo.name} is flexible`);
       const childrenHeight = this.parent.children.filter((c) => c !== flexibleChild).reduce((total, c) => total + c.h, 0);
       const freeSpace = this.parent.h - childrenHeight;
-      console.log(flexibleChild.h, freeSpace);
       if (freeSpace) {
         return freeSpace;
       }
@@ -2059,12 +2057,93 @@
   };
 
   // plug-ins/meowse/Resize.js
-  var Resize = class extends Drag {
+  var Resize = class {
     static {
       __name(this, "Resize");
     }
+    box;
+    area = window;
+    handle = null;
+    scale;
+    before = () => {
+    };
+    movement = () => {
+    };
+    after = () => {
+    };
+    mouseDownHandler;
+    mouseMoveHandler;
+    mouseUpHandler;
+    dragging = false;
+    previousX = 0;
+    previousY = 0;
+    minimumX = 128;
+    minimumY = 128;
+    sinkX = 0;
+    sinkY = 0;
+    simulatedW = 0;
+    simulatedH = 0;
+    constructor({ box, handle, area, before, movement, after, scale, minimumX, minimumY }) {
+      this.box = box;
+      this.handle = handle;
+      this.area = area;
+      this.before = before;
+      this.movement = movement;
+      this.after = after;
+      this.scale = scale;
+      this.minimumX = minimumX;
+      this.minimumY = minimumY;
+      this.#mount();
+    }
+    #mount() {
+      this.mouseDownHandler = (e) => {
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+        this.sinkX = 0;
+        this.sinkY = 0;
+        this.simulatedW = this.box.w;
+        this.simulatedH = this.box.h;
+        this.area.addEventListener("mousemove", this.mouseMoveHandler);
+        this.before();
+      };
+      this.mouseMoveHandler = (e) => {
+        let movementX = this.previousX - e.screenX;
+        let movementY = this.previousY - e.screenY;
+        const scale = this.scale();
+        movementX = movementX / scale;
+        movementY = movementY / scale;
+        this.simulatedW -= movementX;
+        this.simulatedH -= movementY;
+        let limitX = this.simulatedW < this.minimumX;
+        let limitY = this.simulatedH < this.minimumY;
+        if (limitX) {
+          this.sinkX = this.sinkX - movementX;
+          this.box.w = this.minimumX;
+        } else {
+          this.box.w = this.simulatedW;
+        }
+        if (limitY) {
+          this.sinkY = this.sinkY - movementY;
+          this.box.h = this.minimumY;
+        } else {
+          this.box.h = this.simulatedH;
+        }
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+      };
+      this.mouseUpHandler = (e) => {
+        this.after();
+        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      };
+      this.handle.addEventListener("mousedown", this.mouseDownHandler);
+      this.area.addEventListener("mouseup", this.mouseUpHandler);
+    }
+    destroy() {
+      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      this.area.removeEventListener("mouseup", this.mouseUpHandler);
+    }
   };
-  var Resize_default = Resize;
 
   // plug-ins/windows/Viewport.js
   var Viewport = class {
@@ -2450,25 +2529,19 @@
             [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
             [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
           ], (c) => this.children.create(c));
-          this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-          const resize = new Resize_default({
+          this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+          let absorbX = 0;
+          let absorbY = 0;
+          const resize = new Resize({
             area: window,
+            minimumX: 320,
+            minimumY: 200,
             handle: resizeHandle.el.Container,
             scale: () => this.getParentScale(this),
+            box: this.getApplication(this),
             before: () => {
             },
-            movement: ({ x, y, stop }) => {
-              let win = this.getApplication();
-              if (win.w - x > 256) {
-                win.w -= x;
-              } else {
-                stop();
-              }
-              if (win.h - y > 256) {
-                win.h -= y;
-              } else {
-                stop();
-              }
+            movement: ({ x, y }) => {
             },
             after: () => {
             }

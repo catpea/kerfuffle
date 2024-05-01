@@ -167,14 +167,14 @@ export class VerticalLayout extends Layout {
 
 	calculateGrowChildH(flexibleChild){
 		let response = flexibleChild.h;
-		console.log(`${flexibleChild.oo.name} is flexible`);
+		// console.log(`${flexibleChild.oo.name} is flexible`);
 
 
 		const childrenHeight = this.parent.children.filter(c=>c!==flexibleChild).reduce((total, c) => total + (c.h), 0);
 	  // console.log({childrenHeight});
 	  const freeSpace = this.parent.h - childrenHeight;
 	  // console.log({freeSpace});
-	  console.log(flexibleChild.h, freeSpace);
+	  // console.log(flexibleChild.h, freeSpace);
 	 //
 	     if(freeSpace){
 				 return freeSpace;

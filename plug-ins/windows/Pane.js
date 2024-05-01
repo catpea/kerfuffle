@@ -111,30 +111,19 @@ export default class Pane {
 
         ], (c)=>this.children.create(c));
 
-        this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} ${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+        this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
 
-
+        let absorbX = 0;
+        let absorbY = 0;
         const resize = new Resize({
           area: window,
+          minimumX:320,
+          minimumY:200,
           handle: resizeHandle.el.Container,
           scale: ()=>this.getParentScale(this),
+          box:  this.getApplication(this),
           before: ()=>{},
-          movement: ({x,y, stop})=>{
-            let win = this.getApplication();
-
-            if(win.w - x > 256){
-              win.w -= x;
-            }else{
-              stop()
-            }
-
-            if(win.h - y > 256){
-              win.h -= y;
-            }else{
-              stop()
-            }
-
-          },
+          movement: ({x,y})=>{},
           after: ()=>{},
         });
         this.destructable = ()=>resize.destroy();
