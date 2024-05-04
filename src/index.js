@@ -1,6 +1,8 @@
 // Boot Script - this is a boot sctipt that gets all the non-symmetrical oddities out of the way
 // import { v4 as uuid } from "uuid";
 
+
+
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
 // console.log(`session ${uuid()}`);
@@ -12,6 +14,8 @@ themes.theme = 'nostromo';
 
 import System from './System.js';
 const system = new Instance(System);
+
+
 
 globalThis.system = system;
 globalThis.project = system;

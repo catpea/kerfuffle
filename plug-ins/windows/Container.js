@@ -18,9 +18,9 @@ export default class Container {
       this.el.Container = svg.rect({
         name: this.oo.name,
         style:{'pointer-events': 'none'},
-        class: 'editor-container',
+        class: ['container-background', this.isApplication?'application':null].filter(i=>i).join(' '),
         ry: this.r,
-        'stroke-width': 2,
+        'stroke-width': 0,
         'vector-effect': 'non-scaling-stroke',
 
         // set initial values

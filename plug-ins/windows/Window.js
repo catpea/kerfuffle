@@ -1,3 +1,6 @@
+import { svg, update } from "/plug-ins/domek/index.js"
+
+
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
 import Vertical from "/plug-ins/windows/Vertical.js";
@@ -24,7 +27,11 @@ export default class Window {
 
   methods = {
 
+
+
+
     initialize(){
+      this.b = 3;
     },
 
     mount(){
@@ -77,7 +84,6 @@ export default class Window {
       //   handle: caption.handle,
       // }); this.destructable = ()=>focus.destroy()
       // this.on("selected", selected => caption.selected = selected);
-
 
 
     },

@@ -79,6 +79,7 @@
     {
       "meta": {
         "id": "test-f",
+
         "type": "TestWindow",
         "x": 2300,
         "y": 1100,

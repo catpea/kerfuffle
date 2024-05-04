@@ -664,6 +664,80 @@
     };
   };
 
+  // plug-ins/domek/index.js
+  var update = /* @__PURE__ */ __name(function(elements, properties) {
+    const els = Array.isArray(elements) ? elements : [elements];
+    for (const el of els) {
+      for (const key in properties) {
+        let value = properties[key];
+        if (key == "style" && typeof value == "object") {
+          for (const name2 in value) {
+            el.style[name2] = value[name2];
+          }
+          continue;
+        } else if (typeof value == "object") {
+          value = Object.entries(value).map(([k, v]) => `${k}: ${v};`).join(" ");
+        }
+        if (el.namespaceURI == "http://www.w3.org/2000/svg") {
+          el.setAttributeNS(null, key, value);
+        } else {
+          el.setAttribute(key, value);
+        }
+      }
+    }
+  }, "update");
+  var svg = new Proxy({}, {
+    get: function(target, property) {
+      return function(properties, text2) {
+        const el = document.createElementNS("http://www.w3.org/2000/svg", property);
+        update(el, properties);
+        if (text2)
+          el.appendChild(document.createTextNode(text2));
+        return el;
+      };
+    }
+  });
+  var xhtml = new Proxy({}, {
+    get: function(target, property) {
+      return function(properties, text2) {
+        const el = document.createElementNS("http://www.w3.org/1999/xhtml", property);
+        update(el, properties);
+        if (text2)
+          el.appendChild(document.createTextNode(text2));
+        return el;
+      };
+    }
+  });
+  var html = new Proxy({}, {
+    get: function(target, property) {
+      return function(properties, text2) {
+        const el = document.createElement(property);
+        update(el, properties);
+        if (text2)
+          el.appendChild(document.createTextNode(text2));
+        return el;
+      };
+    }
+  });
+  var text = /* @__PURE__ */ __name(function(text2) {
+    return document.createTextNode(text2);
+  }, "text");
+  function front(element) {
+    const parentElement = element.parentNode;
+    parentElement.removeChild(element);
+    parentElement.appendChild(element);
+  }
+  __name(front, "front");
+  function click(element, callback) {
+    element.addEventListener("mouseup", handler);
+    function handler(event) {
+      callback(event);
+    }
+    __name(handler, "handler");
+    return () => element.removeEventListener("mouseup", handler);
+  }
+  __name(click, "click");
+
   // plug-ins/layout-manager/index.js
   var BOTH_SIDES = 2;
   var Layout = class {
@@ -713,7 +787,9 @@
         if (child.flexible)
           child.h = this.calculateGrowChildH(child);
       });
-      child.on("h", () => this.parent.h = this.calculateH());
+      child.on("h", () => {
+        this.parent.h = this.calculateH();
+      });
       this.parent.on("h", () => child.y = this.calculateChildY(child));
     }
     calculateChildW(child) {
@@ -724,8 +800,7 @@
       let heightOfChildren = 0;
       const children = this.parent[this.source];
       heightOfChildren = children.reduce((total, c) => total + c.h, 0) + this.parent.s * 2 * (children.length > 0 ? children.length - 1 : 0);
-      let response = this.parent.b + this.parent.p + // this.parent.H + // NOT A MISTAKE design can hold a base h that is used in calculations
-      heightOfChildren + this.parent.p + this.parent.b;
+      let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
       if (response < this.parent.H) {
         response = this.parent.H;
       }
@@ -744,7 +819,10 @@
     calculateGrowChildH(flexibleChild) {
       let response = flexibleChild.h;
       const childrenHeight = this.parent.children.filter((c) => c !== flexibleChild).reduce((total, c) => total + c.h, 0);
-      const freeSpace = this.parent.h - childrenHeight;
+      const childrenHeightGaps = this.parent.s * 2 * this.parent.children.length;
+      const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2;
+      if (freeSpace != response)
+        console.log(freeSpace, response, childrenHeightGaps, `${this.parent.children.length} children... off by ${freeSpace - response}`);
       if (freeSpace) {
         return freeSpace;
       }
@@ -839,80 +917,6 @@
     calculateChildW(child) {
     }
   };
-
-  // plug-ins/domek/index.js
-  var update = /* @__PURE__ */ __name(function(elements, properties) {
-    const els = Array.isArray(elements) ? elements : [elements];
-    for (const el of els) {
-      for (const key in properties) {
-        let value = properties[key];
-        if (key == "style" && typeof value == "object") {
-          for (const name2 in value) {
-            el.style[name2] = value[name2];
-          }
-          continue;
-        } else if (typeof value == "object") {
-          value = Object.entries(value).map(([k, v]) => `${k}: ${v};`).join(" ");
-        }
-        if (el.namespaceURI == "http://www.w3.org/2000/svg") {
-          el.setAttributeNS(null, key, value);
-        } else {
-          el.setAttribute(key, value);
-        }
-      }
-    }
-  }, "update");
-  var svg = new Proxy({}, {
-    get: function(target, property) {
-      return function(properties, text2) {
-        const el = document.createElementNS("http://www.w3.org/2000/svg", property);
-        update(el, properties);
-        if (text2)
-          el.appendChild(document.createTextNode(text2));
-        return el;
-      };
-    }
-  });
-  var xhtml = new Proxy({}, {
-    get: function(target, property) {
-      return function(properties, text2) {
-        const el = document.createElementNS("http://www.w3.org/1999/xhtml", property);
-        update(el, properties);
-        if (text2)
-          el.appendChild(document.createTextNode(text2));
-        return el;
-      };
-    }
-  });
-  var html = new Proxy({}, {
-    get: function(target, property) {
-      return function(properties, text2) {
-        const el = document.createElement(property);
-        update(el, properties);
-        if (text2)
-          el.appendChild(document.createTextNode(text2));
-        return el;
-      };
-    }
-  });
-  var text = /* @__PURE__ */ __name(function(text2) {
-    return document.createTextNode(text2);
-  }, "text");
-  function front(element) {
-    const parentElement = element.parentNode;
-    parentElement.removeChild(element);
-    parentElement.appendChild(element);
-  }
-  __name(front, "front");
-  function click(element, callback) {
-    element.addEventListener("mouseup", handler);
-    function handler(event) {
-      callback(event);
-    }
-    __name(handler, "handler");
-    return () => element.removeEventListener("mouseup", handler);
-  }
-  __name(click, "click");
 
   // plug-ins/windows/Component.js
   var Component = class {
@@ -1135,9 +1139,9 @@
         this.el.Container = svg.rect({
           name: this.oo.name,
           style: { "pointer-events": "none" },
-          class: "editor-container",
+          class: ["container-background", this.isApplication ? "application" : null].filter((i) => i).join(" "),
           ry: this.r,
-          "stroke-width": 2,
+          "stroke-width": 0,
           "vector-effect": "non-scaling-stroke",
           // set initial values
           // these are special, handeled by the layout manager
@@ -1540,6 +1544,7 @@
         this.el.Container = svg.rect({
           name: this.name,
           class: "editor-label",
+          "stroke-width": this.b,
           "vector-effect": "non-scaling-stroke",
           ry: this.r,
           // set initial values
@@ -1842,6 +1847,7 @@
     };
     methods = {
       initialize() {
+        this.b = 3;
       },
       mount() {
         this.draw();
@@ -1882,6 +1888,27 @@
       }
     };
     constraints = {};
+  };
+
+  // plug-ins/windows/Application.js
+  var Application = class {
+    static {
+      __name(this, "Application");
+    }
+    static extends = [Window];
+    properties = {
+      isApplication: true
+    };
+    observables = {
+      url: null
+    };
+    methods = {
+      initialize() {
+        this.w = 800;
+        this.h = 600;
+        this.getRoot().origins.create(this);
+      }
+    };
   };
 
   // plug-ins/diagnostic/index.js
@@ -2145,6 +2172,70 @@
     }
   };
 
+  // plug-ins/applications/ThemeBuilder.js
+  var ThemeBuilder = class {
+    static {
+      __name(this, "ThemeBuilder");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        const themeColors = new Instance(ThemeColors);
+        this.createWindowComponent(themeColors);
+        this.on("node", (node) => {
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+  var ThemeColors = class {
+    static {
+      __name(this, "ThemeColors");
+    }
+    static extends = [Control];
+    properties = {
+      colors: ["primary", "secondary", "success", "info", "warning", "danger", "light", "dark"]
+    };
+    methods = {
+      initialize() {
+        this.w = 200;
+        this.h = 400;
+        this.H = 400;
+      },
+      mount() {
+        for (const color of this.colors) {
+          this.createControlAnchor({ name: color, side: 0 });
+        }
+        for (const color of this.colors) {
+          this.oo.createObservable(color, "magenta");
+        }
+        for (const color of this.colors) {
+          this.pipe(color).on("data", (data) => document.documentElement.style.setProperty(`--editor-${color}`, data.color));
+          this.pipe(color).on("data", (data) => this[color] = data.color);
+        }
+        this.any(this.colors, (colors) => {
+          let vars = [];
+          for (const color of this.colors) {
+            vars.push(`  --editor-${color}: ${this[color]};`);
+          }
+          const doc = `:root, [data-ui-theme=nostromo] {
+${vars.join("\n")}
+}
+`;
+          this.pipe("output").emit("data", { format: "css", doc });
+        });
+      }
+      // end mount
+    };
+  };
+
   // plug-ins/windows/Viewport.js
   var Viewport = class {
     static {
@@ -2153,7 +2244,9 @@
     static extends = [Container];
     properties = {
       debugBody: false,
-      debugContent: false
+      debugContent: false,
+      classes: ""
+      // css classes
     };
     observables = {
       toX: 0,
@@ -2186,7 +2279,13 @@
         this.mask.appendChild(this.body);
         this.any(["x", "y"], ({ x, y }) => this.body.style.transform = `translate(${x}px, ${y}px)`);
         const bgColor = `hsla(${parseInt(360 * Math.random())}, 25%, 30%, 0.2)`;
-        this.background = svg.rect({ name: "viewport-background", style: { "transform-origin": "0px 0px", fill: bgColor } });
+        this.background = svg.rect({
+          "stroke-width": this.b,
+          "vector-effect": "non-scaling-stroke",
+          name: "viewport-background",
+          class: `viewport-background ${this.classes}`.trim(),
+          style: { "transform-origin": "0px 0px" }
+        });
         this.body.appendChild(this.background);
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => update(this.background, { x: 0, y: 0, width, height }));
         if (this.debugBody) {
@@ -2488,7 +2587,9 @@
     }
     static extends = [Vertical];
     properties = {
-      contain: true
+      contain: true,
+      classes: ""
+      // css classes
     };
     observables = {
       url: null,
@@ -2499,7 +2600,12 @@
       elements: [],
       anchors: [],
       pipes: [],
-      types: [TestWindow, Junction, Line]
+      types: [
+        TestWindow,
+        ThemeBuilder,
+        Junction,
+        Line
+      ]
     };
     methods = {
       initialize() {
@@ -2510,16 +2616,18 @@
         this.flexible = true;
       },
       mount() {
-        const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
-          [Label, { h: 24, W: 32, text: "Add", parent: this }, (c, p2) => p2.children.create(c)],
-          [Label, { h: 24, W: 32, text: "Del", parent: this }, (c, p2) => p2.children.create(c)]
-        ], (c) => this.children.create(c));
-        this.disposable = click(addButton.handle, (e) => {
-          const id = uuid3();
-          const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
-          this.elements.create(node);
-        });
-        const paneBody = new Instance(Viewport, { h: 700, parent: this });
+        if (1) {
+          const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
+            [Label, { h: 24, W: 32, text: "File", parent: this }, (c, p2) => p2.children.create(c)],
+            [Label, { h: 24, W: 32, text: "Info", parent: this }, (c, p2) => p2.children.create(c)]
+          ], (c) => this.children.create(c));
+          this.disposable = click(addButton.handle, (e) => {
+            const id = uuid3();
+            const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
+            this.elements.create(node);
+          });
+        }
+        const paneBody = new Instance(Viewport, { h: 700, parent: this, classes: this.classes });
         this.viewport = paneBody;
         this.getApplication().viewport = paneBody;
         this.children.create(paneBody);
@@ -2530,8 +2638,6 @@
             [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
           ], (c) => this.children.create(c));
           this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-          let absorbX = 0;
-          let absorbY = 0;
           const resize = new Resize({
             area: window,
             minimumX: 320,
@@ -2551,7 +2657,7 @@
         if (this.parent.isRootWindow) {
           this.parent.on("h", (parentH) => {
             const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
-            const freeSpace = parentH - childrenHeight;
+            const freeSpace = parentH - childrenHeight - this.parent.b * 2 - this.parent.p * 2;
             paneBody.h = freeSpace;
             paneBody.H = freeSpace;
           });
@@ -2624,7 +2730,8 @@
       async load(url) {
         if (!url)
           return;
-        const rehydrated = await (await fetch(url)).json();
+        const str = await (await fetch(url)).text();
+        const rehydrated = globalThis.bundle.JSON5.parse(str);
         this.meta = rehydrated.meta;
         for (const { meta, data } of rehydrated.data) {
           const node = new Instance(Node, { origin: this.getApplication().id });
@@ -2649,27 +2756,6 @@
           }));
         }
         return response;
-      }
-    };
-  };
-
-  // plug-ins/windows/Application.js
-  var Application = class {
-    static {
-      __name(this, "Application");
-    }
-    static extends = [Window];
-    properties = {
-      isApplication: true
-    };
-    observables = {
-      url: null
-    };
-    methods = {
-      initialize() {
-        this.w = 800;
-        this.h = 600;
-        this.getRoot().origins.create(this);
       }
     };
   };
@@ -2710,7 +2796,7 @@
     };
     methods = {
       mount() {
-        this.pane = new Instance(Pane);
+        this.pane = new Instance(Pane, { classes: "root-window" });
         this.on("node", (node) => {
           node.on("url", (url) => this.pane.url = url);
         });

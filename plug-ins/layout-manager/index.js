@@ -92,7 +92,9 @@ export class VerticalLayout extends Layout {
 		// this.parent.on('H', () => child.y = this.calculateChildY(child) );
 
 		// when a child changes size update the parent height
-		child.on('h', () => this.parent.h = this.calculateH() );
+		child.on('h', () => {
+			this.parent.h = this.calculateH()
+		});
 
 		// when parent changes size, this child needs to update its Y.
 		this.parent.on('h', () => child.y = this.calculateChildY(child) );
@@ -133,7 +135,6 @@ export class VerticalLayout extends Layout {
 		let response =
 			this.parent.b +
 			this.parent.p +
-			// this.parent.H + // NOT A MISTAKE design can hold a base h that is used in calculations
 			heightOfChildren +
 		  this.parent.p +
 			this.parent.b;
@@ -171,16 +172,20 @@ export class VerticalLayout extends Layout {
 
 
 		const childrenHeight = this.parent.children.filter(c=>c!==flexibleChild).reduce((total, c) => total + (c.h), 0);
+
+		const childrenHeightGaps = (this.parent.s * 2) * this.parent.children.length;
+
 	  // console.log({childrenHeight});
-	  const freeSpace = this.parent.h - childrenHeight;
+	  const freeSpace = this.parent.h - childrenHeight - (this.parent.b*2) - (this.parent.p*2);
 	  // console.log({freeSpace});
 	  // console.log(flexibleChild.h, freeSpace);
 	 //
+	if(freeSpace != response) console.log(freeSpace, response, childrenHeightGaps, `${this.parent.children.length} children... off by ${freeSpace-response}`);
+
 	     if(freeSpace){
 				 return freeSpace;
 			 }
 	 //     viewport.H = freeSpace;
-
 
 		return response;
 	}

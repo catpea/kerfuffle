@@ -13,9 +13,12 @@ globalThis.themes = {Nostromo, Obsidian}
 
 globalThis.bundle = {
   uuid,
-
 };
- 
+
+
+import JSON5 from 'json5'
+bundle['JSON5'] = JSON5;
+
 
 import lodash from 'lodash';
 bundle['lodash'] = lodash;

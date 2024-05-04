@@ -13,6 +13,7 @@ export default class Viewport {
   properties = {
     debugBody: false,
     debugContent: false,
+    classes: '', // css classes
   };
 
   observables = {
@@ -28,7 +29,7 @@ export default class Viewport {
     initialize(){
       // this.layout = new VerticalLayout(this);
       this.flexible = true;
-      
+
     },
 
     mount(){
@@ -63,7 +64,13 @@ export default class Viewport {
       // Give the component a background
       const bgColor = `hsla(${parseInt(360*Math.random())}, 25%, 30%, 0.2)`;
       // console.log(bgColor);
-      this.background = svg.rect({name:'viewport-background', style:{ 'transform-origin': '0px 0px', fill: bgColor}})
+      this.background = svg.rect({
+        'stroke-width': this.b,
+        'vector-effect': 'non-scaling-stroke',
+        name:'viewport-background',
+        class:`viewport-background ${this.classes}`.trim(),
+        style:{ 'transform-origin': '0px 0px',  }
+      })
       this.body.appendChild(this.background);
       this.any(['x','y','w','h'], ({x, y, w:width,h:height})=>update(this.background, {x:0,y:0,width,height}))
 

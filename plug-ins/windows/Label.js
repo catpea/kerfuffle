@@ -34,6 +34,7 @@ export default class Label {
       this.el.Container = svg.rect({
         name: this.name,
         class: 'editor-label',
+        'stroke-width': this.b,
         'vector-effect': 'non-scaling-stroke',
         ry: this.r,
         // set initial values

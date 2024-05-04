@@ -11351,29 +11351,49 @@ fieldset:disabled .btn {
 /* plug-ins/nostromo-theme/index.css */
 :root,
 [data-ui-theme=nostromo] {
-  --editor-primary: rgba(92, 182, 118, 255);
-  --editor-secondary: rgba(0, 75, 34, 255);
-  --editor-success: rgba(81, 53, 52, 255);
-  --editor-info: rgba(88, 43, 48, 255);
-  --editor-warning: rgba(17, 77, 26, 255);
-  --editor-danger: rgba(101, 20, 27, 255);
-  --editor-light: rgba(255, 196, 158, 255);
-  --editor-dark: rgba(3, 17, 17, 255);
+  --editor-primary: #58934c;
+  --editor-secondary: #958d44;
+  --editor-background: #288590;
+  --editor-light: #141920;
+  --editor-dark: #0a0e12;
+  --editor-success: #0af2cf;
+  --editor-info: #0ae6f2;
+  --editor-warning: #d2f20a;
+  --editor-danger: #f7631a;
+  --editor-border: color-mix(in srgb, var(--editor-background) 90%, black);
+  --editor-gradient0: color-mix(in srgb, var(--editor-background) 10%, black);
+  --editor-gradient1: color-mix(in srgb, var(--editor-background) 5%, black);
+}
+#editor-primary-gradient {
+  --editor-gradient0: color-mix(in srgb, var(--editor-background) 25%, black);
+  --editor-gradient1: color-mix(in srgb, var(--editor-background) 35%, black);
+}
+#editor-secondary-gradient {
+  --editor-gradient0: color-mix(in srgb, var(--editor-light) 85%, white);
+  --editor-gradient1: color-mix(in srgb, var(--editor-light) 95%, white);
 }
 body {
   background-color: black;
 }
-rect {
-}
 svg.editor-interface {
   outline: none;
 }
-.editor-background {
-  fill: var(--editor-dark);
-  stroke: var(--editor-primary);
-}
 .editor-scene {
   fill: transparent;
+}
+.viewport-background.root-window {
+  stroke: var(--editor-border);
+  fill: url(#editor-secondary-gradient);
+}
+.viewport-background {
+  fill: url(#editor-primary-gradient);
+}
+.window-background {
+  stroke: var(--editor-light);
+  fill: var(--editor-background);
+}
+.container-background.application {
+  filter: url(#shadow);
 }
 .editor-anchor {
   stroke: var(--editor-primary);
@@ -11394,7 +11414,7 @@ svg.editor-interface {
   stroke-width: 2;
 }
 .editor-line {
-  stroke: var(--editor-secondary);
+  stroke: var(--editor-border);
   stroke-width: 2;
   &.selected {
     stroke: var(--editor-warning);
@@ -11409,29 +11429,29 @@ svg.editor-interface {
   }
 }
 .editor-caption {
-  stroke: var(--editor-primary);
+  stroke: var(--editor-info);
   stroke-width: 2;
   &.selected {
-    stroke: var(--editor-warning);
+    stroke: var(--editor-primary);
   }
 }
 .editor-junction {
-  stroke: var(--editor-primary);
+  stroke: var(--editor-border);
   stroke-width: 2;
   &.selected {
     stroke: var(--editor-warning);
   }
 }
 .editor-container {
-  stroke: var(--editor-primary);
+  stroke: var(--editor-border);
   stroke-width: 2;
 }
 .editor-control {
-  stroke: var(--editor-primary);
+  stroke: var(--editor-border);
   stroke-width: 2;
 }
 .editor-frame {
-  stroke: var(--editor-primary);
+  stroke: var(--editor-border);
   stroke-width: 2;
 }
 div.editor-codemirror {
@@ -11442,7 +11462,7 @@ div.editor-codemirror * {
   border-radius: 0 !important;
 }
 .editor-label {
-  stroke: var(--editor-primary);
+  stroke: var(--editor-border);
   fill: var(--editor-dark);
   &.selected {
     fill: var(--editor-warning);
@@ -11450,13 +11470,13 @@ div.editor-codemirror * {
 }
 .editor-label-text {
   pointer-events: none;
-  fill: var(--editor-primary);
+  fill: var(--editor-info);
 }
 .editor-device-info-text {
   fill: var(--editor-primary);
 }
 .editor-device-info {
-  stroke: var(--editor-primary);
+  stroke: var(--editor-border);
   fill: var(--editor-dark);
   &.selected {
     fill: var(--editor-warning);

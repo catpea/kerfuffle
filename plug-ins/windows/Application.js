@@ -1,6 +1,5 @@
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 import Window from "/plug-ins/windows/Window.js";
-import Pane from "/plug-ins/windows/Pane.js";
 
 export default class Application {
   static extends = [Window];

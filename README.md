@@ -3,11 +3,14 @@ Visual Programming Language
 
 ## TODO
 
-- [x] Add component loading to Root Window
-- [x] Nested Transforms
+- [ ] Proper Toolbar for Icons
+- [ ] Port Control widget inside evey window that controls window anchors
+- [ ] Cascading Zoom
 - [ ] Labels must monitor transform stack from their placement up.
+- [x] Nested Transforms
+- [x] Add component loading to Root Window
 
-- [ ] Switch from JSON to XML
+- [?] Switch from JSON to XML
 
 ## Laws
 - Parent Components Sets The Scene: the child must ass it's .g to the scene (add its svg group to scene set by parent)

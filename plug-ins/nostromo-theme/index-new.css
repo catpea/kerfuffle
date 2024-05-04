@@ -2,7 +2,8 @@
   --editor-primary: #58934c;
   --editor-secondary: #958d44;
 
-  --editor-background: #288590;
+  --editor-background: #00a5ff;
+  --editor-background: #00a5ff;
 
   --editor-light: #141920;
   --editor-dark:  #0a0e12;
@@ -52,25 +53,30 @@ svg.editor-interface {
 
 
 
+.window-border {
+    stroke: var(--editor-light);
+}
+
+
+.window-background {
+    stroke: var(--editor-light);
+    /* fill: url("#editor-background-gradient"); */
+}
+
+.viewport-background {
+  fill: url("#editor-primary-gradient");
+    stroke: var(--editor-border);
+}
+
 .viewport-background.root-window {
     stroke: var(--editor-border);
     fill: url("#editor-secondary-gradient");
 }
 
 
-.viewport-background {
-  fill: url("#editor-primary-gradient");
-}
 
 
-.window-background {
-    stroke: var(--editor-light);
-    fill: var(--editor-background);
-}
 
-.container-background.application {
- filter: url(#shadow);
-}
 
 
 
@@ -134,7 +140,7 @@ svg.editor-interface {
 }
 
 .editor-caption {
-  stroke: var(--editor-info);
+    stroke: var(--editor-border);
   stroke-width: 2;
   &.selected {
     stroke: var(--editor-primary);
@@ -183,7 +189,7 @@ div.editor-codemirror * {
 }
 .editor-label-text {
   pointer-events: none;
-  fill: var(--editor-info);
+  fill: var(--editor-primary);
 }
 
 

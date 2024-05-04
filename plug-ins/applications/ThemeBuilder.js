@@ -1,29 +1,38 @@
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
-
-import Window from "/plug-ins/windows/Window.js";
+import Application from "/plug-ins/windows/Application.js";
 import Control from "/plug-ins/windows/Control.js";
+
 
 export default class ThemeBuilder {
 
-  static extends = [Window];
+  static extends = [Application];
+
+  properties = {
+  };
 
   methods = {
 
-    initialize(){
-      this.w = 200;
-    },
-
     mount(){
-    
 
       const themeColors = new Instance(ThemeColors);
       this.createWindowComponent( themeColors ); // Add Visual Editor To The Window
+
+      this.on("node", (node) => {
+        // node.on("url", url => this.pane.url = url);
+      });
+
     },
 
+    stop(){
+      console.log('todo: stopping root application');
+    },
+
+    destroy(){
+      console.log('todo: destroying root application');
+      this.dispose()
+    },
 
   };
-
-
 }
 
 class ThemeColors {

@@ -13,7 +13,7 @@ export default class RootWindow {
   methods = {
 
     mount(){
-      this.pane = new Instance(Pane);
+      this.pane = new Instance(Pane, {classes:'root-window'});
       this.on("node", (node) => {
         node.on("url", url => this.pane.url = url);
       });

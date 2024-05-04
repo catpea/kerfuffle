@@ -18,6 +18,7 @@ import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
 
 import TestWindow from "/plug-ins/applications/TestWindow.js";
+import ThemeBuilder from "/plug-ins/applications/ThemeBuilder.js";
 
 import Viewport from "/plug-ins/windows/Viewport.js";
 import Container from "/plug-ins/windows/Container.js";
@@ -48,6 +49,7 @@ export default class Pane {
 
   properties = {
     contain:true,
+    classes: '', // css classes
   };
 
   observables = {
@@ -61,7 +63,14 @@ export default class Pane {
     elements: [],
     anchors: [],
     pipes: [],
-    types: [ TestWindow, Junction, Line ],
+
+    types: [
+      TestWindow,
+      ThemeBuilder,
+      Junction,
+      Line
+    ],
+
   };
 
   methods = {
@@ -78,10 +87,10 @@ export default class Pane {
       // console.log(Δ);
 
       // Add Menu
-
+      if(1){
         const [horizontal1, [ addButton, delButton ]] = nest(Horizontal, [
-          [Label, {h: 24, W:32, text: 'Add', parent:this}, (c,p)=>p.children.create(c)],
-          [Label, {h: 24, W:32, text: 'Del', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, {h: 24, W:32, text: 'File', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, {h: 24, W:32, text: 'Info', parent:this}, (c,p)=>p.children.create(c)],
         ], (c)=>this.children.create(c));
 
 
@@ -92,10 +101,10 @@ export default class Pane {
           this.elements.create(node);
         })
 
-
+      }
       // Add Viewport
 
-      const paneBody = new Instance(Viewport, {h: 700,   parent: this} );
+      const paneBody = new Instance(Viewport, {h: 700, parent: this, classes:this.classes} );
       this.viewport = paneBody;
       this.getApplication().viewport = paneBody;
 
@@ -113,8 +122,6 @@ export default class Pane {
 
         this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
 
-        let absorbX = 0;
-        let absorbY = 0;
         const resize = new Resize({
           area: window,
           minimumX:320,
@@ -145,7 +152,7 @@ export default class Pane {
       if(this.parent.isRootWindow){
         this.parent.on('h', parentH=>{
           const childrenHeight = this.children.filter(c=>!(c===paneBody)).reduce((total, c) => total + (c.h), 0);
-          const freeSpace = parentH - childrenHeight;
+          const freeSpace = parentH - childrenHeight - (this.parent.b*2) - (this.parent.p*2);
           paneBody.h = freeSpace;
           paneBody.H = freeSpace;
         })
@@ -258,7 +265,9 @@ export default class Pane {
 
     async load(url){
       if(!url) return;
-      const rehydrated = await (await fetch(url)).json();
+      const str = await (await fetch(url)).text();
+
+      const rehydrated = globalThis.bundle.JSON5.parse(str);
 
       this.meta = rehydrated.meta;
       for (const {meta, data} of rehydrated.data) {
