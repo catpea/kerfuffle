@@ -16,8 +16,11 @@ globalThis.bundle = {
 };
 
 
-import xml2js from 'xml2js'
-bundle['xml2js'] = xml2js;
+import * as cheerio from 'cheerio';
+bundle['cheerio'] = cheerio;
+//
+// import xml2js from 'xml2js'
+// bundle['xml2js'] = xml2js;
 
 import JSON5 from 'json5'
 bundle['JSON5'] = JSON5;

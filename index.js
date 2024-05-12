@@ -2620,7 +2620,7 @@ ${vars.join("\n")}
   // plug-ins/windows/Pane.js
   var segmentDb = {};
   var uuid3 = bundle["uuid"];
-  var xml2js = bundle["xml2js"];
+  var cheerio = bundle["cheerio"];
   var Pane = class {
     static {
       __name(this, "Pane");
@@ -2772,46 +2772,36 @@ ${vars.join("\n")}
           this.feed(this.getApplication().content);
         console.log("FEED", this.content);
       },
-      feed(content) {
-        console.log("BBB arrived", content);
-        for (const [type, contents] of Object.entries(content)) {
-          console.log("BBB decoded type/contents", type, contents);
-          for (const element of contents) {
-            const node = new Instance(Node, { origin: this.getApplication().id });
-            const data = {};
-            const c = Object.fromEntries(Object.entries(element).filter(([name2]) => name2 !== "attributes"));
-            console.log("BBB raw", c);
-            node.assign({ type, ...element.attributes }, data, c);
-            this.elements.create(node);
-          }
+      feed([$, children]) {
+        if (!children)
+          return;
+        console.log("BBB arrived", children);
+        for (const el of children) {
+          const node = new Instance(Node, { origin: this.getApplication().id });
+          const data = {};
+          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
+          this.elements.create(node);
         }
       },
       async load(url) {
-        const parser = new xml2js.Parser({ attrkey: "attributes" });
         if (!url)
           return;
-        const str = await (await fetch(url)).text();
-        if (url.endsWith(".json")) {
-          const rehydrated = globalThis.bundle.JSON5.parse(str);
-          this.meta = rehydrated.meta;
-          for (const { meta, data } of rehydrated.data) {
-            const node = new Instance(Node, { origin: this.getApplication().id });
-            node.assign(meta, data);
-            this.elements.create(node);
-          }
-        } else if (url.endsWith(".xml")) {
-          const xml = { ...await parser.parseStringPromise(str) };
-          console.log("XXXX", xml);
-          for (const [type, contents] of Object.entries(xml.Workspace).filter(([name2]) => name2 !== "attributes")) {
-            for (const element of contents) {
-              const node = new Instance(Node, { origin: this.getApplication().id });
-              const data = {};
-              const c = Object.fromEntries(Object.entries(element).filter(([name2]) => name2 !== "attributes"));
-              console.log("BBB raw", c);
-              node.assign({ type, ...element.attributes }, data, c);
-              this.elements.create(node);
-            }
-          }
+        const xml = await (await fetch(url)).text();
+        const $ = cheerio.load(xml, {
+          xmlMode: true,
+          // Enable htmlparser2's XML mode.
+          decodeEntities: true,
+          // Decode HTML entities.
+          withStartIndices: false,
+          // Add a `startIndex` property to nodes.
+          withEndIndices: false
+          // Add an `endIndex` property to nodes.
+        });
+        for (const el of $("Workspace").children()) {
+          const node = new Instance(Node, { origin: this.getApplication().id });
+          const data = {};
+          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
+          this.elements.create(node);
         }
       },
       transform(o, keys = null, scale = null) {

@@ -32,7 +32,28 @@ import Label from "/plug-ins/windows/Label.js";
 import { RelativeLayout } from "/plug-ins/layout-manager/index.js";
 
 const uuid = bundle['uuid'];
-const xml2js = bundle['xml2js'];
+
+const cheerio = bundle['cheerio'];
+// const xml2js = bundle['xml2js'];+
+
+// npm remove fast-xml-parser xml2js string_decoder buffer timers
+
+// const { XMLParser } = require("fast-xml-parser");
+// const xmlParser = new XMLParser({
+//   attributeNamePrefix : "",
+//   preserveOrder: true,
+//   ignoreAttributes: false,
+//   parseAttributeValue: true,
+//   allowBooleanAttributes: true,
+//   trimValues: true,
+//   skip: ['?xml'],
+//   attributes: { // https://github.com/NaturalIntelligence/fast-xml-parser/blob/1a384a585d7d8af68366e27d9df31d47fb547660/src/v5/OptionsBuilder.js#L22C3-L24C20
+//     ignore: false,
+//     booleanType: true,
+//     entities: true,
+//   },
+// });
+
 
 const through = (...functions) => {
   return (data) => {
@@ -272,25 +293,44 @@ export default class Pane {
       console.log('FEED', this.content);
     },
 
-    feed(content){
+    feed([$, children]){
+      if(!children) return;
+      console.log('BBB arrived', children);
 
-      console.log('BBB arrived', content);
+      for (const el of children) {
+        const node = new Instance(Node, { origin: this.getApplication().id });
+        const data = {}; //? NOTE: this can use await...
+        node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
+        this.elements.create( node ); // -> see project #onStart for creation.
+      }
 
-      for (const [type, contents] of  Object.entries( content ) ) {
-        console.log('BBB decoded type/contents', type, contents);
+
+      // for (const [type, contents] of  Object.entries( content ) ) {
+      //   console.log('BBB decoded type/contents', type, contents);
+      //
+      //
+      //   for (const element of contents ) {
+      //     // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
+      //       const node = new Instance(Node, { origin: this.getApplication().id });
+      //       const data = {}; //? can use await...
+      //       const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
+      //       console.log('BBB raw', c);
+      //       node.assign({type, ...element.attributes}, data, c);
+      //       this.elements.create( node ); // -> see project #onStart for creation.
+      //
+      //
+      //   }
+      //
+      //
 
 
-        for (const element of contents ) {
-          // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
-            const node = new Instance(Node, { origin: this.getApplication().id });
-            const data = {}; //? can use await...
-            const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
-            console.log('BBB raw', c);
-            node.assign({type, ...element.attributes}, data, c);
-            this.elements.create( node ); // -> see project #onStart for creation.
 
- 
-        }
+
+
+
+
+
+
 
 
         // for (const element of Object.entries( group ).filter(([name])=>name!=='attributes') ) {
@@ -311,56 +351,90 @@ export default class Pane {
         // }
 
 
-      }
+      // }
 
     },
 
     async load(url){
-      const parser = new xml2js.Parser({attrkey:'attributes'});
+      // const parser = new xml2js.Parser({attrkey:'attributes'});
 
       if(!url) return;
-      const str = await (await fetch(url)).text();
 
-      if(url.endsWith('.json')){
-        const rehydrated = globalThis.bundle.JSON5.parse(str);
-        this.meta = rehydrated.meta;
-        for (const {meta, data} of rehydrated.data) {
-          const node = new Instance(Node, {origin: this.getApplication().id});
-          node.assign(meta, data);
-          this.elements.create( node ); // -> see project #onStart for creation.
-        }
-      }else if(url.endsWith('.xml')){
-        const xml = {...await parser.parseStringPromise(str, )};
-        //TODO: do something with data in xml.Workspace.attributes
-        console.log('XXXX', xml);
-        for (const [type, contents] of Object.entries( xml.Workspace ).filter(([name])=>name!=='attributes') ) {
+      const xml = await (await fetch(url)).text();
+      const $ = cheerio.load(xml, {
+        xmlMode: true, // Enable htmlparser2's XML mode.
+        decodeEntities: true, // Decode HTML entities.
+        withStartIndices: false, // Add a `startIndex` property to nodes.
+        withEndIndices: false, // Add an `endIndex` property to nodes.
+      });
 
-          for (const element of contents ) {
-            // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
-              const node = new Instance(Node, { origin: this.getApplication().id });
-              const data = {}; //? can use await...
-              const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
-              console.log('BBB raw', c);
-              node.assign({type, ...element.attributes}, data, c);
-              this.elements.create( node ); // -> see project #onStart for creation.
-
-            // for (const [type, data] of Object.entries( element ).filter(([name])=>name!=='attributes') ) {
-            //
-            //   const node = new Instance(Node, { origin: this.getApplication().id });
-            //   const data = {}; //? can use await...
-            //   node.assign({type, ...xml.Workspace.attributes}, data);
-            //   this.elements.create( node ); // -> see project #onStart for creation.
-            //
-            // }
-
-          }
-
-
-
-        }
-
-        // console.log(xml);
+      for (const el of $('Workspace').children()) {
+        // console.log(el.name, el.attribs);
+        const node = new Instance(Node, { origin: this.getApplication().id });
+        const data = {}; //? NOTE: this can use await...
+        node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
+        this.elements.create( node ); // -> see project #onStart for creation.
       }
+
+
+
+
+
+
+
+      ///
+      //
+      // let rehydrated = xmlParser.parse(str);
+      //
+      //
+      //
+      // console.log(rehydrated);
+
+
+
+
+      // return;
+      //
+      // if(url.endsWith('.json')){
+      //   const rehydrated = globalThis.bundle.JSON5.parse(str);
+      //   this.meta = rehydrated.meta;
+      //   for (const {meta, data} of rehydrated.data) {
+      //     const node = new Instance(Node, {origin: this.getApplication().id});
+      //     node.assign(meta, data);
+      //     this.elements.create( node ); // -> see project #onStart for creation.
+      //   }
+      // }else if(url.endsWith('.xml')){
+      //   const xml = {...await parser.parseStringPromise(str, )};
+      //   //TODO: do something with data in xml.Workspace.attributes
+      //   console.log('XXXX', xml);
+      //   for (const [type, contents] of Object.entries( xml.Workspace ).filter(([name])=>name!=='attributes') ) {
+      //
+      //     for (const element of contents ) {
+      //       // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
+      //         const node = new Instance(Node, { origin: this.getApplication().id });
+      //         const data = {}; //? can use await...
+      //         const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
+      //         console.log('BBB raw', c);
+      //         node.assign({type, ...element.attributes}, data, c);
+      //         this.elements.create( node ); // -> see project #onStart for creation.
+      //
+      //       // for (const [type, data] of Object.entries( element ).filter(([name])=>name!=='attributes') ) {
+      //       //
+      //       //   const node = new Instance(Node, { origin: this.getApplication().id });
+      //       //   const data = {}; //? can use await...
+      //       //   node.assign({type, ...xml.Workspace.attributes}, data);
+      //       //   this.elements.create( node ); // -> see project #onStart for creation.
+      //       //
+      //       // }
+      //
+      //     }
+      //
+      //
+      //
+      //   }
+      //
+      //   // console.log(xml);
+      // }
 
 
     },
