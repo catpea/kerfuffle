@@ -24,13 +24,12 @@ export default class Node {
   properties = {
     id: null,
     type: null,
+    content: undefined,
   };
 
   observables = {
 
     // some common/required properties
-
-
     x:0,
     y:0,
     w:0,
@@ -42,29 +41,51 @@ export default class Node {
     s:0,
 
     selected: false,
-
     source: undefined,
     target: undefined,
-
     url: undefined, // JSON url
     src: undefined, // JSON url
-
     data: undefined, // JSON data
 
   }
 
+  types = {
+    x:'Float',
+    y:'Float',
+    w:'Float',
+    h:'Float',
+    H:'Float',
+    r:'Integer',
+    b:'Integer',
+    p:'Integer',
+    s:'Integer',
+  }
+
   methods = {
 
-    assign(meta, data){
-
+    assign(meta, data, content){
+      this.content = content;
       const nodeKeys = new Set([...Object.keys(this.oo.specification.properties), ...Object.keys(this.oo.specification.observables)]);
       const metaKeys = new Set([...Object.keys(meta)]);
+
       const commonProperties = intersection(nodeKeys, metaKeys);
       const newProperties = difference(metaKeys, commonProperties);
       for (const newProperty of newProperties) {
         this.oo.createObservable(newProperty, meta[newProperty])
       }
-      Object.assign(this, meta, {data});
+
+      const values = {...meta, data, content};
+
+      for (const key in values) {
+        if(this.oo.types[key]){
+          console.log( '>>>', values[key], this.oo.types[key], cast(values[key], this.oo.types[key]) );
+          this[key] = cast(values[key], this.oo.types[key]);
+        }else{
+          this[key] = values[key]; // plain assign
+        }
+
+      }
+
     },
 
     toObject(){
@@ -100,4 +121,15 @@ export default class Node {
 
   }
 
+}
+
+
+function cast(value, type){
+  if(type === 'Float'){
+    return parseFloat(value);
+  }else if(type === 'Integer'){
+    return parseInt(value);
+  }else{
+    throw new TypeError('Unknown type, no cast procedure')
+  }
 }

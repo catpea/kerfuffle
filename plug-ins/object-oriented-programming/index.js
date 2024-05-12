@@ -51,6 +51,7 @@ export class Instance {
     this.oo = {}
     this.oo.name = specification.constructor.name;
     this.oo.class = Class;
+    this.oo.types = specification.types;
     this.oo.specification = specification;
     this.oo.newObservables = [];
 
@@ -104,6 +105,7 @@ export class Instance {
     const isStateTransitionAllowed = function({from, to, state}){
       return ensureArray(state[from].can).includes(to);
     }
+
 
 
 

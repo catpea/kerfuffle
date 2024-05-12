@@ -46,6 +46,7 @@
       this.oo = {};
       this.oo.name = specification.constructor.name;
       this.oo.class = Class;
+      this.oo.types = specification.types;
       this.oo.specification = specification;
       this.oo.newObservables = [];
       this.oo.extends = [];
@@ -603,7 +604,8 @@
     };
     properties = {
       id: null,
-      type: null
+      type: null,
+      content: void 0
     };
     observables = {
       // some common/required properties
@@ -626,8 +628,20 @@
       data: void 0
       // JSON data
     };
+    types = {
+      x: "Float",
+      y: "Float",
+      w: "Float",
+      h: "Float",
+      H: "Float",
+      r: "Integer",
+      b: "Integer",
+      p: "Integer",
+      s: "Integer"
+    };
     methods = {
-      assign(meta, data) {
+      assign(meta, data, content) {
+        this.content = content;
         const nodeKeys = /* @__PURE__ */ new Set([...Object.keys(this.oo.specification.properties), ...Object.keys(this.oo.specification.observables)]);
         const metaKeys = /* @__PURE__ */ new Set([...Object.keys(meta)]);
         const commonProperties = intersection(nodeKeys, metaKeys);
@@ -635,7 +649,15 @@
         for (const newProperty of newProperties) {
           this.oo.createObservable(newProperty, meta[newProperty]);
         }
-        Object.assign(this, meta, { data });
+        const values = { ...meta, data, content };
+        for (const key in values) {
+          if (this.oo.types[key]) {
+            console.log(">>>", values[key], this.oo.types[key], cast(values[key], this.oo.types[key]));
+            this[key] = cast(values[key], this.oo.types[key]);
+          } else {
+            this[key] = values[key];
+          }
+        }
       },
       toObject() {
         const meta = {};
@@ -663,6 +685,16 @@
       }
     };
   };
+  function cast(value, type) {
+    if (type === "Float") {
+      return parseFloat(value);
+    } else if (type === "Integer") {
+      return parseInt(value);
+    } else {
+      throw new TypeError("Unknown type, no cast procedure");
+    }
+  }
+  __name(cast, "cast");
 
   // plug-ins/domek/index.js
   var update = /* @__PURE__ */ __name(function(elements, properties) {
@@ -925,8 +957,10 @@
     }
     properties = {
       id: uuid(),
-      el: {}
+      el: {},
       // bag of elements
+      content: void 0
+      // XML nodes
     };
     observables = {
       parent: void 0,
@@ -1117,6 +1151,10 @@
           node.on("p", (p2) => this.p = p2);
           node.on("s", (s) => this.s = s);
           node.on("data", (data) => this.data = data);
+          if (node.content) {
+            this.content = node.content;
+          }
+          ;
         });
       }
     };
@@ -1847,7 +1885,8 @@
     };
     methods = {
       initialize() {
-        this.b = 3;
+        this.r = 4;
+        this.b = 1;
       },
       mount() {
         this.draw();
@@ -2581,6 +2620,7 @@ ${vars.join("\n")}
   // plug-ins/windows/Pane.js
   var segmentDb = {};
   var uuid3 = bundle["uuid"];
+  var xml2js = bundle["xml2js"];
   var Pane = class {
     static {
       __name(this, "Pane");
@@ -2588,8 +2628,9 @@ ${vars.join("\n")}
     static extends = [Vertical];
     properties = {
       contain: true,
-      classes: ""
+      classes: "",
       // css classes
+      feed: []
     };
     observables = {
       url: null,
@@ -2672,7 +2713,8 @@ ${vars.join("\n")}
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
           let root = svg.g({ name: "element" });
           paneBody.content.appendChild(root);
-          const ui = new Instance(Ui, { id: node.id, node, scene: root, parent: this });
+          console.log("FEED .created phase", node.type, node.content);
+          const ui = new Instance(Ui, { id: node.id, node, scene: root, parent: this, content: node.content });
           this.applications.create(ui);
           ui.start();
         }, { replay: true });
@@ -2726,17 +2768,50 @@ ${vars.join("\n")}
         });
         this.destructable = () => zoom.destroy();
         this.on("url", (url) => this.load(this.url));
+        if (this.getApplication().content)
+          this.feed(this.getApplication().content);
+        console.log("FEED", this.content);
+      },
+      feed(content) {
+        console.log("BBB arrived", content);
+        for (const [type, contents] of Object.entries(content)) {
+          console.log("BBB decoded type/contents", type, contents);
+          for (const element of contents) {
+            const node = new Instance(Node, { origin: this.getApplication().id });
+            const data = {};
+            const c = Object.fromEntries(Object.entries(element).filter(([name2]) => name2 !== "attributes"));
+            console.log("BBB raw", c);
+            node.assign({ type, ...element.attributes }, data, c);
+            this.elements.create(node);
+          }
+        }
       },
       async load(url) {
+        const parser = new xml2js.Parser({ attrkey: "attributes" });
         if (!url)
           return;
         const str = await (await fetch(url)).text();
-        const rehydrated = globalThis.bundle.JSON5.parse(str);
-        this.meta = rehydrated.meta;
-        for (const { meta, data } of rehydrated.data) {
-          const node = new Instance(Node, { origin: this.getApplication().id });
-          node.assign(meta, data);
-          this.elements.create(node);
+        if (url.endsWith(".json")) {
+          const rehydrated = globalThis.bundle.JSON5.parse(str);
+          this.meta = rehydrated.meta;
+          for (const { meta, data } of rehydrated.data) {
+            const node = new Instance(Node, { origin: this.getApplication().id });
+            node.assign(meta, data);
+            this.elements.create(node);
+          }
+        } else if (url.endsWith(".xml")) {
+          const xml = { ...await parser.parseStringPromise(str) };
+          console.log("XXXX", xml);
+          for (const [type, contents] of Object.entries(xml.Workspace).filter(([name2]) => name2 !== "attributes")) {
+            for (const element of contents) {
+              const node = new Instance(Node, { origin: this.getApplication().id });
+              const data = {};
+              const c = Object.fromEntries(Object.entries(element).filter(([name2]) => name2 !== "attributes"));
+              console.log("BBB raw", c);
+              node.assign({ type, ...element.attributes }, data, c);
+              this.elements.create(node);
+            }
+          }
         }
       },
       transform(o, keys = null, scale = null) {
@@ -2862,6 +2937,6 @@ ${vars.join("\n")}
   system.svg = document.querySelector("#editor-svg");
   system.scene = document.querySelector("#editor-scene");
   system.background = document.querySelector("#editor-background");
-  system.url = "templates/test.json";
+  system.url = "templates/test.xml";
   system.start();
 })();

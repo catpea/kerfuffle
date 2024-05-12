@@ -32,6 +32,7 @@ import Label from "/plug-ins/windows/Label.js";
 import { RelativeLayout } from "/plug-ins/layout-manager/index.js";
 
 const uuid = bundle['uuid'];
+const xml2js = bundle['xml2js'];
 
 const through = (...functions) => {
   return (data) => {
@@ -50,6 +51,7 @@ export default class Pane {
   properties = {
     contain:true,
     classes: '', // css classes
+    feed: [],
   };
 
   observables = {
@@ -121,6 +123,7 @@ export default class Pane {
         ], (c)=>this.children.create(c));
 
         this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+        // this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>console.log({x,y,zoom,w,h}));
 
         const resize = new Resize({
           area: window,
@@ -174,8 +177,8 @@ export default class Pane {
 
         let root = svg.g({ name: 'element' });
         paneBody.content.appendChild(root);
-
-        const ui = new Instance(Ui, {id:node.id, node, scene: root, parent: this});
+        console.log('FEED .created phase', node.type, node.content);
+        const ui = new Instance(Ui, {id:node.id, node, scene: root, parent: this, content:node.content});
         this.applications.create(ui);
         ui.start();
 
@@ -259,22 +262,107 @@ export default class Pane {
       });
       this.destructable = ()=>zoom.destroy();
 
-      this.on('url', url=>this.load(this.url));
+      this.on('url',     url=>this.load(this.url));
+      // this.on('content', content=>this.feed(content));
+
+
+      if(this.getApplication().content) this.feed(this.getApplication().content)
+
+
+      console.log('FEED', this.content);
+    },
+
+    feed(content){
+
+      console.log('BBB arrived', content);
+
+      for (const [type, contents] of  Object.entries( content ) ) {
+        console.log('BBB decoded type/contents', type, contents);
+
+
+        for (const element of contents ) {
+          // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
+            const node = new Instance(Node, { origin: this.getApplication().id });
+            const data = {}; //? can use await...
+            const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
+            console.log('BBB raw', c);
+            node.assign({type, ...element.attributes}, data, c);
+            this.elements.create( node ); // -> see project #onStart for creation.
+
+ 
+        }
+
+
+        // for (const element of Object.entries( group ).filter(([name])=>name!=='attributes') ) {
+        //   console.log('BBB instancing', type, element);
+        //
+        // }
+
+        // element.attributes
+        // for (const [index, element] of Object.entries( group ).filter(([name])=>name!=='attributes')  ) {
+        //   for (const element of contents ) {
+        //       const node = new Instance(Node, { origin: this.getApplication().id });
+        //       const data = {}; //? can use await...
+        //       const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
+        //       // node.assign({type, ...element.attributes}, data, c);
+        //       // this.elements.create( node ); // -> see project #onStart for creation.
+        //       console.log('BBB', c);
+        //   }
+        // }
+
+
+      }
 
     },
 
     async load(url){
+      const parser = new xml2js.Parser({attrkey:'attributes'});
+
       if(!url) return;
       const str = await (await fetch(url)).text();
 
-      const rehydrated = globalThis.bundle.JSON5.parse(str);
+      if(url.endsWith('.json')){
+        const rehydrated = globalThis.bundle.JSON5.parse(str);
+        this.meta = rehydrated.meta;
+        for (const {meta, data} of rehydrated.data) {
+          const node = new Instance(Node, {origin: this.getApplication().id});
+          node.assign(meta, data);
+          this.elements.create( node ); // -> see project #onStart for creation.
+        }
+      }else if(url.endsWith('.xml')){
+        const xml = {...await parser.parseStringPromise(str, )};
+        //TODO: do something with data in xml.Workspace.attributes
+        console.log('XXXX', xml);
+        for (const [type, contents] of Object.entries( xml.Workspace ).filter(([name])=>name!=='attributes') ) {
 
-      this.meta = rehydrated.meta;
-      for (const {meta, data} of rehydrated.data) {
-        const node = new Instance(Node, {origin: this.getApplication().id});
-        node.assign(meta, data);
-        this.elements.create( node ); // -> see project #onStart for creation.
+          for (const element of contents ) {
+            // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
+              const node = new Instance(Node, { origin: this.getApplication().id });
+              const data = {}; //? can use await...
+              const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
+              console.log('BBB raw', c);
+              node.assign({type, ...element.attributes}, data, c);
+              this.elements.create( node ); // -> see project #onStart for creation.
+
+            // for (const [type, data] of Object.entries( element ).filter(([name])=>name!=='attributes') ) {
+            //
+            //   const node = new Instance(Node, { origin: this.getApplication().id });
+            //   const data = {}; //? can use await...
+            //   node.assign({type, ...xml.Workspace.attributes}, data);
+            //   this.elements.create( node ); // -> see project #onStart for creation.
+            //
+            // }
+
+          }
+
+
+
+        }
+
+        // console.log(xml);
       }
+
+
     },
 
     transform(o, keys=null, scale=null){

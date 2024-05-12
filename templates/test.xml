@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+<Workspace id="0" name="Hello Project" description="A Selection Of World VisualPrograms" compatibility="1.0.1">
+
+  <TestWindow id="test-a" x="0" y="0" w="1000" h="1000">
+    <TestWindow id="test-a1" x="0" y="0" w="1000" h="1000"></TestWindow>
+    <TestWindow id="test-a2" x="1100" y="0" w="1000" h="1000"></TestWindow>
+  </TestWindow>
+
+  <TestWindow id="test-b" x="1100" y="0" w="1000" h="1000">
+    <TestWindow id="test-b1" x="0" y="0" w="1000" h="1000"></TestWindow>
+    <TestWindow id="test-b2" x="1100" y="0" w="1000" h="1000"></TestWindow>
+  </TestWindow>
+
+  <TestWindow id="test-c" x="2300" y="0" w="1000" h="1000">
+    <Node id="a" TestWindow="test-d"></Node>
+    <Node id="b" TestWindow="test-e"></Node>
+    <Socket id="c" type="out" name="out"></Socket>
+    <Pipe from="a" source="text" to="b" target="in"></Pipe>
+    <Pipe from="b" source="out" to="c" target="out"></Pipe>
+  </TestWindow>
+
+  <TestWindow id="test-d" x="0" y="1100" w="1000" h="1000">
+    <Socket id="a" type="out" format="string" value="Hello World!" name="out"></Socket>
+  </TestWindow>
+
+  <TestWindow id="test-e" x="1100" y="1100" w="1000" h="1000">
+    <Socket id="a" type="in" name="in"></Socket>
+    <Function id="b" src="scripts/transform-upper.js"></Function>
+    <Socket id="c" type="out" name="out"></Socket>
+    <Pipe from="a" to="b"></Pipe>
+    <Pipe from="b" to="c"></Pipe>
+    <TestWindow id="test-a" x="0" y="0" w="1000" h="1000">
+      <TestWindow id="test-a1" x="0" y="0" w="1000" h="1000"></TestWindow>
+      <TestWindow id="test-a2" x="1100" y="550" w="1000" h="1000"></TestWindow>
+    </TestWindow>
+
+  </TestWindow>
+
+  <TestWindow id="test-f" x="2300" y="1100" w="1000" h="1000"></TestWindow>
+
+</Workspace>

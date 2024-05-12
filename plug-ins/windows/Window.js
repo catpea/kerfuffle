@@ -31,7 +31,8 @@ export default class Window {
 
 
     initialize(){
-      this.b = 3;
+      this.r = 4;
+      this.b = 1;
     },
 
     mount(){

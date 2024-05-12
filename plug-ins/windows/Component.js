@@ -5,6 +5,7 @@ export default class Component {
   properties = {
     id: uuid(),
     el: {}, // bag of elements
+    content:  undefined, // XML nodes
   };
 
   observables = {
@@ -211,6 +212,8 @@ export default class Component {
 
         // node carries a .data property
         node.on("data", data => this.data = data);
+        if(node.content){this.content = node.content};
+
       });
     },
 
