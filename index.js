@@ -2769,35 +2769,27 @@ ${vars.join("\n")}
         this.destructable = () => zoom.destroy();
         this.on("url", (url) => this.load(this.url));
         if (this.getApplication().content)
-          this.feed(this.getApplication().content);
-        console.log("FEED", this.content);
+          this.feed(
+            this.getApplication().content
+            /* this passes on the cheerio tuple*/
+          );
       },
-      feed([$, children]) {
-        if (!children)
+      async load(url) {
+        if (!url)
           return;
-        console.log("BBB arrived", children);
-        for (const el of children) {
+        const xml = await (await fetch(url)).text();
+        const $ = cheerio.load(xml, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
+        for (const el of $("Workspace").children()) {
           const node = new Instance(Node, { origin: this.getApplication().id });
           const data = {};
           node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
           this.elements.create(node);
         }
       },
-      async load(url) {
-        if (!url)
+      feed([$, children]) {
+        if (!children)
           return;
-        const xml = await (await fetch(url)).text();
-        const $ = cheerio.load(xml, {
-          xmlMode: true,
-          // Enable htmlparser2's XML mode.
-          decodeEntities: true,
-          // Decode HTML entities.
-          withStartIndices: false,
-          // Add a `startIndex` property to nodes.
-          withEndIndices: false
-          // Add an `endIndex` property to nodes.
-        });
-        for (const el of $("Workspace").children()) {
+        for (const el of children) {
           const node = new Instance(Node, { origin: this.getApplication().id });
           const data = {};
           node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);

@@ -32,27 +32,7 @@ import Label from "/plug-ins/windows/Label.js";
 import { RelativeLayout } from "/plug-ins/layout-manager/index.js";
 
 const uuid = bundle['uuid'];
-
 const cheerio = bundle['cheerio'];
-// const xml2js = bundle['xml2js'];+
-
-// npm remove fast-xml-parser xml2js string_decoder buffer timers
-
-// const { XMLParser } = require("fast-xml-parser");
-// const xmlParser = new XMLParser({
-//   attributeNamePrefix : "",
-//   preserveOrder: true,
-//   ignoreAttributes: false,
-//   parseAttributeValue: true,
-//   allowBooleanAttributes: true,
-//   trimValues: true,
-//   skip: ['?xml'],
-//   attributes: { // https://github.com/NaturalIntelligence/fast-xml-parser/blob/1a384a585d7d8af68366e27d9df31d47fb547660/src/v5/OptionsBuilder.js#L22C3-L24C20
-//     ignore: false,
-//     booleanType: true,
-//     entities: true,
-//   },
-// });
 
 
 const through = (...functions) => {
@@ -97,13 +77,11 @@ export default class Pane {
   };
 
   methods = {
-
     initialize(){
       this.name = 'pane';
       if(this.getRootContainer().isRootWindow) return;
       this.h = 400;
       this.flexible = true;
-
     },
 
     mount(){
@@ -116,7 +94,6 @@ export default class Pane {
           [Label, {h: 24, W:32, text: 'Info', parent:this}, (c,p)=>p.children.create(c)],
         ], (c)=>this.children.create(c));
 
-
         // Add Menu Listeners
         this.disposable = click(addButton.handle, e=>{
           const id = uuid();
@@ -125,8 +102,8 @@ export default class Pane {
         })
 
       }
-      // Add Viewport
 
+      // Add Viewport
       const paneBody = new Instance(Viewport, {h: 700, parent: this, classes:this.classes} );
       this.viewport = paneBody;
       this.getApplication().viewport = paneBody;
@@ -134,17 +111,13 @@ export default class Pane {
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
-
       if(!this.parent.isRootWindow){
-
         const [horizontal, [ statusBar, resizeHandle ]] = nest(Horizontal, [
           [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
           [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
-
         ], (c)=>this.children.create(c));
 
         this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-        // this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>console.log({x,y,zoom,w,h}));
 
         const resize = new Resize({
           area: window,
@@ -161,18 +134,7 @@ export default class Pane {
 
       }
 
-
-
-
-
-
-
-
-
-
-
-
-      // CODE ANOMALY FOR ROOT EDGECASE
+      // NOTE: CODE ANOMALY FOR ROOT EDGECASE
       if(this.parent.isRootWindow){
         this.parent.on('h', parentH=>{
           const childrenHeight = this.children.filter(c=>!(c===paneBody)).reduce((total, c) => total + (c.h), 0);
@@ -180,13 +142,9 @@ export default class Pane {
           paneBody.h = freeSpace;
           paneBody.H = freeSpace;
         })
-
       };
 
-
       // Based on pan and zoom adjust the viewport.
-
-      // Send to viewport
       this.on('panX', panX=>paneBody.panX=panX);
       this.on('panY', panY=>paneBody.panY=panY);
       this.on('zoom', zoom=>paneBody.zoom=zoom);
@@ -211,17 +169,7 @@ export default class Pane {
         this.applications.remove(id);
       });
 
-
-
-
       this.appendElements();
-
-
-
-
-
-
-
 
       const pan = new Pan({
         area: window,
@@ -235,8 +183,6 @@ export default class Pane {
         after: ()=>{},
       });
       this.destructable = ()=>pan.destroy();
-
-      // const showCursorPosition = new DiagnosticPoint('wheel cursor', paneBody.body, 45, 100, 'red')
       function segmentHandler(requests, {container}){
         for (const [key, request] of requests) {
           let lineExists = segmentDb[key];
@@ -244,8 +190,6 @@ export default class Pane {
           segmentDb[key].update(request);
         }
       }
-
-
       const zoom = new Zoom({
         magnitude: 0.1,
         area: paneBody.background,
@@ -253,190 +197,43 @@ export default class Pane {
         handle: paneBody.background,
         getter: (key)=>this[key],
         transforms: ()=>this.getTransforms(this),
-
         before: ()=>{
-          // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
         },
         change: ({zoom,panX,panY})=>{
-
           this.zoom = zoom;
           this.panX = panX;
           this.panY = panY;
-
-
         },
         feedback: (debug) => {
-          // showCursorPosition.draw({x:debug.cursorX, y:debug.cursorY, text: `cursor @${debug.zoom}/${this.zoom}` })
-          // segmentHandler(debug.segments, {container: globalThis.scene})
-
         },
         after: (data,debug)=>{
-          // lineHandler(debug.lines, {container: globalThis.scene})
-          // // console.log({zoom:this.zoom,panX:this.panX,panY:this.panY});
-          // // console.log({debug});
-          // lineA.update({ x:debug.lineA.x, y:debug.lineA.y, length:debug.lineA.length, label: debug.lineA.label })
-          // lineB.update({ x:debug.lineB.x, y:debug.lineB.y, length:debug.lineB.length, label: debug.lineB.label })
-          // lineC.update({ x:debug.lineC.x, y:debug.lineC.y, length:debug.lineC.length, label: debug.lineC.label })
-          // lineD.update(debug.lineD)
-          // // console.log(this.panX);
         },
       });
       this.destructable = ()=>zoom.destroy();
-
       this.on('url',     url=>this.load(this.url));
-      // this.on('content', content=>this.feed(content));
+      if(this.getApplication().content) this.feed(this.getApplication().content /* this passes on the cheerio tuple*/ )
+    },
 
-
-      if(this.getApplication().content) this.feed(this.getApplication().content)
-
-
-      console.log('FEED', this.content);
+    async load(url){
+      if(!url) return;
+      const xml = await (await fetch(url)).text();
+      const $ = cheerio.load(xml, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
+      for (const el of $('Workspace').children()) {
+        const node = new Instance(Node, { origin: this.getApplication().id });
+        const data = {}; //? NOTE: this can use await...
+        node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
+        this.elements.create( node ); // -> see project #onStart for creation.
+      }
     },
 
     feed([$, children]){
       if(!children) return;
-      console.log('BBB arrived', children);
-
       for (const el of children) {
         const node = new Instance(Node, { origin: this.getApplication().id });
         const data = {}; //? NOTE: this can use await...
         node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
         this.elements.create( node ); // -> see project #onStart for creation.
       }
-
-
-      // for (const [type, contents] of  Object.entries( content ) ) {
-      //   console.log('BBB decoded type/contents', type, contents);
-      //
-      //
-      //   for (const element of contents ) {
-      //     // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
-      //       const node = new Instance(Node, { origin: this.getApplication().id });
-      //       const data = {}; //? can use await...
-      //       const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
-      //       console.log('BBB raw', c);
-      //       node.assign({type, ...element.attributes}, data, c);
-      //       this.elements.create( node ); // -> see project #onStart for creation.
-      //
-      //
-      //   }
-      //
-      //
-
-
-
-
-
-
-
-
-
-
-
-        // for (const element of Object.entries( group ).filter(([name])=>name!=='attributes') ) {
-        //   console.log('BBB instancing', type, element);
-        //
-        // }
-
-        // element.attributes
-        // for (const [index, element] of Object.entries( group ).filter(([name])=>name!=='attributes')  ) {
-        //   for (const element of contents ) {
-        //       const node = new Instance(Node, { origin: this.getApplication().id });
-        //       const data = {}; //? can use await...
-        //       const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
-        //       // node.assign({type, ...element.attributes}, data, c);
-        //       // this.elements.create( node ); // -> see project #onStart for creation.
-        //       console.log('BBB', c);
-        //   }
-        // }
-
-
-      // }
-
-    },
-
-    async load(url){
-      // const parser = new xml2js.Parser({attrkey:'attributes'});
-
-      if(!url) return;
-
-      const xml = await (await fetch(url)).text();
-      const $ = cheerio.load(xml, {
-        xmlMode: true, // Enable htmlparser2's XML mode.
-        decodeEntities: true, // Decode HTML entities.
-        withStartIndices: false, // Add a `startIndex` property to nodes.
-        withEndIndices: false, // Add an `endIndex` property to nodes.
-      });
-
-      for (const el of $('Workspace').children()) {
-        // console.log(el.name, el.attribs);
-        const node = new Instance(Node, { origin: this.getApplication().id });
-        const data = {}; //? NOTE: this can use await...
-        node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
-        this.elements.create( node ); // -> see project #onStart for creation.
-      }
-
-
-
-
-
-
-
-      ///
-      //
-      // let rehydrated = xmlParser.parse(str);
-      //
-      //
-      //
-      // console.log(rehydrated);
-
-
-
-
-      // return;
-      //
-      // if(url.endsWith('.json')){
-      //   const rehydrated = globalThis.bundle.JSON5.parse(str);
-      //   this.meta = rehydrated.meta;
-      //   for (const {meta, data} of rehydrated.data) {
-      //     const node = new Instance(Node, {origin: this.getApplication().id});
-      //     node.assign(meta, data);
-      //     this.elements.create( node ); // -> see project #onStart for creation.
-      //   }
-      // }else if(url.endsWith('.xml')){
-      //   const xml = {...await parser.parseStringPromise(str, )};
-      //   //TODO: do something with data in xml.Workspace.attributes
-      //   console.log('XXXX', xml);
-      //   for (const [type, contents] of Object.entries( xml.Workspace ).filter(([name])=>name!=='attributes') ) {
-      //
-      //     for (const element of contents ) {
-      //       // console.log('QQQ', Object.entries( element ).filter(([name])=>name!=='attributes'));
-      //         const node = new Instance(Node, { origin: this.getApplication().id });
-      //         const data = {}; //? can use await...
-      //         const c = Object.fromEntries( Object.entries( element ).filter(([name])=>name!=='attributes') );
-      //         console.log('BBB raw', c);
-      //         node.assign({type, ...element.attributes}, data, c);
-      //         this.elements.create( node ); // -> see project #onStart for creation.
-      //
-      //       // for (const [type, data] of Object.entries( element ).filter(([name])=>name!=='attributes') ) {
-      //       //
-      //       //   const node = new Instance(Node, { origin: this.getApplication().id });
-      //       //   const data = {}; //? can use await...
-      //       //   node.assign({type, ...xml.Workspace.attributes}, data);
-      //       //   this.elements.create( node ); // -> see project #onStart for creation.
-      //       //
-      //       // }
-      //
-      //     }
-      //
-      //
-      //
-      //   }
-      //
-      //   // console.log(xml);
-      // }
-
-
     },
 
     transform(o, keys=null, scale=null){
@@ -456,8 +253,7 @@ export default class Pane {
         }));
       }
       return response;
-
-    }
+    },
 
   }
 
