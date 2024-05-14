@@ -2,10 +2,14 @@
   --editor-primary: #58934c;
   --editor-secondary: #958d44;
 
-  --editor-background: #288590;
+  --editor-foreground-primary:   #5d6075;
+  --editor-foreground-secondary:   #444861;
+  --editor-background-primary:   #323547;
+  --editor-background-secondary: #171a29;
 
   --editor-light: #141920;
   --editor-dark:  #0a0e12;
+  --editor-text:  #0a0e12;
 
   --editor-success: #0af2cf;
   --editor-info: #0ae6f2;
@@ -24,13 +28,13 @@
 }
 
 #editor-primary-gradient {
-  --editor-gradient0: color-mix(in srgb, var(--editor-background) 25%, black);
-  --editor-gradient1: color-mix(in srgb, var(--editor-background) 35%, black);
+  --editor-gradient0: color-mix(in srgb, var(--editor-background-primary) 99%, black);
+  --editor-gradient1: color-mix(in srgb, var(--editor-background-primary) 70%, black);
 }
 
 #editor-secondary-gradient {
-  --editor-gradient0: color-mix(in srgb, var(--editor-light) 85%, white);
-  --editor-gradient1: color-mix(in srgb, var(--editor-light) 95%, white);
+  --editor-gradient0: color-mix(in srgb, var(--editor-background-secondary) 99%, black);
+  --editor-gradient1: color-mix(in srgb, var(--editor-background-secondary) 40%, black);
 }
 
 
@@ -54,13 +58,16 @@ svg.editor-interface {
 
 .viewport-background.root-window {
     stroke: var(--editor-border);
-    fill: url("#editor-secondary-gradient");
+    /* fill: url("#editor-secondary-gradient"); */
+    fill: var(--editor-background-secondary);
 }
 
 
 .viewport-background {
-  fill: url("#editor-primary-gradient");
+  fill: var(--editor-background-primary);
 }
+
+
 
 
 .window-background {
@@ -69,7 +76,11 @@ svg.editor-interface {
 }
 
 .container-background.application {
- filter: url(#shadow);
+  /* filter: url(#shadow); */
+  fill: var(--editor-foreground-secondary);
+
+
+
 }
 
 
@@ -175,15 +186,16 @@ div.editor-codemirror * {
 
 
 .editor-label {
-    stroke: var(--editor-border);
-  fill: var(--editor-dark);
+
+  fill: color-mix(in srgb, var(--editor-foreground-primary) 99%, black);
+
   &.selected {
     fill: var(--editor-warning);
   }
 }
 .editor-label-text {
   pointer-events: none;
-  fill: var(--editor-info);
+  fill: var(--editor-text);
 }
 
 

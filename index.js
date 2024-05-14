@@ -1018,10 +1018,30 @@
       }
     };
     traits = {
-      //
-      // appendMain(){
-      //   Object.values(this.el).forEach(el => this.scene.appendChild(el));
-      // },
+      draw() {
+        this.el.Container = svg.rect({
+          name: this.oo.name,
+          style: { "pointer-events": "none" },
+          class: ["container-background", this.isApplication ? "application" : null].filter((i) => i).join(" "),
+          ry: this.r,
+          "stroke-width": 0,
+          "vector-effect": "non-scaling-stroke",
+          // set initial values
+          // these are special, handeled by the layout manager
+          // NOTE: these are observables, getter returns a value, setter notifies listeners, and you can ```this.observe('x', v=>{...})```
+          width: this.w,
+          height: this.h,
+          x: this.x,
+          y: this.y
+        });
+        this.on("name", (name2) => update(this.el.Container, { name: name2 }));
+        this.on("w", (width) => update(this.el.Container, { width }));
+        this.on("h", (height) => update(this.el.Container, { height }));
+        this.on("x", (x) => update(this.el.Container, { x }));
+        this.on("y", (y) => update(this.el.Container, { y }));
+        this.on("r", (ry) => update(this.el.Container, { ry }));
+        this.appendElements();
+      },
       allAnchors(parent, list = []) {
         if (parent?.children) {
           for (const child of parent.children) {
@@ -1171,32 +1191,6 @@
     };
     observables = {
       children: []
-    };
-    traits = {
-      draw() {
-        this.el.Container = svg.rect({
-          name: this.oo.name,
-          style: { "pointer-events": "none" },
-          class: ["container-background", this.isApplication ? "application" : null].filter((i) => i).join(" "),
-          ry: this.r,
-          "stroke-width": 0,
-          "vector-effect": "non-scaling-stroke",
-          // set initial values
-          // these are special, handeled by the layout manager
-          // NOTE: these are observables, getter returns a value, setter notifies listeners, and you can ```this.observe('x', v=>{...})```
-          width: this.w,
-          height: this.h,
-          x: this.x,
-          y: this.y
-        });
-        this.on("name", (name2) => update(this.el.Container, { name: name2 }));
-        this.on("w", (width) => update(this.el.Container, { width }));
-        this.on("h", (height) => update(this.el.Container, { height }));
-        this.on("x", (x) => update(this.el.Container, { x }));
-        this.on("y", (y) => update(this.el.Container, { y }));
-        this.on("r", (ry) => update(this.el.Container, { ry }));
-        this.appendElements();
-      }
     };
     methods = {
       initialize() {
@@ -1885,8 +1879,10 @@
     };
     methods = {
       initialize() {
-        this.r = 4;
-        this.b = 1;
+        if (!this.isRootWindow) {
+          this.r = 5;
+          this.b = 5;
+        }
       },
       mount() {
         this.draw();
@@ -1948,67 +1944,6 @@
         this.getRoot().origins.create(this);
       }
     };
-  };
-
-  // plug-ins/diagnostic/index.js
-  var DiagnosticRectangle = class {
-    static {
-      __name(this, "DiagnosticRectangle");
-    }
-    space = 8;
-    name;
-    parent;
-    constructor(name2, parent, stroke) {
-      this.name = name2;
-      this.parent = parent;
-      this.rectangle1 = svg.rect({ style: { "pointer-events": "none" }, fill: "none", stroke });
-      this.parent.appendChild(this.rectangle1);
-      this.textContainer = svg.text({ style: { "pointer-events": "none" }, "dominant-baseline": "hanging", fill: stroke });
-      this.parent.appendChild(this.textContainer);
-      this.text = text();
-      this.textContainer.appendChild(this.text);
-    }
-    draw({ x, y, width, height }) {
-      update(this.rectangle1, { x, y, width, height });
-      update(this.textContainer, { x, y });
-      this.text.nodeValue = `${this.name}`;
-    }
-  };
-  var DiagnosticWidth = class {
-    static {
-      __name(this, "DiagnosticWidth");
-    }
-    container;
-    label;
-    x;
-    y;
-    length;
-    color;
-    constructor({ container, label, x, y, length, color = "magenta" }) {
-      this.container = container;
-      this.label = label;
-      this.x = x;
-      this.y = y;
-      this.length = length;
-      this.color = color;
-      this.line = svg.line({ style: { "pointer-events": "none" }, stroke: this.color, fill: "none" });
-      this.container.appendChild(this.line);
-      this.lineStart = svg.line({ style: { "pointer-events": "none" }, stroke: this.color, fill: "none" });
-      this.container.appendChild(this.lineStart);
-      this.lineEnd = svg.line({ style: { "pointer-events": "none" }, stroke: this.color, fill: "none" });
-      this.container.appendChild(this.lineEnd);
-      this.textContainer = svg.text({ style: { "pointer-events": "none" }, fill: color });
-      this.container.appendChild(this.textContainer);
-      this.text = text(this.label);
-      this.textContainer.appendChild(this.text);
-    }
-    update({ x, y, length, label }) {
-      update(this.line, { x1: x, y1: y, x2: x + length, y2: y });
-      update(this.lineStart, { x1: x, y1: y - 10, x2: x, y2: y + 10 });
-      update(this.lineEnd, { x1: x + length, y1: y - 10, x2: x + length, y2: y + 10 });
-      update(this.textContainer, { x: x + 2, y });
-      this.text.nodeValue = `${label}: ${x}x${y}>${length}`;
-    }
   };
 
   // plug-ins/meowse/Pan.js
@@ -2273,6 +2208,31 @@ ${vars.join("\n")}
       }
       // end mount
     };
+  };
+
+  // plug-ins/diagnostic/index.js
+  var DiagnosticRectangle = class {
+    static {
+      __name(this, "DiagnosticRectangle");
+    }
+    space = 8;
+    name;
+    parent;
+    constructor(name2, parent, stroke) {
+      this.name = name2;
+      this.parent = parent;
+      this.rectangle1 = svg.rect({ style: { "pointer-events": "none" }, fill: "none", stroke });
+      this.parent.appendChild(this.rectangle1);
+      this.textContainer = svg.text({ style: { "pointer-events": "none" }, "dominant-baseline": "hanging", fill: stroke });
+      this.parent.appendChild(this.textContainer);
+      this.text = text();
+      this.textContainer.appendChild(this.text);
+    }
+    draw({ x, y, width, height }) {
+      update(this.rectangle1, { x, y, width, height });
+      update(this.textContainer, { x, y });
+      this.text.nodeValue = `${this.name}`;
+    }
   };
 
   // plug-ins/windows/Viewport.js
@@ -2618,7 +2578,6 @@ ${vars.join("\n")}
   };
 
   // plug-ins/windows/Pane.js
-  var segmentDb = {};
   var uuid3 = bundle["uuid"];
   var cheerio = bundle["cheerio"];
   var Pane = class {
@@ -2657,17 +2616,16 @@ ${vars.join("\n")}
         this.flexible = true;
       },
       mount() {
-        if (1) {
-          const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
-            [Label, { h: 24, W: 32, text: "File", parent: this }, (c, p2) => p2.children.create(c)],
-            [Label, { h: 24, W: 32, text: "Info", parent: this }, (c, p2) => p2.children.create(c)]
-          ], (c) => this.children.create(c));
-          this.disposable = click(addButton.handle, (e) => {
-            const id = uuid3();
-            const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
-            this.elements.create(node);
-          });
-        }
+        const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
+          [Label, { h: 24, W: 32, text: "File", parent: this }, (c, p2) => p2.children.create(c)],
+          [Label, { h: 24, W: 32, text: "Info", parent: this }, (c, p2) => p2.children.create(c)],
+          [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
+        ], (c) => this.children.create(c));
+        this.disposable = click(addButton.handle, (e) => {
+          const id = uuid3();
+          const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
+          this.elements.create(node);
+        });
         const paneBody = new Instance(Viewport, { h: 700, parent: this, classes: this.classes });
         this.viewport = paneBody;
         this.getApplication().viewport = paneBody;
@@ -2738,15 +2696,6 @@ ${vars.join("\n")}
           }
         });
         this.destructable = () => pan.destroy();
-        function segmentHandler(requests, { container }) {
-          for (const [key, request] of requests) {
-            let lineExists = segmentDb[key];
-            if (!lineExists)
-              segmentDb[key] = new DiagnosticWidth({ ...request, container });
-            segmentDb[key].update(request);
-          }
-        }
-        __name(segmentHandler, "segmentHandler");
         const zoom = new Zoom({
           magnitude: 0.1,
           area: paneBody.background,
@@ -2767,14 +2716,14 @@ ${vars.join("\n")}
           }
         });
         this.destructable = () => zoom.destroy();
-        this.on("url", (url) => this.load(this.url));
+        this.on("url", (url) => this.loadXml(this.url));
         if (this.getApplication().content)
-          this.feed(
+          this.loadElements(
             this.getApplication().content
             /* this passes on the cheerio tuple*/
           );
       },
-      async load(url) {
+      async loadXml(url) {
         if (!url)
           return;
         const xml = await (await fetch(url)).text();
@@ -2786,7 +2735,7 @@ ${vars.join("\n")}
           this.elements.create(node);
         }
       },
-      feed([$, children]) {
+      loadElements([$, children]) {
         if (!children)
           return;
         for (const el of children) {
@@ -2795,24 +2744,6 @@ ${vars.join("\n")}
           node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
           this.elements.create(node);
         }
-      },
-      transform(o, keys = null, scale = null) {
-        let zoom = scale ?? this.zoom;
-        let response = o;
-        for (const transform of this.getTransforms(this)) {
-          response = Object.fromEntries(Object.entries(response).map(([k, v]) => {
-            if (keys === null) {
-              return [k, v * zoom];
-            } else if (keys.length) {
-              if (keys.includes(k)) {
-                return [k, v * zoom];
-              } else {
-                return [k, v];
-              }
-            }
-          }));
-        }
-        return response;
       }
     };
   };

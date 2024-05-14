@@ -1,21 +1,12 @@
-// import deepEqual from 'deep-equal';
-
-let segmentDb = {};
-
-import { DiagnosticText, DiagnosticRectangle, DiagnosticCross, DiagnosticRuler, DiagnosticWidth, DiagnosticHeight, DiagnosticPoint } from "/plug-ins/diagnostic/index.js"
-
 import { svg, update, click, text } from "/plug-ins/domek/index.js"
 import {nest} from "/plug-ins/nest/index.js";
 
 import Pan from "/plug-ins/meowse/Pan.js";
 import Zoom from "/plug-ins/meowse/Zoom.js";
 import Resize from "/plug-ins/meowse/Resize.js";
-// import Pan from "/plug-ins/pan/index.js";
-// import Zoom from "/plug-ins/zoom/inner.js";
 
 import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
-
 
 import TestWindow from "/plug-ins/applications/TestWindow.js";
 import ThemeBuilder from "/plug-ins/applications/ThemeBuilder.js";
@@ -29,11 +20,9 @@ import Junction from "/plug-ins/windows/Junction.js";
 import Line from "/plug-ins/windows/Line.js";
 
 import Label from "/plug-ins/windows/Label.js";
-import { RelativeLayout } from "/plug-ins/layout-manager/index.js";
 
 const uuid = bundle['uuid'];
 const cheerio = bundle['cheerio'];
-
 
 const through = (...functions) => {
   return (data) => {
@@ -77,6 +66,7 @@ export default class Pane {
   };
 
   methods = {
+
     initialize(){
       this.name = 'pane';
       if(this.getRootContainer().isRootWindow) return;
@@ -88,10 +78,10 @@ export default class Pane {
       // console.log(Δ);
 
       // Add Menu
-      if(1){
         const [horizontal1, [ addButton, delButton ]] = nest(Horizontal, [
           [Label, {h: 24, W:32, text: 'File', parent:this}, (c,p)=>p.children.create(c)],
           [Label, {h: 24, W:32, text: 'Info', parent:this}, (c,p)=>p.children.create(c)],
+          [Label, {h: 24,  text: '', flexible:true, parent:this}, (c,p)=>p.children.create(c)],
         ], (c)=>this.children.create(c));
 
         // Add Menu Listeners
@@ -100,8 +90,6 @@ export default class Pane {
           const node = new Instance( Node, {id, origin:this.getRootContainer().id, type: "Junction", x: 300, y: 300, data:{}} );
           this.elements.create(node);
         })
-
-      }
 
       // Add Viewport
       const paneBody = new Instance(Viewport, {h: 700, parent: this, classes:this.classes} );
@@ -183,13 +171,7 @@ export default class Pane {
         after: ()=>{},
       });
       this.destructable = ()=>pan.destroy();
-      function segmentHandler(requests, {container}){
-        for (const [key, request] of requests) {
-          let lineExists = segmentDb[key];
-          if(!lineExists) segmentDb[key] = new DiagnosticWidth({...request, container});
-          segmentDb[key].update(request);
-        }
-      }
+
       const zoom = new Zoom({
         magnitude: 0.1,
         area: paneBody.background,
@@ -210,11 +192,11 @@ export default class Pane {
         },
       });
       this.destructable = ()=>zoom.destroy();
-      this.on('url',     url=>this.load(this.url));
-      if(this.getApplication().content) this.feed(this.getApplication().content /* this passes on the cheerio tuple*/ )
+      this.on('url',     url=>this.loadXml(this.url));
+      if(this.getApplication().content) this.loadElements(this.getApplication().content /* this passes on the cheerio tuple*/ )
     },
 
-    async load(url){
+    async loadXml(url){
       if(!url) return;
       const xml = await (await fetch(url)).text();
       const $ = cheerio.load(xml, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
@@ -226,7 +208,7 @@ export default class Pane {
       }
     },
 
-    feed([$, children]){
+    loadElements([$, children]){
       if(!children) return;
       for (const el of children) {
         const node = new Instance(Node, { origin: this.getApplication().id });
@@ -234,25 +216,6 @@ export default class Pane {
         node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
         this.elements.create( node ); // -> see project #onStart for creation.
       }
-    },
-
-    transform(o, keys=null, scale=null){
-      let zoom = scale??this.zoom;
-      let response = o;
-      for (const transform of this.getTransforms(this)) {
-        response = Object.fromEntries(Object.entries(response).map(([k,v])=>{
-          if(keys===null){ // transform all
-            return [k, v*zoom]
-          } else if(keys.length){
-            if(keys.includes(k)){ // picked
-              return [k,v*zoom];
-            }else{ // do nothing
-              return [k,v];
-            }
-          }
-        }));
-      }
-      return response;
     },
 
   }

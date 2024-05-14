@@ -50,10 +50,34 @@ export default class Component {
   }
 
   traits = {
-    //
-    // appendMain(){
-    //   Object.values(this.el).forEach(el => this.scene.appendChild(el));
-    // },
+    
+    draw(){
+      this.el.Container = svg.rect({
+        name: this.oo.name,
+        style:{'pointer-events': 'none'},
+        class: ['container-background', this.isApplication?'application':null].filter(i=>i).join(' '),
+        ry: this.r,
+        'stroke-width': 0,
+        'vector-effect': 'non-scaling-stroke',
+
+        // set initial values
+        // these are special, handeled by the layout manager
+        // NOTE: these are observables, getter returns a value, setter notifies listeners, and you can ```this.observe('x', v=>{...})```
+        width: this.w,
+        height: this.h,
+        x: this.x,
+        y: this.y,
+      });
+
+      this.on('name',  name=>update(this.el.Container,{name}), );
+      this.on('w',  width=>update(this.el.Container,{width}), );
+      this.on('h', height=>update(this.el.Container,{height}),);
+      this.on('x',      x=>update(this.el.Container,{x}),     );
+      this.on('y',      y=>update(this.el.Container,{y}),     );
+      this.on('r',     ry=>update(this.el.Container,{ry}),     );
+
+      this.appendElements();
+    },
 
     allAnchors(parent, list=[]){
 
