@@ -53,7 +53,7 @@ export class Instance {
     this.oo.class = Class;
     this.oo.types = specification.types;
     this.oo.specification = specification;
-    this.oo.newObservables = [];
+    this.oo.attributes = [];
 
     this.oo.extends = [];
     this.oo.disposables = [];
@@ -204,7 +204,7 @@ export class Instance {
 
       if(!internal){
         // this is a user defined observable
-        this.oo.newObservables.push(observableName);
+        this.oo.attributes.push(observableName);
       }
 
       // TODO: inherited.observables[observableName] = observableValue; // (for serialization)
@@ -269,7 +269,7 @@ export class Instance {
     // Enable Observing
     this.on = function(eventPath, observerCallback, options, control){
       const [name, path] = eventPath.split('.', 2);
-      if(!observableData[name]) throw new Error(`property "${name}" not defined (${Object.keys(observableData).join(', ')})`);
+      if(!observableData[name]) throw new Error(`property "${name}" not defined on ${this.oo.name} (${Object.keys(observableData).join(', ')})`);
 
 
       if(control?.manualDispose){

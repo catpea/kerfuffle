@@ -19,6 +19,9 @@ export default class Window {
 
   observables = {
     caption: 'Untitled',
+    
+    showMenu: false,
+    showStatus: false,
   };
 
   properties = {

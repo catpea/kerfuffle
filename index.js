@@ -48,7 +48,7 @@
       this.oo.class = Class;
       this.oo.types = specification.types;
       this.oo.specification = specification;
-      this.oo.newObservables = [];
+      this.oo.attributes = [];
       this.oo.extends = [];
       this.oo.disposables = [];
       this.oo.specifications = [];
@@ -137,7 +137,7 @@
       const observableData = {};
       this.oo.createObservable = (observableName, observableValue = void 0, internal = false) => {
         if (!internal) {
-          this.oo.newObservables.push(observableName);
+          this.oo.attributes.push(observableName);
         }
         const isArray = Array.isArray(observableValue) ? true : false;
         if (observableName in this === false) {
@@ -182,7 +182,7 @@
       this.on = function(eventPath, observerCallback, options, control) {
         const [name2, path] = eventPath.split(".", 2);
         if (!observableData[name2])
-          throw new Error(`property "${name2}" not defined (${Object.keys(observableData).join(", ")})`);
+          throw new Error(`property "${name2}" not defined on ${this.oo.name} (${Object.keys(observableData).join(", ")})`);
         if (control?.manualDispose) {
           return observableData[name2].observe(path || name2, observerCallback, options);
         } else {
@@ -849,10 +849,11 @@
     }
     calculateGrowChildH(flexibleChild) {
       let response = flexibleChild.h;
-      const childrenHeight = this.parent.children.filter((c) => c !== flexibleChild).reduce((total, c) => total + c.h, 0);
+      const children = this.parent.children.filter((c) => c !== flexibleChild);
+      const childrenHeight = children.reduce((total, c) => total + c.h, 0);
       const childrenHeightGaps = this.parent.s * 2 * this.parent.children.length;
       const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2;
-      if (freeSpace) {
+      if (children.length && freeSpace) {
         return freeSpace;
       }
       return response;
@@ -1864,7 +1865,9 @@
     }
     static extends = [Vertical];
     observables = {
-      caption: "Untitled"
+      caption: "Untitled",
+      showMenu: false,
+      showStatus: false
     };
     properties = {
       contain: true
@@ -2273,43 +2276,49 @@
         this.flexible = true;
       },
       mount() {
-        const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
-          [Label, { h: 24, W: 32, text: "File", parent: this }, (c, p2) => p2.children.create(c)],
-          [Label, { h: 24, W: 32, text: "Info", parent: this }, (c, p2) => p2.children.create(c)],
-          [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
-        ], (c) => this.children.create(c));
-        this.disposable = click(addButton.handle, (e) => {
-          const id = uuid3();
-          const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
-          this.elements.create(node);
+        this.getApplication().on("showMenu", (showMenu) => {
+          if (showMenu) {
+            const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
+              [Label, { h: 24, W: 32, text: "File", parent: this }, (c, p2) => p2.children.create(c)],
+              [Label, { h: 24, W: 32, text: "Info", parent: this }, (c, p2) => p2.children.create(c)],
+              [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
+            ], (c) => this.children.create(c));
+            this.disposable = click(addButton.handle, (e) => {
+              const id = uuid3();
+              const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
+              this.elements.create(node);
+            });
+          }
         });
         const paneBody = new Instance(Viewport, { h: 700, parent: this, classes: this.classes });
         this.viewport = paneBody;
         this.getApplication().viewport = paneBody;
         this.children.create(paneBody);
         globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
-        if (!this.parent.isRootWindow) {
-          const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
-            [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
-            [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
-          ], (c) => this.children.create(c));
-          this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-          const resize = new Resize({
-            area: window,
-            minimumX: 320,
-            minimumY: 200,
-            handle: resizeHandle.el.Container,
-            scale: () => this.getParentScale(this),
-            box: this.getApplication(this),
-            before: () => {
-            },
-            movement: ({ x, y }) => {
-            },
-            after: () => {
-            }
-          });
-          this.destructable = () => resize.destroy();
-        }
+        this.getApplication().on("showStatus", (showStatus) => {
+          if (showStatus) {
+            const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
+              [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
+              [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
+            ], (c) => this.children.create(c));
+            this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+            const resize = new Resize({
+              area: window,
+              minimumX: 320,
+              minimumY: 200,
+              handle: resizeHandle.el.Container,
+              scale: () => this.getParentScale(this),
+              box: this.getApplication(this),
+              before: () => {
+              },
+              movement: ({ x, y }) => {
+              },
+              after: () => {
+              }
+            });
+            this.destructable = () => resize.destroy();
+          }
+        });
         if (this.parent.isRootWindow) {
           this.parent.on("h", (parentH) => {
             const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
@@ -2328,7 +2337,12 @@
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
           let root = svg.g({ name: "element" });
           paneBody.content.appendChild(root);
-          const ui = new Instance(Ui, { id: node.id, node, scene: root, parent: this, content: node.content });
+          const options = { node, scene: root, parent: this, id: node.id, content: node.content };
+          const attributes = {};
+          for (const name2 of node.oo.attributes) {
+            attributes[name2] = node[name2];
+          }
+          const ui = new Instance(Ui, Object.assign(attributes, options));
           this.applications.create(ui);
           ui.start();
         }, { replay: true });
@@ -2387,7 +2401,7 @@
         for (const el of $("Workspace").children()) {
           const node = new Instance(Node, { origin: this.getApplication().id });
           const data = {};
-          node.assign({ ...el.attribs, type: el.name }, data, [$, $(el).children()]);
+          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
           this.elements.create(node);
         }
       },

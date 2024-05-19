@@ -71,7 +71,11 @@ export default class Pane {
     mount(){
       // console.log(Δ);
 
-      // Add Menu
+
+      this.getApplication().on('showMenu', (showMenu)=>{
+        if(showMenu){
+
+        // Add Menu
         const [horizontal1, [ addButton, delButton ]] = nest(Horizontal, [
           [Label, {h: 24, W:32, text: 'File', parent:this}, (c,p)=>p.children.create(c)],
           [Label, {h: 24, W:32, text: 'Info', parent:this}, (c,p)=>p.children.create(c)],
@@ -85,36 +89,39 @@ export default class Pane {
           this.elements.create(node);
         })
 
+        }
+      });
+
+
       // Add Viewport
-      const paneBody = new Instance(Viewport, {h: 700, parent: this, classes:this.classes} );
+      const paneBody = new Instance(Viewport, {h:700, parent: this, classes:this.classes} );
       this.viewport = paneBody;
       this.getApplication().viewport = paneBody;
 
       this.children.create( paneBody );
       globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
-      if(!this.parent.isRootWindow){
-        const [horizontal, [ statusBar, resizeHandle ]] = nest(Horizontal, [
-          [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
-          [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
-        ], (c)=>this.children.create(c));
-
-        this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-
-        const resize = new Resize({
-          area: window,
-          minimumX:320,
-          minimumY:200,
-          handle: resizeHandle.el.Container,
-          scale: ()=>this.getParentScale(this),
-          box:  this.getApplication(this),
-          before: ()=>{},
-          movement: ({x,y})=>{},
-          after: ()=>{},
-        });
-        this.destructable = ()=>resize.destroy();
-
-      }
+      this.getApplication().on('showStatus', (showStatus)=>{
+        if(showStatus){
+          const [horizontal, [ statusBar, resizeHandle ]] = nest(Horizontal, [
+            [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
+            [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
+          ], (c)=>this.children.create(c));
+          this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+          const resize = new Resize({
+            area: window,
+            minimumX:320,
+            minimumY:200,
+            handle: resizeHandle.el.Container,
+            scale: ()=>this.getParentScale(this),
+            box:  this.getApplication(this),
+            before: ()=>{},
+            movement: ({x,y})=>{},
+            after: ()=>{},
+          });
+          this.destructable = ()=>resize.destroy();
+        }
+      });
 
       // NOTE: CODE ANOMALY FOR ROOT EDGECASE
       if(this.parent.isRootWindow){
@@ -138,9 +145,12 @@ export default class Pane {
 
         let root = svg.g({ name: 'element' });
         paneBody.content.appendChild(root);
-        const ui = new Instance(Ui, {id:node.id, node, scene: root, parent: this, content:node.content});
-        this.applications.create(ui);
 
+        const options = { node, scene: root, parent: this, id:node.id, content:node.content };
+        const attributes = {};
+        for (const name of node.oo.attributes) { attributes[name] = node[name] }
+        const ui = new Instance(Ui, Object.assign(attributes, options));
+        this.applications.create(ui);
         ui.start();
 
       }, {replay:true});
@@ -199,7 +209,7 @@ export default class Pane {
       for (const el of $('Workspace').children()) {
         const node = new Instance(Node, { origin: this.getApplication().id });
         const data = {}; //? NOTE: this can use await...
-        node.assign({...el.attribs, type:el.name}, data, [$, $(el).children()]);
+        node.assign({type:el.name, ...el.attribs, }, data, [$, $(el).children()]);
         this.elements.create( node ); // -> see project #onStart for creation.
       }
     },
@@ -213,6 +223,7 @@ export default class Pane {
         this.elements.create( node ); // -> see project #onStart for creation.
       }
     },
+
 
   }
 

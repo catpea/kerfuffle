@@ -2,7 +2,27 @@
 
 <Workspace id="0" name="Hello Project" description="A Selection Of World VisualPrograms" compatibility="1.0.1">
 
-  <Window id="test-a" x="0" y="0" w="1000" h="1000">
+  <Window id="test-a" x="0" y="0" w="1000" h="1000" showMenu="true">
+
+  </Window>
+
+  <Window id="test-b" x="1100" y="0" w="1000" h="1000" showStatus="true">
+
+  </Window>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- <Window id="test-a" x="0" y="0" w="1000" h="1000">
     <Port out id="test-a0" name="out"></Port>
     <Window id="test-a1" x="0" y="0" w="1000" h="1000"></Window>
     <Window id="test-a2" x="1100" y="0" w="1000" h="1000"></Window>
@@ -42,6 +62,6 @@
     </Window>
   </Program>
 
-  <Window id="test-f" x="2300" y="1100" w="1000" h="1000"></Window>
+  <Window id="test-f" x="2300" y="1100" w="1000" h="1000"></Window> -->
 
 </Workspace>

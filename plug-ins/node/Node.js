@@ -47,6 +47,8 @@ export default class Node {
     src: undefined, // JSON url
     data: undefined, // JSON data
 
+
+
   }
 
   types = {
