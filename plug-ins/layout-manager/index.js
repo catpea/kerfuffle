@@ -115,13 +115,10 @@ export class VerticalLayout extends Layout {
 	}
 
 	calculateChildW(child) {
-		// console.log(`Calculating child width in ${this.parent.name} for child ${child.name||child.text}`);
-		// console.log(`My width is ${this.parent.w}.`);
 		const response =
 			this.parent.w -
 			((this.parent.b + this.parent.p) * BOTH_SIDES) // REMOVE SPACE USED BY PARENT PADDING
 
-		// console.log(`Returning ${response}`);
 		return response;
 	}
 
@@ -155,7 +152,6 @@ export class VerticalLayout extends Layout {
 	}
 
 	calculateChildY(child) {
-		//console.log();
 		const response =
 			this.parent.y +
 			this.parent.b +
@@ -168,31 +164,14 @@ export class VerticalLayout extends Layout {
 
 	calculateGrowChildH(flexibleChild){
 		let response = flexibleChild.h;
-		// console.log(`${flexibleChild.oo.name} is flexible`);
-
-
 		const childrenHeight = this.parent.children.filter(c=>c!==flexibleChild).reduce((total, c) => total + (c.h), 0);
-
 		const childrenHeightGaps = (this.parent.s * 2) * this.parent.children.length;
-
-	  // console.log({childrenHeight});
 	  const freeSpace = this.parent.h - childrenHeight - (this.parent.b*2) - (this.parent.p*2);
-	  // console.log({freeSpace});
-	  // console.log(flexibleChild.h, freeSpace);
-	 //
-	if(freeSpace != response) console.log(freeSpace, response, childrenHeightGaps, `${this.parent.children.length} children... off by ${freeSpace-response}`);
-
-	     if(freeSpace){
-				 return freeSpace;
-			 }
-	 //     viewport.H = freeSpace;
-
+     if(freeSpace){
+			 return freeSpace;
+		 }
 		return response;
 	}
-
-
-
-
 }
 
 export class HorizontalLayout extends Layout {
@@ -202,7 +181,6 @@ export class HorizontalLayout extends Layout {
 		const children = this.parent[this.source];
 		const childCount = children.length;
 		const siblingCount = this.above(this.parent, child).length;
-		// console.log(`${this.constructor.name} got ${childCount} child${childCount==1?'':'ren'} to layout! (I have ${siblingCount} sibling${siblingCount==1?'':'s'} before me.)`);
 
 		child.x = this.calculateChildX(child);
 		child.y = this.calculateChildY(child);
@@ -212,23 +190,17 @@ export class HorizontalLayout extends Layout {
 		this.parent.on('y', () => child.y = this.calculateChildY(child) );
 		this.parent.on('h', () => child.y = this.calculateChildY(child) );
 
-		// when parent width changes children's width should change
-		// this.parent.on('w', () => child.x = this.calculateChildX(child) );
-
 		this.parent.on('children.changed', list => list.forEach(child=>{
 			child.w = this.calculateChildW(child);
 			child.x = this.calculateChildX(child);
 		}));
-
 
 		this.parent.on('w', ()=>{
 			child.w = this.calculateChildW(child);
 			child.x = this.calculateChildX(child);
 		});
 
-
 		child.on('h', () => this.parent.h = this.calculateH() );
-
 
 	}
 
@@ -240,31 +212,15 @@ export class HorizontalLayout extends Layout {
 			this.above(this.parent, child).reduce((total, child) => total + child.w, 0) +
 			((this.parent.s * 2) * this.above(this.parent, child).length);
 			return response;
-
 	}
 
 	calculateChildW1(child){
 		const children = this.parent[this.source];
 		const childCount = children.length;
 		const siblingCount = this.above(this.parent, child).length;
-
-		// console.log(childCount, siblingCount);
 		let response = this.parent.w / childCount;
 		return response;
-
-		// if(child.W) response = child.W; // hard height (min-height)
-		//
-
-		// const usedUp = this.above(this.parent, child).reduce((total, child) => total + child.w, 0);
-		// const remaining = this.parent.w;
-
-		// let hardWidth = this.above(this.parent, child).reduce((total, child) => total + child.W, 0);
-		// let flexWidth = this.parent.w - hardWidth;
-		//
-		// return response;
 	}
-
-
 
 	calculateChildW(child){
 		if(!(child.W===undefined)) return (child.W<1?this.parent.w*child.W:child.W);
@@ -277,12 +233,6 @@ export class HorizontalLayout extends Layout {
 		return softUnit;
 	}
 
-
-
-
-
-
-
 	calculateChildY(child){
 		const response =
 			this.parent.y +
@@ -291,25 +241,18 @@ export class HorizontalLayout extends Layout {
 		return response;
 	}
 
-
 	calculateH() {
 		let heightOfChildren = 0;
 		const children = this.parent[this.source];
 		heightOfChildren = children.reduce((max, c) =>     c.h>max?c.h:max, 0) ;
-				// ((this.parent.s * 2) * (children.length > 0 ? children.length - 1 : 0 /* not counting gap in last child as it does not have one*/ ))
-
 
 		let response =
 			this.parent.b +
 			this.parent.p +
-			// this.parent.H + // NOT A MISTAKE design can hold a base h that is used in calculations
 			heightOfChildren +
 			this.parent.p +
 			this.parent.b;
-
-			// if(response < this.parent.H) response = this.parent.H; // hard height (min-height)
 			if(response < this.parent.H) response = this.parent.H; // hard height (min-height)
-
 		return response;
 	}
 
@@ -325,11 +268,6 @@ export class RelativeLayout extends Layout {
 
 	manage(child) {
 		if(!child.node) throw	new Error('RelativeLayout requires that all children have a valid .node attached.');
-		// children.set(child, {
-		// 	x: child.x,
-		// 	y: child.y,
-		// });
-		//
 		this.parent.on('x', () => child.x = this.calculateChildX(child) );
 		this.parent.on('y', () => child.y = this.calculateChildY(child) );
 		child.node.on('x', () => child.x = this.calculateChildX(child) );
@@ -351,53 +289,34 @@ export class AnchorLayout extends Layout {
 
 		child.x = this.calculateChildX(child);
 		child.y = this.calculateChildY(child);
-		// child.w = this.calculateChildW(child);
 
-		// at the same time, be aware that parent will set your X/Y
-		// so monotor it!
 		this.parent.on('x', () => child.x = this.calculateChildX(child) );
 		this.parent.on('y', () => child.y = this.calculateChildY(child) );
 		this.parent.on('w', () => child.x = this.calculateChildX(child) );
 
-		// child.on('w', () => child.x = this.calculateChildX(child) );
-
-		// when parent changes size, this child needs to update its Y.
 		this.parent.on('h', () => child.y = this.calculateChildY(child) );
 
 	}
 
 	calculateChildX(child){
-		// console.log('child.s', child.s);
 		if(!child.side){ // LEFT or 0 side
 			return this.parent.x - child.r - child.s;
 		}else{ // RIGHT or "1" side
 			return this.parent.x + this.parent.w + child.r + child.s;
 		}
-		// - this.parent.b
-		// - this.parent.p
-		// -(child.r/2)
-
 		this.parent.b + this.parent.p
 	}
 
 	calculateChildY(child){
-		//console.log();
 		const response =
 			this.parent.y +
 			this.parent.b +
 			this.parent.p +
 			child.r +
-
 			this.above(this.parent, child).filter(o=>o.side==child.side).reduce((total, child) => total + child.h, 0) +
 			((this.parent.s * 2) * this.above(this.parent, child).length);
 
 		return response;
 	}
-
-	calculateChildW(child){
-		///??
-	}
-
-
 
 }

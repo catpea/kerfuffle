@@ -2,41 +2,46 @@
 
 <Workspace id="0" name="Hello Project" description="A Selection Of World VisualPrograms" compatibility="1.0.1">
 
-  <TestWindow id="test-a" x="0" y="0" w="1000" h="1000">
-    <TestWindow id="test-a1" x="0" y="0" w="1000" h="1000"></TestWindow>
-    <TestWindow id="test-a2" x="1100" y="0" w="1000" h="1000"></TestWindow>
-  </TestWindow>
+  <Window id="test-a" x="0" y="0" w="1000" h="1000">
+    <Port out id="test-a0" name="out"></Port>
+    <Window id="test-a1" x="0" y="0" w="1000" h="1000"></Window>
+    <Window id="test-a2" x="1100" y="0" w="1000" h="1000"></Window>
+  </Window>
 
-  <TestWindow id="test-b" x="1100" y="0" w="1000" h="1000">
-    <TestWindow id="test-b1" x="0" y="0" w="1000" h="1000"></TestWindow>
-    <TestWindow id="test-b2" x="1100" y="0" w="1000" h="1000"></TestWindow>
-  </TestWindow>
+  <Window id="test-b" x="1100" y="0" w="1000" h="1000">
+    <Port in id="test-b0" name="in"></Port>
+    <Window id="test-b1" x="0" y="0" w="1000" h="1000"></Window>
+    <Window id="test-b2" x="1100" y="0" w="1000" h="1000"></Window>
+  </Window>
 
-  <TestWindow id="test-c" x="2300" y="0" w="1000" h="1000">
-    <Node id="a" TestWindow="test-d"></Node>
-    <Node id="b" TestWindow="test-e"></Node>
-    <Socket id="c" type="out" name="out"></Socket>
+  <Pipe from="test-a" out="out" to="zz"></Pipe>
+  <Function id="zz" name="log"></Function>
+  <Pipe from="zz" to="test-b" in="in"></Pipe>
+
+  <Window id="test-c" x="2300" y="0" w="1000" h="1000">
+    <Function id="a" Window="test-d"></Function>
+    <Function id="b" Window="test-e"></Function>
+    <Port out id="c" name="out"></Port>
     <Pipe from="a" source="text" to="b" target="in"></Pipe>
     <Pipe from="b" source="out" to="c" target="out"></Pipe>
-  </TestWindow>
+  </Window>
 
-  <TestWindow id="test-d" x="0" y="1100" w="1000" h="1000">
-    <Socket id="a" type="out" format="string" value="Hello World!" name="out"></Socket>
-  </TestWindow>
+  <Window id="test-d" x="0" y="1100" w="1000" h="1000">
+    <Port out id="a" format="string" value="Hello World!" name="out"></Port>
+  </Window>
 
-  <TestWindow id="test-e" x="1100" y="1100" w="1000" h="1000">
-    <Socket id="a" type="in" name="in"></Socket>
+  <Program id="test-e" x="1100" y="1100" w="1000" h="1000">
+    <Port in id="a" name="in"></Port>
     <Function id="b" src="scripts/transform-upper.js"></Function>
-    <Socket id="c" type="out" name="out"></Socket>
+    <Port out id="c" name="out"></Port>
     <Pipe from="a" to="b"></Pipe>
     <Pipe from="b" to="c"></Pipe>
-    <TestWindow id="test-a" x="0" y="0" w="1000" h="1000">
-      <TestWindow id="test-a1" x="0" y="0" w="1000" h="1000"></TestWindow>
-      <TestWindow id="test-a2" x="1100" y="550" w="1000" h="1000"></TestWindow>
-    </TestWindow>
+    <Window id="test-a" x="0" y="0" w="1000" h="1000">
+      <Window id="test-a1" x="0" y="0" w="1000" h="1000"></Window>
+      <Window id="test-a2" x="1100" y="550" w="1000" h="1000"></Window>
+    </Window>
+  </Program>
 
-  </TestWindow>
-
-  <TestWindow id="test-f" x="2300" y="1100" w="1000" h="1000"></TestWindow>
+  <Window id="test-f" x="2300" y="1100" w="1000" h="1000"></Window>
 
 </Workspace>

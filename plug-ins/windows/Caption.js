@@ -36,9 +36,6 @@ export default class Caption {
 
     mount(){
 
-      this.createControlAnchor({ name: 'input', side: 0 });
-      this.createControlAnchor({ name: 'output', side: 1 });
-
       const [horizontal, [ info1, maximizeButton ]] = nest(Horizontal, { parent:this, scene:this.scene }, [
         [Label, {h: 24,       text: this.text, parent:this}, (c,p)=>p.children.create(c)],
         [Label, {h: 24, W:24, text: '[ ]', parent:this}, (c,p)=>p.children.create(c)],

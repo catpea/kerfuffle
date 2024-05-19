@@ -78,7 +78,6 @@ export default class Node {
 
       for (const key in values) {
         if(this.oo.types[key]){
-          console.log( '>>>', values[key], this.oo.types[key], cast(values[key], this.oo.types[key]) );
           this[key] = cast(values[key], this.oo.types[key]);
         }else{
           this[key] = values[key]; // plain assign

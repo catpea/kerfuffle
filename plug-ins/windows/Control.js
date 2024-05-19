@@ -27,26 +27,11 @@ export default class Control {
   methods = {
 
     initialize(){
-      // console.log(`%cControl.initialize!`, 'background: hsl(180, 80%, 60%); color: black;', this);
     },
 
     mount(){
+      
       this.anchorage = new AnchorLayout(this, {source: 'anchors'});
-      // this.piper = new EventSystem(this.getRootContainer(), {source: 'streams'});
-
-      // this.el.Container = svg.rect({
-      //   name: this.name,
-      //   class: 'editor-control',
-      //   ry: this.r,
-      //   'stroke-width': 2,
-      //   // set initial values
-      //   // these are special, handeled by the layout manager
-      //   // NOTE: these are observables, getter returns a value, setter notifies listeners, and you can ```this.observe('x', v=>{...})```
-      //   width: this.w,
-      //   height: this.h,
-      //   x: this.x,
-      //   y: this.y,
-      // });
 
       this.on("anchors.created", (anchor) => {
         anchor.start();
@@ -60,13 +45,6 @@ export default class Control {
         this.removeControlAnchor(anchor.id);
         this.anchorage.forget(anchor);
       });
-
-      // this.on('name',  name=>update(this.el.Container,{name}), );
-      // this.on('w',  width=>update(this.el.Container,{width}), );
-      // this.on('h', height=>update(this.el.Container,{height}),);
-      // this.on('x',      x=>update(this.el.Container,{x}),     );
-      // this.on('y',      y=>update(this.el.Container,{y}),     );
-      // this.on('r',     ry=>update(this.el.Container,{ry}),     );
 
       this.appendElements();
     },
@@ -87,6 +65,8 @@ export default class Control {
     },
 
 
+
+
     createControlAnchor({name, side}){
       console.log('TODO: createControlAnchor is disabled');
       return
@@ -104,6 +84,12 @@ export default class Control {
       const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
       origin.root.anchors.remove(id);
     },
+
+
+
+
+
+
 
     destroy(){
       console.warn('TODO: DESTROY ALL ANCHORS');

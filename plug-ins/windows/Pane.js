@@ -8,8 +8,7 @@ import Resize from "/plug-ins/meowse/Resize.js";
 import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
-import TestWindow from "/plug-ins/applications/TestWindow.js";
-import ThemeBuilder from "/plug-ins/applications/ThemeBuilder.js";
+import components from "/plug-ins/components/index.js";
 
 import Viewport from "/plug-ins/windows/Viewport.js";
 import Container from "/plug-ins/windows/Container.js";
@@ -56,12 +55,7 @@ export default class Pane {
     anchors: [],
     pipes: [],
 
-    types: [
-      TestWindow,
-      ThemeBuilder,
-      Junction,
-      Line
-    ],
+    components,
 
   };
 
@@ -139,14 +133,14 @@ export default class Pane {
 
       this.on("elements.created", (node) => {
 
-        const Ui = this.types.find(o=>o.name==node.type); // concept as in conceptmap is a component as it is a GUI thing.
+        const Ui = this.components[node.type];
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
 
         let root = svg.g({ name: 'element' });
         paneBody.content.appendChild(root);
-        console.log('FEED .created phase', node.type, node.content);
         const ui = new Instance(Ui, {id:node.id, node, scene: root, parent: this, content:node.content});
         this.applications.create(ui);
+
         ui.start();
 
       }, {replay:true});
@@ -193,7 +187,9 @@ export default class Pane {
       });
       this.destructable = ()=>zoom.destroy();
       this.on('url',     url=>this.loadXml(this.url));
-      if(this.getApplication().content) this.loadElements(this.getApplication().content /* this passes on the cheerio tuple*/ )
+
+      if(this.getApplication().content) this.loadElements(this.getApplication().content /* this passes on the cheerio tuple */ )
+
     },
 
     async loadXml(url){
@@ -203,7 +199,7 @@ export default class Pane {
       for (const el of $('Workspace').children()) {
         const node = new Instance(Node, { origin: this.getApplication().id });
         const data = {}; //? NOTE: this can use await...
-        node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
+        node.assign({...el.attribs, type:el.name}, data, [$, $(el).children()]);
         this.elements.create( node ); // -> see project #onStart for creation.
       }
     },

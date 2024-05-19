@@ -652,7 +652,6 @@
         const values = { ...meta, data, content };
         for (const key in values) {
           if (this.oo.types[key]) {
-            console.log(">>>", values[key], this.oo.types[key], cast(values[key], this.oo.types[key]));
             this[key] = cast(values[key], this.oo.types[key]);
           } else {
             this[key] = values[key];
@@ -853,8 +852,6 @@
       const childrenHeight = this.parent.children.filter((c) => c !== flexibleChild).reduce((total, c) => total + c.h, 0);
       const childrenHeightGaps = this.parent.s * 2 * this.parent.children.length;
       const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2;
-      if (freeSpace != response)
-        console.log(freeSpace, response, childrenHeightGaps, `${this.parent.children.length} children... off by ${freeSpace - response}`);
       if (freeSpace) {
         return freeSpace;
       }
@@ -915,8 +912,7 @@
       let heightOfChildren = 0;
       const children = this.parent[this.source];
       heightOfChildren = children.reduce((max, c) => c.h > max ? c.h : max, 0);
-      let response = this.parent.b + this.parent.p + // this.parent.H + // NOT A MISTAKE design can hold a base h that is used in calculations
-      heightOfChildren + this.parent.p + this.parent.b;
+      let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
       if (response < this.parent.H)
         response = this.parent.H;
       return response;
@@ -945,8 +941,6 @@
     calculateChildY(child) {
       const response = this.parent.y + this.parent.b + this.parent.p + child.r + this.above(this.parent, child).filter((o) => o.side == child.side).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
       return response;
-    }
-    calculateChildW(child) {
     }
   };
 
@@ -1691,8 +1685,6 @@
       initialize() {
       },
       mount() {
-        this.createControlAnchor({ name: "input", side: 0 });
-        this.createControlAnchor({ name: "output", side: 1 });
         const [horizontal, [info1, maximizeButton]] = nest(Horizontal, { parent: this, scene: this.scene }, [
           [Label, { h: 24, text: this.text, parent: this }, (c, p2) => p2.children.create(c)],
           [Label, { h: 24, W: 24, text: "[ ]", parent: this }, (c, p2) => p2.children.create(c)]
@@ -2146,70 +2138,6 @@
     }
   };
 
-  // plug-ins/applications/ThemeBuilder.js
-  var ThemeBuilder = class {
-    static {
-      __name(this, "ThemeBuilder");
-    }
-    static extends = [Application];
-    properties = {};
-    methods = {
-      mount() {
-        const themeColors = new Instance(ThemeColors);
-        this.createWindowComponent(themeColors);
-        this.on("node", (node) => {
-        });
-      },
-      stop() {
-        console.log("todo: stopping root application");
-      },
-      destroy() {
-        console.log("todo: destroying root application");
-        this.dispose();
-      }
-    };
-  };
-  var ThemeColors = class {
-    static {
-      __name(this, "ThemeColors");
-    }
-    static extends = [Control];
-    properties = {
-      colors: ["primary", "secondary", "success", "info", "warning", "danger", "light", "dark"]
-    };
-    methods = {
-      initialize() {
-        this.w = 200;
-        this.h = 400;
-        this.H = 400;
-      },
-      mount() {
-        for (const color of this.colors) {
-          this.createControlAnchor({ name: color, side: 0 });
-        }
-        for (const color of this.colors) {
-          this.oo.createObservable(color, "magenta");
-        }
-        for (const color of this.colors) {
-          this.pipe(color).on("data", (data) => document.documentElement.style.setProperty(`--editor-${color}`, data.color));
-          this.pipe(color).on("data", (data) => this[color] = data.color);
-        }
-        this.any(this.colors, (colors) => {
-          let vars = [];
-          for (const color of this.colors) {
-            vars.push(`  --editor-${color}: ${this[color]};`);
-          }
-          const doc = `:root, [data-ui-theme=nostromo] {
-${vars.join("\n")}
-}
-`;
-          this.pipe("output").emit("data", { format: "css", doc });
-        });
-      }
-      // end mount
-    };
-  };
-
   // plug-ins/diagnostic/index.js
   var DiagnosticRectangle = class {
     static {
@@ -2311,272 +2239,6 @@ ${vars.join("\n")}
     };
   };
 
-  // plug-ins/move/index.js
-  var Move2 = class {
-    static {
-      __name(this, "Move");
-    }
-    component;
-    window;
-    handle;
-    zone;
-    mouseDownHandler;
-    mouseMoveHandler;
-    mouseUpHandler;
-    previousX = 0;
-    previousY = 0;
-    dragging = false;
-    constructor({ component, window: window2, handle, zone }) {
-      if (!component)
-        throw new Error("component is required");
-      if (!handle)
-        throw new Error("handle is required");
-      if (!window2)
-        throw new Error("window is required");
-      if (!zone)
-        throw new Error("zone is required");
-      this.component = component;
-      this.handle = handle;
-      this.window = window2;
-      this.zone = zone;
-      this.mount();
-    }
-    mount() {
-      this.mouseDownHandler = (e) => {
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-        this.dragging = true;
-        globalThis.project.iframe = false;
-        this.zone.addEventListener("mousemove", this.mouseMoveHandler);
-      };
-      this.mouseMoveHandler = (e) => {
-        const movementX = this.previousX - e.screenX;
-        const movementY = this.previousY - e.screenY;
-        this.component.node.x = this.component.node.x - movementX / globalThis.project.zoom;
-        this.component.node.y = this.component.node.y - movementY / globalThis.project.zoom;
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-      };
-      this.mouseUpHandler = (e) => {
-        this.dragging = false;
-        globalThis.project.iframe = true;
-        this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
-      };
-      this.handle.addEventListener("mousedown", this.mouseDownHandler);
-      this.zone.addEventListener("mouseup", this.mouseUpHandler);
-    }
-    destroy() {
-      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
-      this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
-      this.zone.removeEventListener("mouseup", this.mouseUpHandler);
-    }
-  };
-
-  // plug-ins/focus/index.js
-  var Focus2 = class {
-    static {
-      __name(this, "Focus");
-    }
-    component;
-    handle;
-    // handlers
-    mouseDownHandler;
-    mouseUpHandler;
-    constructor({ component, handle }) {
-      if (!component)
-        throw new Error("component is required");
-      if (!handle)
-        throw new Error("handle is required");
-      this.component = component;
-      this.handle = handle;
-      this.mount();
-    }
-    mount() {
-      this.mouseDownHandler = (e) => {
-        front(this.component.scene);
-      };
-      this.handle.addEventListener("mousedown", this.mouseDownHandler);
-    }
-    destroy() {
-      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
-    }
-  };
-
-  // plug-ins/windows/Junction.js
-  var Junction = class {
-    static {
-      __name(this, "Junction");
-    }
-    static extends = [Control];
-    properties = {
-      handle: null
-    };
-    observables = {};
-    constraints = {
-      mount: {
-        ".scene is required to start the universe": function() {
-          if (!this.scene) {
-            return { error: ".svg not found" };
-          }
-        }
-      }
-    };
-    methods = {
-      initialize() {
-        this.w = 0;
-        this.h = 0;
-        this.r = 12;
-      },
-      mount() {
-        this.el.Primary = svg.circle({
-          name: this.name,
-          class: "editor-junction",
-          "vector-effect": "non-scaling-stroke",
-          r: this.r,
-          width: this.w,
-          height: this.h,
-          cx: this.x,
-          cy: this.y
-        });
-        this.on("selected", (selected) => selected ? this.el.Primary.classList.add("selected") : this.el.Primary.classList.remove("selected"));
-        const move = new Move2({
-          component: this,
-          handle: this.el.Primary,
-          window: this,
-          zone: window
-        });
-        this.destructable = () => move.destroy();
-        const focus2 = new Focus2({
-          component: this,
-          handle: this.scene
-          // set to caption above to react to window captions only
-        });
-        this.destructable = () => focus2.destroy();
-        const select = new Select({
-          component: this,
-          handle: this.el.Primary
-        });
-        this.destructable = () => select.destroy();
-        this.appendElements();
-        const inputAnchor = this.createControlAnchor({ name: "input", side: 0, r: 4 });
-        const outputAnchor = this.createControlAnchor({ name: "output", side: 1, r: 4 });
-        this.pipe("input").on("data", (data) => this.pipe("output").emit("data", data));
-        this.on("name", (name2) => update(this.el.Primary, { name: name2 }));
-        this.on("x", (cx) => update(this.el.Primary, { cx }));
-        this.on("y", (cy) => update(this.el.Primary, { cy }));
-      },
-      destroy() {
-        this.removeElements();
-      }
-    };
-  };
-
-  // plug-ins/geometrique/midpoint.js
-  function midpoint({ x1, y1, x2, y2 }) {
-    const cx = (x1 + x2) / 2;
-    const cy = (y1 + y2) / 2;
-    return { cx, cy };
-  }
-  __name(midpoint, "midpoint");
-
-  // plug-ins/geometrique/edgepoint.js
-  function edgepoint(cx, cy, r, x1, y1, x2, y2) {
-    const angleRadians = Math.atan2(y2 - y1, x2 - x1);
-    const x = cx + r * Math.cos(angleRadians);
-    const y = cy + r * Math.sin(angleRadians);
-    return [x, y];
-  }
-  __name(edgepoint, "edgepoint");
-
-  // plug-ins/windows/Line.js
-  var Line = class {
-    static {
-      __name(this, "Line");
-    }
-    static extends = [Component];
-    properties = {};
-    observables = {
-      source: null,
-      target: null,
-      x1: 0,
-      y1: 0,
-      x2: 0,
-      y2: 0
-    };
-    constraints = {
-      mount: {
-        ".scene is required to start the universe": function() {
-          if (!this.scene) {
-            return { error: ".svg not found" };
-          }
-        }
-      }
-    };
-    methods = {
-      initialize() {
-      },
-      mount() {
-        this.el.Primary = svg.line({
-          name: this.name,
-          class: "editor-line",
-          "vector-effect": "non-scaling-stroke"
-        });
-        this.el.Midpoint = svg.circle({
-          name: this.name,
-          class: "editor-line-midpoint",
-          "vector-effect": "non-scaling-stroke",
-          r: 4
-        });
-        this.on("selected", (selected) => selected ? this.el.Primary.classList.add("selected") : this.el.Primary.classList.remove("selected"));
-        this.on("selected", (selected) => selected ? this.el.Midpoint.classList.add("selected") : this.el.Midpoint.classList.remove("selected"));
-        const select = new Select({
-          component: this,
-          handle: this.el.Primary
-        });
-        this.destructable = () => focus.destroy();
-        this.on("name", (name2) => update(this.el.Primary, { name: name2 }));
-        this.on("node", (node) => {
-          node.on("source", (source) => this.source = source);
-          node.on("target", (target) => this.target = target);
-        });
-        this.on("source", (id) => {
-          if (!id)
-            throw new Error(`Primary requires source id`);
-          if (!id.includes(":"))
-            throw new Error(`Id must contain ":".`);
-          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-          const component = origin.root.anchors.get(id);
-          component.on("x", (x) => this.x1 = x);
-          component.on("y", (y) => this.y1 = y);
-        });
-        this.on("target", (id) => {
-          if (!id)
-            throw new Error(`Primary requires target id`);
-          if (!id.includes(":"))
-            throw new Error(`Id must contain ":".`);
-          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-          const component = origin.root.anchors.get(id);
-          component.on("x", (x) => this.x2 = x);
-          component.on("y", (y) => this.y2 = y);
-        });
-        this.all(["source", "target"], ({ source, target }) => {
-          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-          globalThis.project.pipe(origin, source, target);
-        });
-        this.any(["x1", "y1", "x2", "y2"], (packet) => update(this.el.Midpoint, midpoint(packet)));
-        this.any(["x1", "y1", "x2", "y2"], ({ x1, y1, x2, y2 }) => {
-          const [x3, y3] = edgepoint(x1, y1, 12, x1, y1, x2, y2);
-          const [x4, y4] = edgepoint(x2, y2, -12, x1, y1, x2, y2);
-          update(this.el.Primary, { x1: x3, y1: y3, x2: x4, y2: y4 });
-        });
-        this.appendElements();
-      },
-      destroy() {
-        this.removeElements();
-      }
-    };
-  };
-
   // plug-ins/windows/Pane.js
   var uuid3 = bundle["uuid"];
   var cheerio = bundle["cheerio"];
@@ -2600,12 +2262,7 @@ ${vars.join("\n")}
       elements: [],
       anchors: [],
       pipes: [],
-      types: [
-        TestWindow,
-        ThemeBuilder,
-        Junction,
-        Line
-      ]
+      components: components_default
     };
     methods = {
       initialize() {
@@ -2666,12 +2323,11 @@ ${vars.join("\n")}
         this.on("panY", (panY) => paneBody.panY = panY);
         this.on("zoom", (zoom2) => paneBody.zoom = zoom2);
         this.on("elements.created", (node) => {
-          const Ui = this.types.find((o) => o.name == node.type);
+          const Ui = this.components[node.type];
           if (!Ui)
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
           let root = svg.g({ name: "element" });
           paneBody.content.appendChild(root);
-          console.log("FEED .created phase", node.type, node.content);
           const ui = new Instance(Ui, { id: node.id, node, scene: root, parent: this, content: node.content });
           this.applications.create(ui);
           ui.start();
@@ -2720,7 +2376,7 @@ ${vars.join("\n")}
         if (this.getApplication().content)
           this.loadElements(
             this.getApplication().content
-            /* this passes on the cheerio tuple*/
+            /* this passes on the cheerio tuple */
           );
       },
       async loadXml(url) {
@@ -2731,7 +2387,7 @@ ${vars.join("\n")}
         for (const el of $("Workspace").children()) {
           const node = new Instance(Node, { origin: this.getApplication().id });
           const data = {};
-          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
+          node.assign({ ...el.attribs, type: el.name }, data, [$, $(el).children()]);
           this.elements.create(node);
         }
       },
@@ -2748,10 +2404,10 @@ ${vars.join("\n")}
     };
   };
 
-  // plug-ins/applications/TestWindow.js
-  var TestWindow = class {
+  // plug-ins/components/Window.js
+  var Window2 = class {
     static {
-      __name(this, "TestWindow");
+      __name(this, "Window");
     }
     static extends = [Application];
     properties = {};
@@ -2773,22 +2429,16 @@ ${vars.join("\n")}
     };
   };
 
-  // plug-ins/applications/RootWindow.js
-  var RootWindow = class {
+  // plug-ins/components/Port.js
+  var Port = class {
     static {
-      __name(this, "RootWindow");
+      __name(this, "Port");
     }
     static extends = [Application];
-    properties = {
-      isRootWindow: true
-    };
+    properties = {};
     methods = {
       mount() {
-        this.pane = new Instance(Pane, { classes: "root-window" });
-        this.on("node", (node) => {
-          node.on("url", (url) => this.pane.url = url);
-        });
-        this.createWindowComponent(this.pane);
+        console.log("I am the mighty port child of", this.parent.oo.name, "I exist in two places in a window and outside it");
       },
       stop() {
         console.log("todo: stopping root application");
@@ -2799,6 +2449,14 @@ ${vars.join("\n")}
       }
     };
   };
+
+  // plug-ins/components/index.js
+  var components = {
+    Workspace: Window2,
+    Window: Window2,
+    Port
+  };
+  var components_default = components;
 
   // src/System.js
   var System = class {
@@ -2820,7 +2478,7 @@ ${vars.join("\n")}
       },
       mount() {
         const node = new Instance(Node, { id: "0", origin: "0", url: this.url, data: {} });
-        this.rootWindow = new Instance(RootWindow, { id: node.id, node, svg: this.svg, scene: this.scene, parent: null, origins: this.origins, isRootWindow: true });
+        this.rootWindow = new Instance(components_default.Workspace, { id: node.id, node, svg: this.svg, scene: this.scene, parent: null, origins: this.origins, isRootWindow: true });
         this.rootWindow.start();
         const onResize = /* @__PURE__ */ __name(() => {
           this.rootWindow.w = this.svg.clientWidth;
