@@ -124,7 +124,9 @@ export class VerticalLayout extends Layout {
 
 	calculateH() {
 		let heightOfChildren = 0;
+
 		const children = this.parent[this.source];
+
 		heightOfChildren = children.reduce((total, c) => total + (c.h), 0) +
 				((this.parent.s * 2) * (children.length > 0 ? children.length - 1 : 0 /* not counting gap in last child as it does not have one*/ ))
 
@@ -164,10 +166,13 @@ export class VerticalLayout extends Layout {
 
 	calculateGrowChildH(flexibleChild){
 		let response = flexibleChild.h;
-		const childrenHeight = this.parent.children.filter(c=>c!==flexibleChild).reduce((total, c) => total + (c.h), 0);
+		const children = this.parent.children.filter(c=>c!==flexibleChild);
+		const childrenHeight = children.reduce((total, c) => total + (c.h), 0);
 		const childrenHeightGaps = (this.parent.s * 2) * this.parent.children.length;
 	  const freeSpace = this.parent.h - childrenHeight - (this.parent.b*2) - (this.parent.p*2);
-     if(freeSpace){
+
+
+     if( children.length && freeSpace){
 			 return freeSpace;
 		 }
 		return response;
