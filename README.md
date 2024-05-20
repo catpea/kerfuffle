@@ -8,16 +8,18 @@ Visual Programming Language
 - [ ] Port Node
 - [ ] Pipe
 - [ ] Junction
-- [ ] Editor
-- [ ] Terminal
+- [x] Editor
+- [x] Terminal
+- [x] HTML Window (possibly for svelte)
+- [ ] Restore iframe (just use Foreign)
+- [ ] Proper Toolbar for Icons
+- [ ] Port Control widget inside evey window that controls window anchors
 
 ---
 
-- [ ] Proper Toolbar for Icons
-- [ ] Port Control widget inside evey window that controls window anchors
-- [ ] Cascading Zoom
-- [ ] Labels must monitor transform stack from their placement up.
-- [ ] .s is not working with laut manager and the anomaly in pane.
+- [x] Cascading Zoom
+- [x] Labels must monitor transform stack from their placement up.
+- [x] .s is not working with laut manager and the anomaly in pane.
 - [x] Nested Transforms
 - [x] Add component loading to Root Window
 - [x] Switch from JSON to XML

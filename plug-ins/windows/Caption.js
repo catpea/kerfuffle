@@ -32,13 +32,14 @@ export default class Caption {
 
     initialize(){
       // console.log(`%cComponent.initialize!`, 'background: hsl(180, 80%, 60%); color: black;', this);
+
     },
 
     mount(){
 
-      const [horizontal, [ info1, maximizeButton ]] = nest(Horizontal, { parent:this, scene:this.scene }, [
-        [Label, {h: 24,       text: this.text, parent:this}, (c,p)=>p.children.create(c)],
-        [Label, {h: 24, W:24, text: '[ ]', parent:this}, (c,p)=>p.children.create(c)],
+      const [horizontal, [ info1, maximizeButton ]] = nest(Horizontal, { parent:this, scene:this.scene, s:2  }, [
+        [Label, {h: 24,       text: this.text, parent:this, r:3}, (c,p)=>p.children.create(c)],
+        [Label, {h: 24, W:24, text: '++', parent:this , r:3}, (c,p)=>p.children.create(c)],
       ], (c)=>{
         this.destructable = ()=>{c.stop(); c.destroy();}
       })

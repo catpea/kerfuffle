@@ -173,8 +173,11 @@ export class VerticalLayout extends Layout {
 
 		const children = this.parent.children.filter(c=>c!==flexibleChild);
 		const childrenHeight = children.reduce((total, c) => total + (c.h), 0);
-		const childrenHeightGaps = (this.parent.s * 2) * this.parent.children.length;
-	  const freeSpace = this.parent.h - childrenHeight - (this.parent.b*2) - (this.parent.p*2);
+
+		const childrenHeightGaps = (this.parent.s * 1) * this.parent.children.length;
+		// let childrenHeightGaps = ((this.parent.s * 2) * (children.length > 0 ? children.length - 1 : 0  ))
+
+	  const freeSpace = this.parent.h - childrenHeight - (this.parent.b*2) - (this.parent.p*2) - childrenHeightGaps;
 
 		console.table('flexibleChild.h', {
 			application:this.parent.getApplication().oo.name,
@@ -250,7 +253,10 @@ export class HorizontalLayout extends Layout {
 		let softElements = children.filter(child=>child.W===undefined);
 		let hardElements = children.filter(child=>!(child.W===undefined));
 		let hardSpace = hardElements.reduce((total, child) => total + (child.W<1?this.parent.w*child.W:child.W), 0);
-		let availableSoftSpace = this.parent.w - hardSpace;
+
+		let spacers = ((this.parent.s * 2) * (children.length > 0 ? children.length - 1 : 0  ))
+
+		let availableSoftSpace = this.parent.w - hardSpace - spacers;
  		let softUnit = availableSoftSpace / (softElements.length||1);
 		return softUnit;
 	}

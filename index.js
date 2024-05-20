@@ -850,8 +850,8 @@
       let response = flexibleChild.h;
       const children = this.parent.children.filter((c) => c !== flexibleChild);
       const childrenHeight = children.reduce((total, c) => total + c.h, 0);
-      const childrenHeightGaps = this.parent.s * 2 * this.parent.children.length;
-      const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2;
+      const childrenHeightGaps = this.parent.s * 1 * this.parent.children.length;
+      const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2 - childrenHeightGaps;
       console.table("flexibleChild.h", {
         application: this.parent.getApplication().oo.name,
         "application.h": this.parent.getApplication().h,
@@ -908,7 +908,8 @@
       let softElements = children.filter((child2) => child2.W === void 0);
       let hardElements = children.filter((child2) => !(child2.W === void 0));
       let hardSpace = hardElements.reduce((total, child2) => total + (child2.W < 1 ? this.parent.w * child2.W : child2.W), 0);
-      let availableSoftSpace = this.parent.w - hardSpace;
+      let spacers = this.parent.s * 2 * (children.length > 0 ? children.length - 1 : 0);
+      let availableSoftSpace = this.parent.w - hardSpace - spacers;
       let softUnit = availableSoftSpace / (softElements.length || 1);
       return softUnit;
     }
@@ -1696,9 +1697,9 @@
       initialize() {
       },
       mount() {
-        const [horizontal, [info1, maximizeButton]] = nest(Horizontal, { parent: this, scene: this.scene }, [
-          [Label, { h: 24, text: this.text, parent: this }, (c, p2) => p2.children.create(c)],
-          [Label, { h: 24, W: 24, text: "[ ]", parent: this }, (c, p2) => p2.children.create(c)]
+        const [horizontal, [info1, maximizeButton]] = nest(Horizontal, { parent: this, scene: this.scene, s: 2 }, [
+          [Label, { h: 24, text: this.text, parent: this, r: 3 }, (c, p2) => p2.children.create(c)],
+          [Label, { h: 24, W: 24, text: "++", parent: this, r: 3 }, (c, p2) => p2.children.create(c)]
         ], (c) => {
           this.destructable = () => {
             c.stop();
@@ -1887,6 +1888,7 @@
         if (!this.isRootWindow) {
           this.r = 5;
           this.b = 5;
+          this.s = 3;
         }
       },
       mount() {
@@ -2333,7 +2335,8 @@
         if (this.parent.isRootWindow) {
           this.parent.on("h", (parentH) => {
             const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
-            const freeSpace = parentH - childrenHeight - this.parent.b * 2 - this.parent.p * 2;
+            const spacers = this.parent.s * 1 * (this.children.length > 0 ? this.children.length - 1 : 0);
+            const freeSpace = parentH - childrenHeight - this.parent.b * 2 - this.parent.p * 2 - spacers;
             paneBody.h = freeSpace;
             paneBody.H = freeSpace;
           });

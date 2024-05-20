@@ -19,7 +19,7 @@ export default class Window {
 
   observables = {
     caption: 'Untitled',
-    
+
     showMenu: false,
     showStatus: false,
   };
@@ -37,6 +37,8 @@ export default class Window {
       if(!this.isRootWindow){
         this.r = 5;
         this.b = 5;
+        this.s = 3;
+
       }
     },
 

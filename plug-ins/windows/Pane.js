@@ -127,7 +127,8 @@ export default class Pane {
       if(this.parent.isRootWindow){
         this.parent.on('h', parentH=>{
           const childrenHeight = this.children.filter(c=>!(c===paneBody)).reduce((total, c) => total + (c.h), 0);
-          const freeSpace = parentH - childrenHeight - (this.parent.b*2) - (this.parent.p*2);
+          const spacers = ((this.parent.s * 1) * (this.children.length > 0 ? this.children.length - 1 : 0  )) //XXX: just top spacer not *2 right?
+          const freeSpace = parentH - childrenHeight - (this.parent.b*2) - (this.parent.p*2) - spacers;
           paneBody.h = freeSpace;
           paneBody.H = freeSpace;
         })
