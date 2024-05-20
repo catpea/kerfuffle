@@ -814,14 +814,13 @@
       this.parent.on("x", () => child.x = this.calculateChildX(child));
       this.parent.on("y", () => child.y = this.calculateChildY(child));
       this.parent.on("w", () => child.w = this.calculateChildW(child));
+      child.on("h", () => {
+      });
+      this.parent.on("h", () => child.y = this.calculateChildY(child));
       this.parent.on("h", () => {
         if (child.flexible)
           child.h = this.calculateGrowChildH(child);
       });
-      child.on("h", () => {
-        this.parent.h = this.calculateH();
-      });
-      this.parent.on("h", () => child.y = this.calculateChildY(child));
     }
     calculateChildW(child) {
       const response = this.parent.w - (this.parent.b + this.parent.p) * BOTH_SIDES;
@@ -853,6 +852,14 @@
       const childrenHeight = children.reduce((total, c) => total + c.h, 0);
       const childrenHeightGaps = this.parent.s * 2 * this.parent.children.length;
       const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2;
+      console.table("flexibleChild.h", {
+        application: this.parent.getApplication().oo.name,
+        "application.h": this.parent.getApplication().h,
+        h: flexibleChild.h,
+        "this.parent.h": this.parent.h,
+        size: children.length,
+        freeSpace
+      });
       if (children.length && freeSpace) {
         return freeSpace;
       }
@@ -1934,8 +1941,6 @@
     };
     methods = {
       initialize() {
-        this.w = 800;
-        this.h = 600;
         this.getRoot().origins.create(this);
       }
     };
@@ -2258,8 +2263,8 @@
     };
     observables = {
       url: null,
-      panX: 100,
-      panY: 100,
+      panX: 10,
+      panY: 10,
       zoom: 0.4,
       applications: [],
       elements: [],
@@ -2272,7 +2277,6 @@
         this.name = "pane";
         if (this.getRootContainer().isRootWindow)
           return;
-        this.h = 400;
         this.flexible = true;
       },
       mount() {
@@ -2464,11 +2468,254 @@
     };
   };
 
+  // plug-ins/windows/Foreign.js
+  var Foreign = class {
+    static {
+      __name(this, "Foreign");
+    }
+    static extends = [Control];
+    observables = {
+      src: ""
+    };
+    constraints = {
+      mount: {
+        ".scene is required to start the universe": function() {
+          if (!this.scene) {
+            return { error: ".svg not found" };
+          }
+        }
+      }
+    };
+    methods = {
+      initialize() {
+        this.flexible = true;
+      },
+      appendChild(domNode) {
+        return this.body.appendChild(domNode);
+      },
+      mount() {
+        this.el.ForeignObject = svg.foreignObject({
+          name: this.name,
+          width: this.w,
+          height: this.h,
+          x: this.x,
+          y: this.y
+        });
+        this.body = html.div({});
+        this.el.ForeignObject.appendChild(this.body);
+        this.on("name", (name2) => update(this.el.ForeignObject, { name: name2 }));
+        this.on("w", (width) => update(this.el.ForeignObject, { width }));
+        this.on("h", (height) => update(this.el.ForeignObject, { height }));
+        this.on("x", (x) => update(this.el.ForeignObject, { x }));
+        this.on("y", (y) => update(this.el.ForeignObject, { y }));
+        this.on("w", (width) => update(this.body, { style: { width: width + "px" } }));
+        this.on("h", (height) => update(this.body, { style: { height: height + "px" } }));
+        this.appendElements();
+      },
+      destroy() {
+        this.removeElements();
+      }
+    };
+  };
+
+  // plug-ins/components/Hello.js
+  var Hello = class {
+    static {
+      __name(this, "Hello");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        const textnode = document.createTextNode("Hello World, I am simple HTML you can hook into to parade foreign elements!");
+        this.foreign.appendChild(textnode);
+        this.on("h", (h) => {
+          console.log({ h });
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/Terminal.js
+  var { Terminal, FitAddon } = bundle["xterm"];
+  var Window3 = class {
+    static {
+      __name(this, "Window");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        const term = new Terminal({
+          fontFamily: '"Cascadia Code", Menlo, monospace',
+          cursorBlink: true
+          // allowProposedApi: true
+        });
+        const fitAddon = new FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(this.foreign.body);
+        fitAddon.fit();
+        fitAddon.fit();
+        this.any(["w", "h"], (x) => fitAddon.fit());
+        this.foreign.body.addEventListener("wheel", (e) => {
+          if (term.buffer.active.baseY > 0) {
+            e.preventDefault();
+          }
+        });
+        this.foreign.body.addEventListener("click", (e) => {
+          term.focus();
+        });
+        var command = "";
+        this.disposables = term.onData((e) => {
+          console.log("term.onData", e);
+          switch (e) {
+            case "":
+              term.write("^C");
+              prompt(term);
+              break;
+            case "\r":
+              runCommand(term, command);
+              command = "";
+              break;
+            case "\x7F":
+              if (term._core.buffer.x > 2) {
+                term.write("\b \b");
+                if (command.length > 0) {
+                  command = command.substr(0, command.length - 1);
+                }
+              }
+              break;
+            default:
+              if (e >= String.fromCharCode(32) && e <= String.fromCharCode(126) || e >= "\xA0") {
+                command += e;
+                term.write(e);
+              }
+          }
+        });
+        function prompt(term2) {
+          command = "";
+          term2.write("\r\n$ ");
+        }
+        __name(prompt, "prompt");
+        function runFakeTerminal() {
+          if (term._initialized) {
+            return;
+          }
+          term._initialized = true;
+          term.prompt = () => {
+            term.write("\r\n$$$ ");
+          };
+          term.writeln("Below is a simple emulated backend, try running `info`.");
+          prompt(term);
+        }
+        __name(runFakeTerminal, "runFakeTerminal");
+        var commands = {
+          info: {
+            f: () => {
+              term.writeln(["yup, I got your info command", "teminal is neat"].join("\r\n"));
+              term.prompt(term);
+            },
+            description: "Prints a fake directory structure"
+          }
+        };
+        function runCommand(term2, text2) {
+          const command2 = text2.trim().split(" ")[0];
+          if (command2.length > 0) {
+            term2.writeln("");
+            if (command2 in commands) {
+              commands[command2].f();
+              return;
+            }
+            term2.writeln(`${command2}: command not found`);
+          }
+          prompt(term2);
+        }
+        __name(runCommand, "runCommand");
+        runFakeTerminal();
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/Editor.js
+  var { basicSetup, EditorView } = bundle["codemirror"];
+  var { javascript } = bundle["@codemirror/lang-javascript"];
+  var { keymap } = bundle["@codemirror/view"];
+  var { indentWithTab } = bundle["@codemirror/commands"];
+  var { EditorState } = bundle["@codemirror/state"];
+  var { oneDark } = bundle["@codemirror/theme-one-dark"];
+  var Window4 = class {
+    static {
+      __name(this, "Window");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        const extensions = [
+          basicSetup,
+          javascript(),
+          EditorView.lineWrapping,
+          //NOTE: EditorView.lineWrapping does/did not honor code indents
+          keymap.of([indentWithTab]),
+          // EditorView.updateListener.of((update) => {if (update.docChanged) value = update.state.doc.toString(); }),
+          oneDark,
+          EditorView.theme({
+            "&": { maxHeight: this.h + "px" },
+            ".cm-gutter,.cm-content": { minHeight: "100px" },
+            ".cm-scroller": {
+              overflow: "auto",
+              borderTopLeftRadius: "0px",
+              borderTopLeftRadius: "0px",
+              borderBottomLeftRadius: "0px",
+              borderBottomRightRadius: "0px"
+            }
+          })
+        ];
+        this.editorView = new EditorView({
+          doc: "// Hello!\njavaScript.go('Brrrrr...');\n",
+          extensions,
+          parent: this.foreign.body
+        });
+        this.destructable = click(this.foreign.body, () => this.editorView.focus());
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
   // plug-ins/components/index.js
   var components = {
     Workspace: Window2,
     Window: Window2,
-    Port
+    Port,
+    Hello,
+    Terminal: Window3,
+    Editor: Window4
   };
   var components_default = components;
 

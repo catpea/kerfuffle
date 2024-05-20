@@ -3,11 +3,21 @@ Visual Programming Language
 
 ## TODO
 
-- [ ] .s is not working with laut manager and the anomaly in pane.
+- [ ] Function Node
+- [ ] Ports
+- [ ] Port Node
+- [ ] Pipe
+- [ ] Junction
+- [ ] Editor
+- [ ] Terminal
+
+---
+
 - [ ] Proper Toolbar for Icons
 - [ ] Port Control widget inside evey window that controls window anchors
 - [ ] Cascading Zoom
 - [ ] Labels must monitor transform stack from their placement up.
+- [ ] .s is not working with laut manager and the anomaly in pane.
 - [x] Nested Transforms
 - [x] Add component loading to Root Window
 - [x] Switch from JSON to XML

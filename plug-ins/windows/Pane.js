@@ -46,8 +46,8 @@ export default class Pane {
   observables = {
     url:null,
 
-    panX: 100,
-    panY: 100,
+    panX: 10,
+    panY: 10,
     zoom: .4,
 
     applications: [],
@@ -64,7 +64,7 @@ export default class Pane {
     initialize(){
       this.name = 'pane';
       if(this.getRootContainer().isRootWindow) return;
-      this.h = 400;
+      // this.h = 400;
       this.flexible = true;
     },
 

@@ -84,16 +84,14 @@ export class VerticalLayout extends Layout {
 		this.parent.on('y', () => child.y = this.calculateChildY(child) );
 		this.parent.on('w', () => child.w = this.calculateChildW(child) );
 
-		this.parent.on('h', () => {
-			if(child.flexible) child.h = this.calculateGrowChildH(child);
-		});
+
 
 		// child.properties.observe('H', () => this.parent.h = this.calculateH() );
 		// this.parent.on('H', () => child.y = this.calculateChildY(child) );
 
 		// when a child changes size update the parent height
 		child.on('h', () => {
-			this.parent.h = this.calculateH()
+			// XXX; this.parent.h = this.calculateH()
 		});
 
 		// when parent changes size, this child needs to update its Y.
@@ -102,7 +100,10 @@ export class VerticalLayout extends Layout {
 
 
 
+		this.parent.on('h', () => {
+			if(child.flexible) child.h = this.calculateGrowChildH(child);
 
+		});
 
 
 
@@ -165,17 +166,33 @@ export class VerticalLayout extends Layout {
 	}
 
 	calculateGrowChildH(flexibleChild){
+
 		let response = flexibleChild.h;
+
+
+
 		const children = this.parent.children.filter(c=>c!==flexibleChild);
 		const childrenHeight = children.reduce((total, c) => total + (c.h), 0);
 		const childrenHeightGaps = (this.parent.s * 2) * this.parent.children.length;
 	  const freeSpace = this.parent.h - childrenHeight - (this.parent.b*2) - (this.parent.p*2);
 
+		console.table('flexibleChild.h', {
+			application:this.parent.getApplication().oo.name,
+			'application.h': this.parent.getApplication().h,
+			h:flexibleChild.h,
+			'this.parent.h': this.parent.h,
+			size: children.length,
+			freeSpace,
+		});
 
-     if( children.length && freeSpace){
-			 return freeSpace;
-		 }
+
+
+		if( children.length && freeSpace){
+			return freeSpace;
+		}
+
 		return response;
+
 	}
 }
 

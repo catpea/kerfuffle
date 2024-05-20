@@ -2,17 +2,22 @@
 
 <Workspace id="0" name="Hello Project" description="A Selection Of World VisualPrograms" compatibility="1.0.1">
 
-  <Window id="test-a" x="0" y="0" w="1000" h="1000" showMenu="true">
+  <Window id="test-a" x="0" y="0" w="1000" h="1000" showMenu="true" showStatus="true">
+
+    <Terminal id="test-c" x="10" y="10" w="1000" h="1000">
+    </Terminal>
 
   </Window>
 
-  <Window id="test-b" x="1100" y="0" w="1000" h="1000" showStatus="true">
+  <Hello id="test-b" x="1100" y="0" w="1000" h="1000">
+  </Hello>
 
-  </Window>
+  <Terminal id="test-c" x="2300" y="0" w="1000" h="1000">
+  </Terminal>
 
 
-
-
+  <Editor id="test-d" x="0" y="1100" w="1000" h="1000">
+  </Editor>
 
 
 

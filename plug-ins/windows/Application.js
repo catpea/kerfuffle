@@ -15,8 +15,11 @@ export default class Application {
   methods = {
 
     initialize(){
-      this.w = 800;
-      this.h = 600;
+
+      // this.w = 320;
+      // this.h = 200;
+      // this.H = this.h;
+
 
       // All Applications Register Themselves
       this.getRoot().origins.create(this);

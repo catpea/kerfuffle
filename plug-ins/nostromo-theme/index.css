@@ -2,10 +2,12 @@
   --editor-primary: #58934c;
   --editor-secondary: #958d44;
 
-  --editor-foreground-primary:   #5d6075;
-  --editor-foreground-secondary:   #444861;
-  --editor-background-primary:   #323547;
-  --editor-background-secondary: #171a29;
+  --editor-primary-hue: 183;
+
+  --editor-foreground-primary:   hsl(var(--editor-primary-hue), 40%, 34%);
+  --editor-foreground-secondary: hsl(var(--editor-primary-hue), 40%, 25%);
+  --editor-background-primary:   hsl(var(--editor-primary-hue), 30%, 17%);
+  --editor-background-secondary: hsl(var(--editor-primary-hue), 20%, 5%) ;
 
   --editor-light: #141920;
   --editor-dark:  #0a0e12;
@@ -18,7 +20,8 @@
 
   /* tints - only color mix allowed */
 
-  --editor-border: color-mix(in srgb, var(--editor-background) 90%, black);
+  /* --editor-border: color-mix(in srgb, var(--editor-background) 90%, black); */
+
   --editor-gradient0: color-mix(in srgb, var(--editor-background) 10%, black);
   --editor-gradient1: color-mix(in srgb, var(--editor-background) 5%, black);
 
