@@ -71,6 +71,13 @@ export default class Viewport {
         class:`viewport-background ${this.classes}`.trim(),
         style:{ 'transform-origin': '0px 0px',  }
       })
+
+      this.getApplication().on("node", (node) => {
+        console.log('node-type', node.type);
+          this.background.classList.add(node.type.toLowerCase());
+      });
+
+
       this.body.appendChild(this.background);
       this.any(['x','y','w','h'], ({x, y, w:width,h:height})=>update(this.background, {x:0,y:0,width,height}))
 

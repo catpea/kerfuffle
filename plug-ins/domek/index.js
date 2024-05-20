@@ -6,11 +6,14 @@ const update = function(elements, properties) {
 	for(const el of els) {
 		for(const key in properties) {
 			let value = properties[key];
+
+
 			if(key=='style' && typeof value == 'object'){
 				for (const name in value) {
 					el.style[name] = value[name];
 				}
 				continue;
+ 
 			}else if(typeof value == 'object'){
 				value = Object.entries(value).map(([k,v])=>`${k}: ${v};`).join(' ')
 			}

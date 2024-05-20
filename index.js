@@ -1036,6 +1036,9 @@
           x: this.x,
           y: this.y
         });
+        this.getApplication().on("node", (node) => {
+          this.el.Container.classList.add(node.type.toLowerCase());
+        });
         this.on("name", (name2) => update(this.el.Container, { name: name2 }));
         this.on("w", (width) => update(this.el.Container, { width }));
         this.on("h", (height) => update(this.el.Container, { height }));
@@ -2221,6 +2224,10 @@
           class: `viewport-background ${this.classes}`.trim(),
           style: { "transform-origin": "0px 0px" }
         });
+        this.getApplication().on("node", (node) => {
+          console.log("node-type", node.type);
+          this.background.classList.add(node.type.toLowerCase());
+        });
         this.body.appendChild(this.background);
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => update(this.background, { x: 0, y: 0, width, height }));
         if (this.debugBody) {
@@ -2696,6 +2703,7 @@
           extensions,
           parent: this.foreign.body
         });
+        console.log(this.editorView);
         this.destructable = click(this.foreign.body, () => this.editorView.focus());
       },
       stop() {
@@ -2738,7 +2746,7 @@
       initialize() {
       },
       mount() {
-        const node = new Instance(Node, { id: "0", origin: "0", url: this.url, data: {} });
+        const node = new Instance(Node, { id: "0", origin: "0", url: this.url, type: "Workspace", data: {} });
         this.rootWindow = new Instance(components_default.Workspace, { id: node.id, node, svg: this.svg, scene: this.scene, parent: null, origins: this.origins, isRootWindow: true });
         this.rootWindow.start();
         const onResize = /* @__PURE__ */ __name(() => {

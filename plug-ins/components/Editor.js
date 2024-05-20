@@ -54,8 +54,12 @@ export default class Window {
               doc: ("// Hello!\njavaScript.go('Brrrrr...');\n"),
               extensions,
               parent: this.foreign.body
-            })
-            // codemirror.setSize(this.w, this.h);
+            });
+
+            console.log(this.editorView);
+            // this.any(['w','h'], ({w,h})=>this.editorView.setSize(w, h));
+
+
 
             // HACK: code mirror inside a foreign element does not correctly receive focus - we monitor for its parent's click and manually set focus
             this.destructable = click(this.foreign.body, ()=>this.editorView.focus())

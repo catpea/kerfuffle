@@ -4,10 +4,15 @@
 
   --editor-primary-hue: 183;
 
-  --editor-foreground-primary:   hsl(var(--editor-primary-hue), 40%, 34%);
-  --editor-foreground-secondary: hsl(var(--editor-primary-hue), 40%, 25%);
+  --mozilla-light: #565656;
+  --mozilla-twilight: #3c3c3c;
+  --mozilla-dark: #1c1b22;
+  --codemirror-dark: #282c34;
+
+  --editor-foreground-primary:   var(--mozilla-light);
+  --editor-foreground-secondary: var(--mozilla-twilight);
   --editor-background-primary:   hsl(var(--editor-primary-hue), 30%, 17%);
-  --editor-background-secondary: hsl(var(--editor-primary-hue), 20%, 5%) ;
+  --editor-background-secondary: var(--mozilla-dark);
 
   --editor-light: #141920;
   --editor-dark:  #0a0e12;
@@ -59,15 +64,24 @@ svg.editor-interface {
 
 
 
-.viewport-background.root-window {
+.viewport-background.workspace {
+    stroke: var(--editor-border);
+    /* fill: url("#editor-secondary-gradient"); */
+    fill: var(--editor-background-secondary);
+}
+.viewport-background.window {
     stroke: var(--editor-border);
     /* fill: url("#editor-secondary-gradient"); */
     fill: var(--editor-background-secondary);
 }
 
+.container-background.application.editor {
+    fill: var(--codemirror-dark);
+}
+
 
 .viewport-background {
-  fill: var(--editor-background-primary);
+  /* fill: var(--editor-background-primary); */
 }
 
 

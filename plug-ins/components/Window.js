@@ -14,7 +14,7 @@ export default class Window {
       this.pane = new Instance(Pane);
       this.on("node", (node) => {
         node.on("url", url => this.pane.url = url);
-      });
+       });
       this.createWindowComponent( this.pane );
     },
 

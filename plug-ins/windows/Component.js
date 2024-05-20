@@ -50,7 +50,7 @@ export default class Component {
   }
 
   traits = {
-    
+
     draw(){
       this.el.Container = svg.rect({
         name: this.oo.name,
@@ -67,6 +67,10 @@ export default class Component {
         height: this.h,
         x: this.x,
         y: this.y,
+      });
+
+      this.getApplication().on("node", (node) => {
+          this.el.Container.classList.add(node.type.toLowerCase());
       });
 
       this.on('name',  name=>update(this.el.Container,{name}), );

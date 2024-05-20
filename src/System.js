@@ -27,7 +27,7 @@ export default class System {
     mount(){
 
 
-      const node = new Instance(Node, {id:'0', origin:'0', url:this.url, data:{}});
+      const node = new Instance(Node, {id:'0', origin:'0', url:this.url, type:'Workspace', data:{}});
       this.rootWindow = new Instance(components.Workspace, {id:node.id, node, svg:this.svg, scene:this.scene, parent:null, origins:this.origins, isRootWindow: true});
       this.rootWindow.start()
 
