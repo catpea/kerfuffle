@@ -33,6 +33,7 @@ Visual Programming Language
 - root container always has a node, node always has an origin, origin has a root
 
 ## Program Ideas
+- [ ] Automator
 - [ ] Split Screen App Example (in->f->out)
 - [ ] ELIZA Chatbot
 - [ ] Wiki Wiki

@@ -4,6 +4,7 @@ import {nest} from "/plug-ins/nest/index.js";
 import Pan from "/plug-ins/meowse/Pan.js";
 import Zoom from "/plug-ins/meowse/Zoom.js";
 import Resize from "/plug-ins/meowse/Resize.js";
+import Menu from "/plug-ins/meowse/Menu.js";
 
 import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
@@ -46,8 +47,8 @@ export default class Pane {
   observables = {
     url:null,
 
-    panX: 10,
-    panY: 10,
+    panX: 0,
+    panY: 0,
     zoom: .4,
 
     applications: [],
@@ -163,6 +164,24 @@ export default class Pane {
       });
 
       this.appendElements();
+
+      const menu = new Menu({
+        area: paneBody.body,
+        scale: ()=>this.getScale(this),
+        pan: ()=>({ x: this.getRoot().pane.panX, y:this.getRoot().pane.panY}),
+        show: ({x,y})=>{
+          const root = this.getRoot();
+          console.log({x,y, root});
+          root.openMenu({
+            x,
+            y,
+            options: {data:[
+              {root: this.getApplication().node.id, text: 'Bueno', value:'bueno', click:()=>console.log('Bueno!')}
+            ]}
+          })
+        },
+      });
+      this.destructable = ()=>menu.destroy();
 
       const pan = new Pan({
         area: window,

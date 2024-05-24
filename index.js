@@ -1895,6 +1895,8 @@
         this.draw();
         if (this.isRootWindow)
           return;
+        if (this.isMenuWindow)
+          return;
         let caption = new Instance(Caption, { h: 24, text: this.caption });
         this.on("caption", (v) => caption.text = v);
         this.createWindowComponent(caption);
@@ -2151,6 +2153,39 @@
     }
   };
 
+  // plug-ins/meowse/Menu.js
+  var Menu = class {
+    static {
+      __name(this, "Menu");
+    }
+    area = window;
+    scale = null;
+    show = null;
+    mouseDownHandler;
+    mouseMoveHandler;
+    mouseUpHandler;
+    constructor({ area, scale, show }) {
+      this.area = area;
+      this.scale = scale;
+      this.show = show;
+      this.#mount();
+    }
+    #mount() {
+      this.contextMenuHandler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("SCALE", this.scale());
+        let x = e.x;
+        let y = e.y;
+        this.show({ x, y });
+      };
+      this.area.addEventListener("contextmenu", this.contextMenuHandler);
+    }
+    destroy() {
+      this.area.removeEventListener("contextmenu", this.contextMenuHandler);
+    }
+  };
+
   // plug-ins/diagnostic/index.js
   var DiagnosticRectangle = class {
     static {
@@ -2272,8 +2307,8 @@
     };
     observables = {
       url: null,
-      panX: 10,
-      panY: 10,
+      panX: 0,
+      panY: 0,
       zoom: 0.4,
       applications: [],
       elements: [],
@@ -2366,6 +2401,23 @@
           this.applications.remove(id);
         });
         this.appendElements();
+        const menu = new Menu({
+          area: paneBody.body,
+          scale: () => this.getScale(this),
+          pan: () => ({ x: this.getRoot().pane.panX, y: this.getRoot().pane.panY }),
+          show: ({ x, y }) => {
+            const root = this.getRoot();
+            console.log({ x, y, root });
+            root.openMenu({
+              x,
+              y,
+              options: { data: [
+                { root: this.getApplication().node.id, text: "Bueno", value: "bueno", click: () => console.log("Bueno!") }
+              ] }
+            });
+          }
+        });
+        this.destructable = () => menu.destroy();
         const pan = new Pan_default({
           area: window,
           handle: paneBody.background,
@@ -2432,52 +2484,6 @@
     };
   };
 
-  // plug-ins/components/Window.js
-  var Window2 = class {
-    static {
-      __name(this, "Window");
-    }
-    static extends = [Application];
-    properties = {};
-    methods = {
-      mount() {
-        this.pane = new Instance(Pane);
-        this.on("node", (node) => {
-          node.on("url", (url) => this.pane.url = url);
-        });
-        this.createWindowComponent(this.pane);
-      },
-      stop() {
-        console.log("todo: stopping root application");
-      },
-      destroy() {
-        console.log("todo: destroying root application");
-        this.dispose();
-      }
-    };
-  };
-
-  // plug-ins/components/Port.js
-  var Port = class {
-    static {
-      __name(this, "Port");
-    }
-    static extends = [Application];
-    properties = {};
-    methods = {
-      mount() {
-        console.log("I am the mighty port child of", this.parent.oo.name, "I exist in two places in a window and outside it");
-      },
-      stop() {
-        console.log("todo: stopping root application");
-      },
-      destroy() {
-        console.log("todo: destroying root application");
-        this.dispose();
-      }
-    };
-  };
-
   // plug-ins/windows/Foreign.js
   var Foreign = class {
     static {
@@ -2528,8 +2534,105 @@
     };
   };
 
-  // plug-ins/components/Hello.js
+  // plug-ins/components/Menu.js
   var Hello = class {
+    static {
+      __name(this, "Hello");
+    }
+    static extends = [Application];
+    properties = {};
+    observables = {
+      options: {}
+    };
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        const textnode = document.createTextNode("I am an HTML context menu, based on foreign object." + JSON.stringify(this.options));
+        this.foreign.appendChild(textnode);
+        this.on("options", (options) => {
+          textnode.textContent = "I am an HTML context menu, based on foreign object." + JSON.stringify(this.options);
+        });
+        this.foreign.body.addEventListener("click", (e) => {
+          this.scene.style.display = "none";
+        });
+        this.on("h", (h) => {
+          console.log({ h });
+          this.foreign.h = h;
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/Window.js
+  var Window2 = class {
+    static {
+      __name(this, "Window");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      openMenu({ x, y, options, w = 200, h = 320 }) {
+        console.log({ x, y, options });
+        if (this.menu) {
+          this.menu.options = options;
+          this.menu.x = x;
+          this.menu.y = y;
+          this.container.style.display = "block";
+          return;
+        }
+        this.container = svg.g({ name: "menu" });
+        this.scene.appendChild(this.container);
+        this.menu = new Instance(Hello, { parent: this, scene: this.container, x, y, w, h, isMenuWindow: true, options });
+        this.menu.start();
+      },
+      mount() {
+        this.pane = new Instance(Pane);
+        this.on("node", (node) => {
+          node.on("url", (url) => this.pane.url = url);
+        });
+        this.createWindowComponent(this.pane);
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/Port.js
+  var Port = class {
+    static {
+      __name(this, "Port");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        console.log("I am the mighty port child of", this.parent.oo.name, "I exist in two places in a window and outside it");
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/Hello.js
+  var Hello2 = class {
     static {
       __name(this, "Hello");
     }
@@ -2724,7 +2827,7 @@
     Workspace: Window2,
     Window: Window2,
     Port,
-    Hello,
+    Hello: Hello2,
     Terminal: Window3,
     Editor: Window4
   };

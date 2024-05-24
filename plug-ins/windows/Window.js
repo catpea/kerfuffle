@@ -38,7 +38,6 @@ export default class Window {
         this.r = 5;
         this.b = 5;
         this.s = 3;
-
       }
     },
 
@@ -48,6 +47,7 @@ export default class Window {
       this.draw(); // WARNING: you must draw the window before drawing the caption, so that the caption is on top
 
       if(this.isRootWindow) return;
+      if(this.isMenuWindow) return;
 
       let caption = new Instance(Caption, {h: 24, text: this.caption});
       this.on('caption', v=>caption.text=v)
@@ -57,15 +57,6 @@ export default class Window {
       this.on("node", (node) => {
         if(node.caption) node.on("caption", caption => this.caption = caption);
       });
-
-      // const move = new Move({
-      //   component: this,
-      //   handle: caption.handle,
-      //   window: this,
-      //   zone: window,
-      // }); this.destructable = ()=>move.destroy()
-
-
 
       const move = new Move({
         area: window,
