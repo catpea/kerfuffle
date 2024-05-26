@@ -8,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import * as esbuild from 'esbuild'
 import {sassPlugin} from 'esbuild-sass-plugin'
 
+import sveltePlugin from "esbuild-svelte";
+
 let examplePlugin = ()=>({
   name: 'example',
   setup(build) {
@@ -39,6 +41,11 @@ let exampleOnResolvePlugin = ()=>({
 
 
 let ctx = await esbuild.context({
+
+
+  mainFields: ["svelte", "browser", "module", "main"],
+  conditions: ["svelte", "browser"],
+  
   bundle: true,
   entryPoints: ['src/library.js', 'src/index.js'],
   keepNames: true, // this is important for when comparing classes
@@ -47,7 +54,7 @@ let ctx = await esbuild.context({
      '.html': 'text',
      '.js': 'jsx',
    },
-  plugins: [exampleOnResolvePlugin(), examplePlugin(), sassPlugin()],
+  plugins: [exampleOnResolvePlugin(), examplePlugin(), sassPlugin(), sveltePlugin()],
 })
 
 const xxx = await ctx.watch()

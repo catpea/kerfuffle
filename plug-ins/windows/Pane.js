@@ -72,6 +72,12 @@ export default class Pane {
     mount(){
       // console.log(Δ);
 
+      // let X ='';
+      // for (let i = 1; i < 300; i++) {
+      //   let x = 1200 *  i;
+      //   X+=`<Hello id="test-foreign-${i}" x="${x}" y="1200" w="1000" h="1000"></Hello>\n`
+      // }
+      // console.log(X);
 
       this.getApplication().on('showMenu', (showMenu)=>{
         if(showMenu){
@@ -95,7 +101,9 @@ export default class Pane {
 
 
       // Add Viewport
-      const paneBody = new Instance(Viewport, {h:700, parent: this, classes:this.classes} );
+      const paneBody = new Instance(Viewport, { parent: this, classes:this.classes, flexible:true} );
+      // this.on('h', h=> paneBody.h = h)
+
       this.viewport = paneBody;
       this.getApplication().viewport = paneBody;
 
@@ -126,6 +134,7 @@ export default class Pane {
 
       // NOTE: CODE ANOMALY FOR ROOT EDGECASE
       if(this.parent.isRootWindow){
+
         this.parent.on('h', parentH=>{
           const childrenHeight = this.children.filter(c=>!(c===paneBody)).reduce((total, c) => total + (c.h), 0);
           const spacers = ((this.parent.s * 1) * (this.children.length > 0 ? this.children.length - 1 : 0  )) //XXX: just top spacer not *2 right?
@@ -133,6 +142,7 @@ export default class Pane {
           paneBody.h = freeSpace;
           paneBody.H = freeSpace;
         })
+
       };
 
       // Based on pan and zoom adjust the viewport.

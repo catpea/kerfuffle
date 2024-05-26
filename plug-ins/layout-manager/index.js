@@ -169,6 +169,13 @@ export class VerticalLayout extends Layout {
 
 		let response = flexibleChild.h;
 
+		// if (flexibleChild.oo.name === 'Viewport') console.log();
+
+		const onlyChild = this.parent.children.length === 1;
+
+		if(onlyChild){
+			return this.parent.h;
+		}
 
 
 		const children = this.parent.children.filter(c=>c!==flexibleChild);

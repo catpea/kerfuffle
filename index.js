@@ -9,8 +9,8 @@
     }
     instance;
     root;
-    constructor({ Class, instance, specification }) {
-      this.instance = instance;
+    constructor({ Class, instance: instance2, specification }) {
+      this.instance = instance2;
       this.instance.oo.extends.push(Class);
       this.collectClasses(Class.extends);
       this.instantiateSuperclasses();
@@ -26,10 +26,10 @@
     instantiateSuperclasses() {
       let parent;
       for (const Class of this.instance.oo.extends) {
-        const instance = new Class();
-        this.instance.oo.specifications.push(instance);
-        instance.parent = parent;
-        parent = instance;
+        const instance2 = new Class();
+        this.instance.oo.specifications.push(instance2);
+        instance2.parent = parent;
+        parent = instance2;
       }
     }
   };
@@ -719,53 +719,53 @@
   }, "update");
   var svg = new Proxy({}, {
     get: function(target, property) {
-      return function(properties, text2) {
+      return function(properties, text3) {
         const el = document.createElementNS("http://www.w3.org/2000/svg", property);
         update(el, properties);
-        if (text2)
-          el.appendChild(document.createTextNode(text2));
+        if (text3)
+          el.appendChild(document.createTextNode(text3));
         return el;
       };
     }
   });
   var xhtml = new Proxy({}, {
     get: function(target, property) {
-      return function(properties, text2) {
+      return function(properties, text3) {
         const el = document.createElementNS("http://www.w3.org/1999/xhtml", property);
         update(el, properties);
-        if (text2)
-          el.appendChild(document.createTextNode(text2));
+        if (text3)
+          el.appendChild(document.createTextNode(text3));
         return el;
       };
     }
   });
   var html = new Proxy({}, {
     get: function(target, property) {
-      return function(properties, text2) {
+      return function(properties, text3) {
         const el = document.createElement(property);
         update(el, properties);
-        if (text2)
-          el.appendChild(document.createTextNode(text2));
+        if (text3)
+          el.appendChild(document.createTextNode(text3));
         return el;
       };
     }
   });
-  var text = /* @__PURE__ */ __name(function(text2) {
-    return document.createTextNode(text2);
+  var text = /* @__PURE__ */ __name(function(text3) {
+    return document.createTextNode(text3);
   }, "text");
-  function front(element) {
-    const parentElement = element.parentNode;
-    parentElement.removeChild(element);
-    parentElement.appendChild(element);
+  function front(element2) {
+    const parentElement = element2.parentNode;
+    parentElement.removeChild(element2);
+    parentElement.appendChild(element2);
   }
   __name(front, "front");
-  function click(element, callback) {
-    element.addEventListener("mouseup", handler);
+  function click(element2, callback) {
+    element2.addEventListener("mouseup", handler);
     function handler(event) {
       callback(event);
     }
     __name(handler, "handler");
-    return () => element.removeEventListener("mouseup", handler);
+    return () => element2.removeEventListener("mouseup", handler);
   }
   __name(click, "click");
 
@@ -828,8 +828,8 @@
     }
     calculateH() {
       let heightOfChildren = 0;
-      const children = this.parent[this.source];
-      heightOfChildren = children.reduce((total, c) => total + c.h, 0) + this.parent.s * 2 * (children.length > 0 ? children.length - 1 : 0);
+      const children2 = this.parent[this.source];
+      heightOfChildren = children2.reduce((total, c) => total + c.h, 0) + this.parent.s * 2 * (children2.length > 0 ? children2.length - 1 : 0);
       let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
       if (response < this.parent.H) {
         response = this.parent.H;
@@ -848,8 +848,12 @@
     }
     calculateGrowChildH(flexibleChild) {
       let response = flexibleChild.h;
-      const children = this.parent.children.filter((c) => c !== flexibleChild);
-      const childrenHeight = children.reduce((total, c) => total + c.h, 0);
+      const onlyChild = this.parent.children.length === 1;
+      if (onlyChild) {
+        return this.parent.h;
+      }
+      const children2 = this.parent.children.filter((c) => c !== flexibleChild);
+      const childrenHeight = children2.reduce((total, c) => total + c.h, 0);
       const childrenHeightGaps = this.parent.s * 1 * this.parent.children.length;
       const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2 - childrenHeightGaps;
       console.table("flexibleChild.h", {
@@ -857,10 +861,10 @@
         "application.h": this.parent.getApplication().h,
         h: flexibleChild.h,
         "this.parent.h": this.parent.h,
-        size: children.length,
+        size: children2.length,
         freeSpace
       });
-      if (children.length && freeSpace) {
+      if (children2.length && freeSpace) {
         return freeSpace;
       }
       return response;
@@ -871,8 +875,8 @@
       __name(this, "HorizontalLayout");
     }
     manage(child) {
-      const children = this.parent[this.source];
-      const childCount = children.length;
+      const children2 = this.parent[this.source];
+      const childCount = children2.length;
       const siblingCount = this.above(this.parent, child).length;
       child.x = this.calculateChildX(child);
       child.y = this.calculateChildY(child);
@@ -895,8 +899,8 @@
       return response;
     }
     calculateChildW1(child) {
-      const children = this.parent[this.source];
-      const childCount = children.length;
+      const children2 = this.parent[this.source];
+      const childCount = children2.length;
       const siblingCount = this.above(this.parent, child).length;
       let response = this.parent.w / childCount;
       return response;
@@ -904,11 +908,11 @@
     calculateChildW(child) {
       if (!(child.W === void 0))
         return child.W < 1 ? this.parent.w * child.W : child.W;
-      const children = this.parent[this.source];
-      let softElements = children.filter((child2) => child2.W === void 0);
-      let hardElements = children.filter((child2) => !(child2.W === void 0));
+      const children2 = this.parent[this.source];
+      let softElements = children2.filter((child2) => child2.W === void 0);
+      let hardElements = children2.filter((child2) => !(child2.W === void 0));
       let hardSpace = hardElements.reduce((total, child2) => total + (child2.W < 1 ? this.parent.w * child2.W : child2.W), 0);
-      let spacers = this.parent.s * 2 * (children.length > 0 ? children.length - 1 : 0);
+      let spacers = this.parent.s * 2 * (children2.length > 0 ? children2.length - 1 : 0);
       let availableSoftSpace = this.parent.w - hardSpace - spacers;
       let softUnit = availableSoftSpace / (softElements.length || 1);
       return softUnit;
@@ -919,8 +923,8 @@
     }
     calculateH() {
       let heightOfChildren = 0;
-      const children = this.parent[this.source];
-      heightOfChildren = children.reduce((max, c) => c.h > max ? c.h : max, 0);
+      const children2 = this.parent[this.source];
+      heightOfChildren = children2.reduce((max, c) => c.h > max ? c.h : max, 0);
       let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
       if (response < this.parent.H)
         response = this.parent.H;
@@ -1114,12 +1118,12 @@
         }
         return response;
       },
-      getStack(element, list = []) {
-        if (!element)
-          element = this;
-        list.unshift(element);
-        if (element.parent)
-          this.getStack(element.parent, list);
+      getStack(element2, list = []) {
+        if (!element2)
+          element2 = this;
+        list.unshift(element2);
+        if (element2.parent)
+          this.getStack(element2.parent, list);
         return list;
       },
       getParentScale(component) {
@@ -1132,18 +1136,18 @@
         const scale = list.map((o) => o.zoom).reduce((a, c) => a * c, 1);
         return scale;
       },
-      getTransforms(element, list = [], root = true) {
-        if (!element)
-          element = this;
-        const isTransform = element.hasOwnProperty("panX") && element.hasOwnProperty("panY") && element.hasOwnProperty("zoom");
+      getTransforms(element2, list = [], root = true) {
+        if (!element2)
+          element2 = this;
+        const isTransform = element2.hasOwnProperty("panX") && element2.hasOwnProperty("panY") && element2.hasOwnProperty("zoom");
         if (isTransform) {
-          let offsetX = element.viewport.x - element.x;
-          let offsetY = element.viewport.y - element.y;
-          const { oo: { name: name2 }, panX, panY, zoom, x, y } = element;
-          list.unshift({ name: name2, panX, panY, zoom, x: element.x + offsetX, y: element.y + offsetY, element: element.scene, offsetX: 0, offsetY: 0 });
+          let offsetX = element2.viewport.x - element2.x;
+          let offsetY = element2.viewport.y - element2.y;
+          const { oo: { name: name2 }, panX, panY, zoom, x, y } = element2;
+          list.unshift({ name: name2, panX, panY, zoom, x: element2.x + offsetX, y: element2.y + offsetY, element: element2.scene, offsetX: 0, offsetY: 0 });
         }
-        if (element.parent)
-          this.getTransforms(element.parent, list, false);
+        if (element2.parent)
+          this.getTransforms(element2.parent, list, false);
         if (root) {
           let parent = false;
           for (const [index, item] of list.entries()) {
@@ -1154,14 +1158,14 @@
         }
         return list;
       },
-      getApplication(element) {
-        if (!element)
-          element = this;
-        if (element.isApplication === true) {
-          return element;
+      getApplication(element2) {
+        if (!element2)
+          element2 = this;
+        if (element2.isApplication === true) {
+          return element2;
         }
-        if (element.parent)
-          return this.getApplication(element.parent);
+        if (element2.parent)
+          return this.getApplication(element2.parent);
       }
     };
     methods = {
@@ -1634,7 +1638,7 @@
         this.on("x", (x) => update(this.el.Container, { x }));
         this.on("y", (y) => update(this.el.Container, { y }));
         this.on("r", (ry) => update(this.el.Container, { ry }));
-        this.on("text", (text2) => captionText.nodeValue = text2);
+        this.on("text", (text3) => captionText.nodeValue = text3);
         this.any(["x", "y"], ({ x, y }) => updateZUI(this.el.Caption, { x: (x + this.s) * globalThis.project.zoom, y: (y + this.s) * globalThis.project.zoom }, { style: { scale: 1 }, x: x + this.s, y: y + this.s }));
         this.any(["x", "y", "w", "h"], ({ x, y, w: width, h: height }) => updateZUI(clipPathRect, { x: x * globalThis.project.zoom, y: y * globalThis.project.zoom, width: width * globalThis.project.zoom, height: this.h * globalThis.project.zoom }, { x, y, width, height }));
         this.appendElements();
@@ -1664,11 +1668,11 @@
   function nest(Type, ...input) {
     if (!Type)
       return;
-    const { Object: attr, Array: children, Function: init } = byType(input);
-    const instance = new Instance(Type, attr);
-    if (init)
-      init(instance, this ? this.parent : null);
-    return [instance, children?.map((child) => nest.bind({ parent: instance })(...child)).map(([ins, chi]) => chi ? [ins, chi] : ins)];
+    const { Object: attr2, Array: children2, Function: init2 } = byType(input);
+    const instance2 = new Instance(Type, attr2);
+    if (init2)
+      init2(instance2, this ? this.parent : null);
+    return [instance2, children2?.map((child) => nest.bind({ parent: instance2 })(...child)).map(([ins, chi]) => chi ? [ins, chi] : ins)];
   }
   __name(nest, "nest");
 
@@ -1709,7 +1713,7 @@
         this.handle = info1.el.Container;
         horizontal.start();
         this.on("selected", (selected) => selected ? info1.el.Container.classList.add("selected") : info1.el.Container.classList.remove("selected"));
-        this.on("text", (text2) => info1.text = text2);
+        this.on("text", (text3) => info1.text = text3);
         this.any(["x", "y", "w", "h"], ({ x, y, w, h }) => Object.assign(horizontal, { x, y, w, h }));
         let maximized = false;
         const parent = this.getApplication().parent ? this.getApplication().parent.getApplication() : this.getRootContainer();
@@ -1847,13 +1851,13 @@
     // handlers
     mouseDownHandler;
     mouseUpHandler;
-    constructor({ component, handle, element }) {
+    constructor({ component, handle, element: element2 }) {
       if (!component)
         throw new Error("component is required");
       if (!handle)
         throw new Error("handle is required");
       this.component = component;
-      this.element = element;
+      this.element = element2;
       this.handle = handle;
       this.mount();
     }
@@ -2338,7 +2342,7 @@
             });
           }
         });
-        const paneBody = new Instance(Viewport, { h: 700, parent: this, classes: this.classes });
+        const paneBody = new Instance(Viewport, { parent: this, classes: this.classes, flexible: true });
         this.viewport = paneBody;
         this.getApplication().viewport = paneBody;
         this.children.create(paneBody);
@@ -2471,10 +2475,10 @@
           this.elements.create(node);
         }
       },
-      loadElements([$, children]) {
-        if (!children)
+      loadElements([$, children2]) {
+        if (!children2)
           return;
-        for (const el of children) {
+        for (const el of children2) {
           const node = new Instance(Node, { origin: this.getApplication().id });
           const data = {};
           node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
@@ -2631,8 +2635,1036 @@
     };
   };
 
+  // node_modules/svelte/src/runtime/internal/utils.js
+  function noop() {
+  }
+  __name(noop, "noop");
+  function run(fn) {
+    return fn();
+  }
+  __name(run, "run");
+  function blank_object() {
+    return /* @__PURE__ */ Object.create(null);
+  }
+  __name(blank_object, "blank_object");
+  function run_all(fns) {
+    fns.forEach(run);
+  }
+  __name(run_all, "run_all");
+  function is_function(thing) {
+    return typeof thing === "function";
+  }
+  __name(is_function, "is_function");
+  function safe_not_equal(a, b) {
+    return a != a ? b == b : a !== b || a && typeof a === "object" || typeof a === "function";
+  }
+  __name(safe_not_equal, "safe_not_equal");
+  function is_empty(obj2) {
+    return Object.keys(obj2).length === 0;
+  }
+  __name(is_empty, "is_empty");
+
+  // node_modules/svelte/src/runtime/internal/globals.js
+  var globals = typeof window !== "undefined" ? window : typeof globalThis !== "undefined" ? globalThis : (
+    // @ts-ignore Node typings have this
+    global
+  );
+
+  // node_modules/svelte/src/runtime/internal/ResizeObserverSingleton.js
+  var ResizeObserverSingleton = class _ResizeObserverSingleton {
+    static {
+      __name(this, "ResizeObserverSingleton");
+    }
+    /**
+     * @private
+     * @readonly
+     * @type {WeakMap<Element, import('./private.js').Listener>}
+     */
+    _listeners = "WeakMap" in globals ? /* @__PURE__ */ new WeakMap() : void 0;
+    /**
+     * @private
+     * @type {ResizeObserver}
+     */
+    _observer = void 0;
+    /** @type {ResizeObserverOptions} */
+    options;
+    /** @param {ResizeObserverOptions} options */
+    constructor(options) {
+      this.options = options;
+    }
+    /**
+     * @param {Element} element
+     * @param {import('./private.js').Listener} listener
+     * @returns {() => void}
+     */
+    observe(element2, listener) {
+      this._listeners.set(element2, listener);
+      this._getObserver().observe(element2, this.options);
+      return () => {
+        this._listeners.delete(element2);
+        this._observer.unobserve(element2);
+      };
+    }
+    /**
+     * @private
+     */
+    _getObserver() {
+      return this._observer ?? (this._observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          _ResizeObserverSingleton.entries.set(entry.target, entry);
+          this._listeners.get(entry.target)?.(entry);
+        }
+      }));
+    }
+  };
+  ResizeObserverSingleton.entries = "WeakMap" in globals ? /* @__PURE__ */ new WeakMap() : void 0;
+
+  // node_modules/svelte/src/runtime/internal/dom.js
+  var is_hydrating = false;
+  function start_hydrating() {
+    is_hydrating = true;
+  }
+  __name(start_hydrating, "start_hydrating");
+  function end_hydrating() {
+    is_hydrating = false;
+  }
+  __name(end_hydrating, "end_hydrating");
+  function append(target, node) {
+    target.appendChild(node);
+  }
+  __name(append, "append");
+  function insert(target, node, anchor) {
+    target.insertBefore(node, anchor || null);
+  }
+  __name(insert, "insert");
+  function detach(node) {
+    if (node.parentNode) {
+      node.parentNode.removeChild(node);
+    }
+  }
+  __name(detach, "detach");
+  function element(name2) {
+    return document.createElement(name2);
+  }
+  __name(element, "element");
+  function text2(data) {
+    return document.createTextNode(data);
+  }
+  __name(text2, "text");
+  function space() {
+    return text2(" ");
+  }
+  __name(space, "space");
+  function listen(node, event, handler, options) {
+    node.addEventListener(event, handler, options);
+    return () => node.removeEventListener(event, handler, options);
+  }
+  __name(listen, "listen");
+  function attr(node, attribute, value) {
+    if (value == null)
+      node.removeAttribute(attribute);
+    else if (node.getAttribute(attribute) !== value)
+      node.setAttribute(attribute, value);
+  }
+  __name(attr, "attr");
+  function to_number(value) {
+    return value === "" ? null : +value;
+  }
+  __name(to_number, "to_number");
+  function children(element2) {
+    return Array.from(element2.childNodes);
+  }
+  __name(children, "children");
+  function set_data(text3, data) {
+    data = "" + data;
+    if (text3.data === data)
+      return;
+    text3.data = /** @type {string} */
+    data;
+  }
+  __name(set_data, "set_data");
+  function set_input_value(input, value) {
+    input.value = value == null ? "" : value;
+  }
+  __name(set_input_value, "set_input_value");
+  function get_custom_elements_slots(element2) {
+    const result = {};
+    element2.childNodes.forEach(
+      /** @param {Element} node */
+      (node) => {
+        result[node.slot || "default"] = true;
+      }
+    );
+    return result;
+  }
+  __name(get_custom_elements_slots, "get_custom_elements_slots");
+
+  // node_modules/svelte/src/runtime/internal/lifecycle.js
+  var current_component;
+  function set_current_component(component) {
+    current_component = component;
+  }
+  __name(set_current_component, "set_current_component");
+
+  // node_modules/svelte/src/runtime/internal/scheduler.js
+  var dirty_components = [];
+  var binding_callbacks = [];
+  var render_callbacks = [];
+  var flush_callbacks = [];
+  var resolved_promise = /* @__PURE__ */ Promise.resolve();
+  var update_scheduled = false;
+  function schedule_update() {
+    if (!update_scheduled) {
+      update_scheduled = true;
+      resolved_promise.then(flush);
+    }
+  }
+  __name(schedule_update, "schedule_update");
+  function add_render_callback(fn) {
+    render_callbacks.push(fn);
+  }
+  __name(add_render_callback, "add_render_callback");
+  var seen_callbacks = /* @__PURE__ */ new Set();
+  var flushidx = 0;
+  function flush() {
+    if (flushidx !== 0) {
+      return;
+    }
+    const saved_component = current_component;
+    do {
+      try {
+        while (flushidx < dirty_components.length) {
+          const component = dirty_components[flushidx];
+          flushidx++;
+          set_current_component(component);
+          update2(component.$$);
+        }
+      } catch (e) {
+        dirty_components.length = 0;
+        flushidx = 0;
+        throw e;
+      }
+      set_current_component(null);
+      dirty_components.length = 0;
+      flushidx = 0;
+      while (binding_callbacks.length)
+        binding_callbacks.pop()();
+      for (let i = 0; i < render_callbacks.length; i += 1) {
+        const callback = render_callbacks[i];
+        if (!seen_callbacks.has(callback)) {
+          seen_callbacks.add(callback);
+          callback();
+        }
+      }
+      render_callbacks.length = 0;
+    } while (dirty_components.length);
+    while (flush_callbacks.length) {
+      flush_callbacks.pop()();
+    }
+    update_scheduled = false;
+    seen_callbacks.clear();
+    set_current_component(saved_component);
+  }
+  __name(flush, "flush");
+  function update2($$) {
+    if ($$.fragment !== null) {
+      $$.update();
+      run_all($$.before_update);
+      const dirty = $$.dirty;
+      $$.dirty = [-1];
+      $$.fragment && $$.fragment.p($$.ctx, dirty);
+      $$.after_update.forEach(add_render_callback);
+    }
+  }
+  __name(update2, "update");
+  function flush_render_callbacks(fns) {
+    const filtered = [];
+    const targets = [];
+    render_callbacks.forEach((c) => fns.indexOf(c) === -1 ? filtered.push(c) : targets.push(c));
+    targets.forEach((c) => c());
+    render_callbacks = filtered;
+  }
+  __name(flush_render_callbacks, "flush_render_callbacks");
+
+  // node_modules/svelte/src/runtime/internal/transitions.js
+  var outroing = /* @__PURE__ */ new Set();
+  function transition_in(block, local) {
+    if (block && block.i) {
+      outroing.delete(block);
+      block.i(local);
+    }
+  }
+  __name(transition_in, "transition_in");
+
+  // node_modules/svelte/src/shared/boolean_attributes.js
+  var _boolean_attributes = (
+    /** @type {const} */
+    [
+      "allowfullscreen",
+      "allowpaymentrequest",
+      "async",
+      "autofocus",
+      "autoplay",
+      "checked",
+      "controls",
+      "default",
+      "defer",
+      "disabled",
+      "formnovalidate",
+      "hidden",
+      "inert",
+      "ismap",
+      "loop",
+      "multiple",
+      "muted",
+      "nomodule",
+      "novalidate",
+      "open",
+      "playsinline",
+      "readonly",
+      "required",
+      "reversed",
+      "selected"
+    ]
+  );
+  var boolean_attributes = /* @__PURE__ */ new Set([..._boolean_attributes]);
+
+  // node_modules/svelte/src/runtime/internal/Component.js
+  function mount_component(component, target, anchor) {
+    const { fragment, after_update } = component.$$;
+    fragment && fragment.m(target, anchor);
+    add_render_callback(() => {
+      const new_on_destroy = component.$$.on_mount.map(run).filter(is_function);
+      if (component.$$.on_destroy) {
+        component.$$.on_destroy.push(...new_on_destroy);
+      } else {
+        run_all(new_on_destroy);
+      }
+      component.$$.on_mount = [];
+    });
+    after_update.forEach(add_render_callback);
+  }
+  __name(mount_component, "mount_component");
+  function destroy_component(component, detaching) {
+    const $$ = component.$$;
+    if ($$.fragment !== null) {
+      flush_render_callbacks($$.after_update);
+      run_all($$.on_destroy);
+      $$.fragment && $$.fragment.d(detaching);
+      $$.on_destroy = $$.fragment = null;
+      $$.ctx = [];
+    }
+  }
+  __name(destroy_component, "destroy_component");
+  function make_dirty(component, i) {
+    if (component.$$.dirty[0] === -1) {
+      dirty_components.push(component);
+      schedule_update();
+      component.$$.dirty.fill(0);
+    }
+    component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
+  }
+  __name(make_dirty, "make_dirty");
+  function init(component, options, instance2, create_fragment2, not_equal, props, append_styles = null, dirty = [-1]) {
+    const parent_component = current_component;
+    set_current_component(component);
+    const $$ = component.$$ = {
+      fragment: null,
+      ctx: [],
+      // state
+      props,
+      update: noop,
+      not_equal,
+      bound: blank_object(),
+      // lifecycle
+      on_mount: [],
+      on_destroy: [],
+      on_disconnect: [],
+      before_update: [],
+      after_update: [],
+      context: new Map(options.context || (parent_component ? parent_component.$$.context : [])),
+      // everything else
+      callbacks: blank_object(),
+      dirty,
+      skip_bound: false,
+      root: options.target || parent_component.$$.root
+    };
+    append_styles && append_styles($$.root);
+    let ready = false;
+    $$.ctx = instance2 ? instance2(component, options.props || {}, (i, ret, ...rest) => {
+      const value = rest.length ? rest[0] : ret;
+      if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
+        if (!$$.skip_bound && $$.bound[i])
+          $$.bound[i](value);
+        if (ready)
+          make_dirty(component, i);
+      }
+      return ret;
+    }) : [];
+    $$.update();
+    ready = true;
+    run_all($$.before_update);
+    $$.fragment = create_fragment2 ? create_fragment2($$.ctx) : false;
+    if (options.target) {
+      if (options.hydrate) {
+        start_hydrating();
+        const nodes = children(options.target);
+        $$.fragment && $$.fragment.l(nodes);
+        nodes.forEach(detach);
+      } else {
+        $$.fragment && $$.fragment.c();
+      }
+      if (options.intro)
+        transition_in(component.$$.fragment);
+      mount_component(component, options.target, options.anchor);
+      end_hydrating();
+      flush();
+    }
+    set_current_component(parent_component);
+  }
+  __name(init, "init");
+  var SvelteElement;
+  if (typeof HTMLElement === "function") {
+    SvelteElement = class extends HTMLElement {
+      static {
+        __name(this, "SvelteElement");
+      }
+      /** The Svelte component constructor */
+      $$ctor;
+      /** Slots */
+      $$s;
+      /** The Svelte component instance */
+      $$c;
+      /** Whether or not the custom element is connected */
+      $$cn = false;
+      /** Component props data */
+      $$d = {};
+      /** `true` if currently in the process of reflecting component props back to attributes */
+      $$r = false;
+      /** @type {Record<string, CustomElementPropDefinition>} Props definition (name, reflected, type etc) */
+      $$p_d = {};
+      /** @type {Record<string, Function[]>} Event listeners */
+      $$l = {};
+      /** @type {Map<Function, Function>} Event listener unsubscribe functions */
+      $$l_u = /* @__PURE__ */ new Map();
+      constructor($$componentCtor, $$slots, use_shadow_dom) {
+        super();
+        this.$$ctor = $$componentCtor;
+        this.$$s = $$slots;
+        if (use_shadow_dom) {
+          this.attachShadow({ mode: "open" });
+        }
+      }
+      addEventListener(type, listener, options) {
+        this.$$l[type] = this.$$l[type] || [];
+        this.$$l[type].push(listener);
+        if (this.$$c) {
+          const unsub = this.$$c.$on(type, listener);
+          this.$$l_u.set(listener, unsub);
+        }
+        super.addEventListener(type, listener, options);
+      }
+      removeEventListener(type, listener, options) {
+        super.removeEventListener(type, listener, options);
+        if (this.$$c) {
+          const unsub = this.$$l_u.get(listener);
+          if (unsub) {
+            unsub();
+            this.$$l_u.delete(listener);
+          }
+        }
+      }
+      async connectedCallback() {
+        this.$$cn = true;
+        if (!this.$$c) {
+          let create_slot = function(name2) {
+            return () => {
+              let node;
+              const obj2 = {
+                c: /* @__PURE__ */ __name(function create() {
+                  node = element("slot");
+                  if (name2 !== "default") {
+                    attr(node, "name", name2);
+                  }
+                }, "create"),
+                /**
+                 * @param {HTMLElement} target
+                 * @param {HTMLElement} [anchor]
+                 */
+                m: /* @__PURE__ */ __name(function mount(target, anchor) {
+                  insert(target, node, anchor);
+                }, "mount"),
+                d: /* @__PURE__ */ __name(function destroy(detaching) {
+                  if (detaching) {
+                    detach(node);
+                  }
+                }, "destroy")
+              };
+              return obj2;
+            };
+          };
+          __name(create_slot, "create_slot");
+          await Promise.resolve();
+          if (!this.$$cn || this.$$c) {
+            return;
+          }
+          const $$slots = {};
+          const existing_slots = get_custom_elements_slots(this);
+          for (const name2 of this.$$s) {
+            if (name2 in existing_slots) {
+              $$slots[name2] = [create_slot(name2)];
+            }
+          }
+          for (const attribute of this.attributes) {
+            const name2 = this.$$g_p(attribute.name);
+            if (!(name2 in this.$$d)) {
+              this.$$d[name2] = get_custom_element_value(name2, attribute.value, this.$$p_d, "toProp");
+            }
+          }
+          for (const key in this.$$p_d) {
+            if (!(key in this.$$d) && this[key] !== void 0) {
+              this.$$d[key] = this[key];
+              delete this[key];
+            }
+          }
+          this.$$c = new this.$$ctor({
+            target: this.shadowRoot || this,
+            props: {
+              ...this.$$d,
+              $$slots,
+              $$scope: {
+                ctx: []
+              }
+            }
+          });
+          const reflect_attributes = /* @__PURE__ */ __name(() => {
+            this.$$r = true;
+            for (const key in this.$$p_d) {
+              this.$$d[key] = this.$$c.$$.ctx[this.$$c.$$.props[key]];
+              if (this.$$p_d[key].reflect) {
+                const attribute_value = get_custom_element_value(
+                  key,
+                  this.$$d[key],
+                  this.$$p_d,
+                  "toAttribute"
+                );
+                if (attribute_value == null) {
+                  this.removeAttribute(this.$$p_d[key].attribute || key);
+                } else {
+                  this.setAttribute(this.$$p_d[key].attribute || key, attribute_value);
+                }
+              }
+            }
+            this.$$r = false;
+          }, "reflect_attributes");
+          this.$$c.$$.after_update.push(reflect_attributes);
+          reflect_attributes();
+          for (const type in this.$$l) {
+            for (const listener of this.$$l[type]) {
+              const unsub = this.$$c.$on(type, listener);
+              this.$$l_u.set(listener, unsub);
+            }
+          }
+          this.$$l = {};
+        }
+      }
+      // We don't need this when working within Svelte code, but for compatibility of people using this outside of Svelte
+      // and setting attributes through setAttribute etc, this is helpful
+      attributeChangedCallback(attr2, _oldValue, newValue) {
+        if (this.$$r)
+          return;
+        attr2 = this.$$g_p(attr2);
+        this.$$d[attr2] = get_custom_element_value(attr2, newValue, this.$$p_d, "toProp");
+        this.$$c?.$set({ [attr2]: this.$$d[attr2] });
+      }
+      disconnectedCallback() {
+        this.$$cn = false;
+        Promise.resolve().then(() => {
+          if (!this.$$cn && this.$$c) {
+            this.$$c.$destroy();
+            this.$$c = void 0;
+          }
+        });
+      }
+      $$g_p(attribute_name) {
+        return Object.keys(this.$$p_d).find(
+          (key) => this.$$p_d[key].attribute === attribute_name || !this.$$p_d[key].attribute && key.toLowerCase() === attribute_name
+        ) || attribute_name;
+      }
+    };
+  }
+  function get_custom_element_value(prop, value, props_definition, transform) {
+    const type = props_definition[prop]?.type;
+    value = type === "Boolean" && typeof value !== "boolean" ? value != null : value;
+    if (!transform || !props_definition[prop]) {
+      return value;
+    } else if (transform === "toAttribute") {
+      switch (type) {
+        case "Object":
+        case "Array":
+          return value == null ? null : JSON.stringify(value);
+        case "Boolean":
+          return value ? "" : null;
+        case "Number":
+          return value == null ? null : value;
+        default:
+          return value;
+      }
+    } else {
+      switch (type) {
+        case "Object":
+        case "Array":
+          return value && JSON.parse(value);
+        case "Boolean":
+          return value;
+        case "Number":
+          return value != null ? +value : value;
+        default:
+          return value;
+      }
+    }
+  }
+  __name(get_custom_element_value, "get_custom_element_value");
+  var SvelteComponent = class {
+    static {
+      __name(this, "SvelteComponent");
+    }
+    /**
+     * ### PRIVATE API
+     *
+     * Do not use, may change at any time
+     *
+     * @type {any}
+     */
+    $$ = void 0;
+    /**
+     * ### PRIVATE API
+     *
+     * Do not use, may change at any time
+     *
+     * @type {any}
+     */
+    $$set = void 0;
+    /** @returns {void} */
+    $destroy() {
+      destroy_component(this, 1);
+      this.$destroy = noop;
+    }
+    /**
+     * @template {Extract<keyof Events, string>} K
+     * @param {K} type
+     * @param {((e: Events[K]) => void) | null | undefined} callback
+     * @returns {() => void}
+     */
+    $on(type, callback) {
+      if (!is_function(callback)) {
+        return noop;
+      }
+      const callbacks = this.$$.callbacks[type] || (this.$$.callbacks[type] = []);
+      callbacks.push(callback);
+      return () => {
+        const index = callbacks.indexOf(callback);
+        if (index !== -1)
+          callbacks.splice(index, 1);
+      };
+    }
+    /**
+     * @param {Partial<Props>} props
+     * @returns {void}
+     */
+    $set(props) {
+      if (this.$$set && !is_empty(props)) {
+        this.$$.skip_bound = true;
+        this.$$set(props);
+        this.$$.skip_bound = false;
+      }
+    }
+  };
+
+  // node_modules/svelte/src/shared/version.js
+  var PUBLIC_VERSION = "4";
+
+  // node_modules/svelte/src/runtime/internal/disclose-version/index.js
+  if (typeof window !== "undefined")
+    (window.__svelte || (window.__svelte = { v: /* @__PURE__ */ new Set() })).v.add(PUBLIC_VERSION);
+
+  // plug-ins/components/hello/index.svelte
+  function create_fragment(ctx) {
+    let div2;
+    let t1;
+    let label0;
+    let t3;
+    let input2;
+    let t4;
+    let datalist;
+    let option0;
+    let option1;
+    let option2;
+    let option3;
+    let option4;
+    let t5;
+    let hr0;
+    let t6;
+    let label1;
+    let t8;
+    let input3;
+    let t9;
+    let hr1;
+    let t10;
+    let label2;
+    let t11;
+    let t12;
+    let t13;
+    let input4;
+    let t14;
+    let hr2;
+    let t15;
+    let input5;
+    let t16;
+    let input6;
+    let t17;
+    let p2;
+    let t18;
+    let t19;
+    let t20;
+    let t21;
+    let t22_value = (
+      /*a*/
+      ctx[0] + /*b*/
+      ctx[1] + ""
+    );
+    let t22;
+    let t23;
+    let hr3;
+    let t24;
+    let form;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        div2 = element("div");
+        div2.innerHTML = `<div class="col"><input type="text" class="form-control" placeholder="First name" aria-label="First name"/></div> <div class="col"><input type="text" class="form-control" placeholder="Last name" aria-label="Last name"/></div>`;
+        t1 = space();
+        label0 = element("label");
+        label0.textContent = "Datalist example";
+        t3 = space();
+        input2 = element("input");
+        t4 = space();
+        datalist = element("datalist");
+        option0 = element("option");
+        option0.innerHTML = ``;
+        option1 = element("option");
+        option1.innerHTML = ``;
+        option2 = element("option");
+        option2.innerHTML = ``;
+        option3 = element("option");
+        option3.innerHTML = ``;
+        option4 = element("option");
+        option4.innerHTML = ``;
+        t5 = space();
+        hr0 = element("hr");
+        t6 = space();
+        label1 = element("label");
+        label1.textContent = "Color picker";
+        t8 = space();
+        input3 = element("input");
+        t9 = space();
+        hr1 = element("hr");
+        t10 = space();
+        label2 = element("label");
+        t11 = text2("Example range = ");
+        t12 = text2(
+          /*c*/
+          ctx[2]
+        );
+        t13 = space();
+        input4 = element("input");
+        t14 = space();
+        hr2 = element("hr");
+        t15 = space();
+        input5 = element("input");
+        t16 = space();
+        input6 = element("input");
+        t17 = space();
+        p2 = element("p");
+        t18 = text2(
+          /*a*/
+          ctx[0]
+        );
+        t19 = text2(" + ");
+        t20 = text2(
+          /*b*/
+          ctx[1]
+        );
+        t21 = text2(" = ");
+        t22 = text2(t22_value);
+        t23 = space();
+        hr3 = element("hr");
+        t24 = space();
+        form = element("form");
+        form.innerHTML = `<div class="mb-3"><label for="exampleInputEmail1" class="form-label">Email address</label> <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"/> <div id="emailHelp" class="form-text">We&#39;ll never share your email with anyone else.</div></div> <div class="mb-3"><label for="exampleInputPassword1" class="form-label">Password</label> <input type="password" class="form-control" id="exampleInputPassword1"/></div> <div class="mb-3 form-check"><input type="checkbox" class="form-check-input" id="exampleCheck1"/> <label class="form-check-label" for="exampleCheck1">Check me out</label></div> <button type="submit" class="btn btn-primary">Submit</button>`;
+        attr(div2, "class", "row");
+        attr(label0, "for", "exampleDataList");
+        attr(label0, "class", "form-label");
+        attr(input2, "class", "form-control");
+        attr(input2, "list", "datalistOptions");
+        attr(input2, "id", "exampleDataList");
+        attr(input2, "placeholder", "Type to search...");
+        option0.__value = "San Francisco";
+        set_input_value(option0, option0.__value);
+        option1.__value = "New York";
+        set_input_value(option1, option1.__value);
+        option2.__value = "Seattle";
+        set_input_value(option2, option2.__value);
+        option3.__value = "Los Angeles";
+        set_input_value(option3, option3.__value);
+        option4.__value = "Chicago";
+        set_input_value(option4, option4.__value);
+        attr(datalist, "id", "datalistOptions");
+        attr(label1, "for", "exampleColorInput");
+        attr(label1, "class", "form-label");
+        attr(input3, "type", "color");
+        attr(input3, "class", "form-control form-control-color");
+        attr(input3, "id", "exampleColorInput");
+        input3.value = "#563d7c";
+        attr(input3, "title", "Choose your color");
+        attr(label2, "for", "customRange2");
+        attr(label2, "class", "form-label");
+        attr(input4, "type", "range");
+        attr(input4, "class", "form-range");
+        attr(input4, "min", "0");
+        attr(input4, "max", "500");
+        attr(input4, "id", "customRange2");
+        attr(input5, "type", "number");
+        attr(input6, "type", "number");
+      },
+      m(target, anchor) {
+        insert(target, div2, anchor);
+        insert(target, t1, anchor);
+        insert(target, label0, anchor);
+        insert(target, t3, anchor);
+        insert(target, input2, anchor);
+        insert(target, t4, anchor);
+        insert(target, datalist, anchor);
+        append(datalist, option0);
+        append(datalist, option1);
+        append(datalist, option2);
+        append(datalist, option3);
+        append(datalist, option4);
+        insert(target, t5, anchor);
+        insert(target, hr0, anchor);
+        insert(target, t6, anchor);
+        insert(target, label1, anchor);
+        insert(target, t8, anchor);
+        insert(target, input3, anchor);
+        insert(target, t9, anchor);
+        insert(target, hr1, anchor);
+        insert(target, t10, anchor);
+        insert(target, label2, anchor);
+        append(label2, t11);
+        append(label2, t12);
+        insert(target, t13, anchor);
+        insert(target, input4, anchor);
+        set_input_value(
+          input4,
+          /*c*/
+          ctx[2]
+        );
+        insert(target, t14, anchor);
+        insert(target, hr2, anchor);
+        insert(target, t15, anchor);
+        insert(target, input5, anchor);
+        set_input_value(
+          input5,
+          /*a*/
+          ctx[0]
+        );
+        insert(target, t16, anchor);
+        insert(target, input6, anchor);
+        set_input_value(
+          input6,
+          /*b*/
+          ctx[1]
+        );
+        insert(target, t17, anchor);
+        insert(target, p2, anchor);
+        append(p2, t18);
+        append(p2, t19);
+        append(p2, t20);
+        append(p2, t21);
+        append(p2, t22);
+        insert(target, t23, anchor);
+        insert(target, hr3, anchor);
+        insert(target, t24, anchor);
+        insert(target, form, anchor);
+        if (!mounted) {
+          dispose = [
+            listen(
+              input4,
+              "change",
+              /*input4_change_input_handler*/
+              ctx[3]
+            ),
+            listen(
+              input4,
+              "input",
+              /*input4_change_input_handler*/
+              ctx[3]
+            ),
+            listen(
+              input5,
+              "input",
+              /*input5_input_handler*/
+              ctx[4]
+            ),
+            listen(
+              input6,
+              "input",
+              /*input6_input_handler*/
+              ctx[5]
+            )
+          ];
+          mounted = true;
+        }
+      },
+      p(ctx2, [dirty]) {
+        if (dirty & /*c*/
+        4)
+          set_data(
+            t12,
+            /*c*/
+            ctx2[2]
+          );
+        if (dirty & /*c*/
+        4) {
+          set_input_value(
+            input4,
+            /*c*/
+            ctx2[2]
+          );
+        }
+        if (dirty & /*a*/
+        1 && to_number(input5.value) !== /*a*/
+        ctx2[0]) {
+          set_input_value(
+            input5,
+            /*a*/
+            ctx2[0]
+          );
+        }
+        if (dirty & /*b*/
+        2 && to_number(input6.value) !== /*b*/
+        ctx2[1]) {
+          set_input_value(
+            input6,
+            /*b*/
+            ctx2[1]
+          );
+        }
+        if (dirty & /*a*/
+        1)
+          set_data(
+            t18,
+            /*a*/
+            ctx2[0]
+          );
+        if (dirty & /*b*/
+        2)
+          set_data(
+            t20,
+            /*b*/
+            ctx2[1]
+          );
+        if (dirty & /*a, b*/
+        3 && t22_value !== (t22_value = /*a*/
+        ctx2[0] + /*b*/
+        ctx2[1] + ""))
+          set_data(t22, t22_value);
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching) {
+          detach(div2);
+          detach(t1);
+          detach(label0);
+          detach(t3);
+          detach(input2);
+          detach(t4);
+          detach(datalist);
+          detach(t5);
+          detach(hr0);
+          detach(t6);
+          detach(label1);
+          detach(t8);
+          detach(input3);
+          detach(t9);
+          detach(hr1);
+          detach(t10);
+          detach(label2);
+          detach(t13);
+          detach(input4);
+          detach(t14);
+          detach(hr2);
+          detach(t15);
+          detach(input5);
+          detach(t16);
+          detach(input6);
+          detach(t17);
+          detach(p2);
+          detach(t23);
+          detach(hr3);
+          detach(t24);
+          detach(form);
+        }
+        mounted = false;
+        run_all(dispose);
+      }
+    };
+  }
+  __name(create_fragment, "create_fragment");
+  function instance($$self, $$props, $$invalidate) {
+    let a = 1;
+    let b = 2;
+    let c = 3;
+    function input4_change_input_handler() {
+      c = to_number(this.value);
+      $$invalidate(2, c);
+    }
+    __name(input4_change_input_handler, "input4_change_input_handler");
+    function input5_input_handler() {
+      a = to_number(this.value);
+      $$invalidate(0, a);
+    }
+    __name(input5_input_handler, "input5_input_handler");
+    function input6_input_handler() {
+      b = to_number(this.value);
+      $$invalidate(1, b);
+    }
+    __name(input6_input_handler, "input6_input_handler");
+    return [
+      a,
+      b,
+      c,
+      input4_change_input_handler,
+      input5_input_handler,
+      input6_input_handler
+    ];
+  }
+  __name(instance, "instance");
+  var Hello2 = class extends SvelteComponent {
+    static {
+      __name(this, "Hello");
+    }
+    constructor(options) {
+      super();
+      init(this, options, instance, create_fragment, safe_not_equal, {});
+    }
+  };
+  var hello_default = Hello2;
+
   // plug-ins/components/Hello.js
-  var Hello2 = class {
+  var Hello3 = class {
     static {
       __name(this, "Hello");
     }
@@ -2642,8 +3674,9 @@
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        const textnode = document.createTextNode("Hello World, I am simple HTML you can hook into to parade foreign elements!");
-        this.foreign.appendChild(textnode);
+        new hello_default({
+          target: this.foreign.body
+        });
         this.on("h", (h) => {
           console.log({ h });
         });
@@ -2742,8 +3775,8 @@
             description: "Prints a fake directory structure"
           }
         };
-        function runCommand(term2, text2) {
-          const command2 = text2.trim().split(" ")[0];
+        function runCommand(term2, text3) {
+          const command2 = text3.trim().split(" ")[0];
           if (command2.length > 0) {
             term2.writeln("");
             if (command2 in commands) {
@@ -2827,7 +3860,7 @@
     Workspace: Window2,
     Window: Window2,
     Port,
-    Hello: Hello2,
+    Hello: Hello3,
     Terminal: Window3,
     Editor: Window4
   };

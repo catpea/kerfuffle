@@ -9,8 +9,12 @@
 
   </Window>
 
-  <Hello id="test-b" x="1200" y="100" w="1000" h="1000">
-  </Hello>
+  <Window id="test-emitter-nodes" x="1200" y="100" w="1000" h="1000" >
+
+    <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
+
+    
+  </Window>
 
   <Terminal id="test-c" x="2300" y="100" w="1000" h="1000">
   </Terminal>
@@ -22,6 +26,19 @@
 
 
 
+
+
+
+  <Hello id="test-foreign-1" x="1200" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-2" x="2400" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-3" x="3600" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-4" x="4800" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-5" x="6000" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-6" x="7200" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-7" x="8400" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-8" x="9600" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-9" x="10800" y="1200" w="1000" h="1000"></Hello>
+  <Hello id="test-foreign-10" x="12000" y="1200" w="1000" h="1000"></Hello>
 
 
 
