@@ -3,6 +3,7 @@
 <Workspace id="0" name="Hello Project" description="A Selection Of World VisualPrograms" compatibility="1.0.1">
 
   <Window id="test-a" x="100" y="100" w="1000" h="1000" showMenu="true" showStatus="true">
+    <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
 
     <Terminal id="test-c" x="100" y="100" w="1000" h="800">
     </Terminal>
@@ -13,7 +14,7 @@
 
     <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
 
-    
+
   </Window>
 
   <Terminal id="test-c" x="2300" y="100" w="1000" h="1000">

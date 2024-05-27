@@ -1,9 +1,10 @@
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 import Application from "/plug-ins/windows/Application.js";
 import Pane from "/plug-ins/windows/Pane.js";
-import Menu from "/plug-ins/components/Menu.js";
+import Menu from "/plug-ins/windows/Menu.js";
+import Overlay from "/plug-ins/windows/Overlay.js";
 
-import { svg } from "/plug-ins/domek/index.js"
+import { svg, click } from "/plug-ins/domek/index.js"
 
 
 export default class Window {
@@ -14,25 +15,53 @@ export default class Window {
 
   methods = {
 
-    openMenu({x,y,options, w=200, h=320}){
-      console.log({x,y,options});
+    // TODO: menu should be destroyed/recreated each time
+
+    closeMenu(){
+      console.log('Close Menu');
+        this.overlay.show = false;
+        this.menu.show = false;
+        this.container.style.display = 'none';
+
+
+    },
+    openMenu({x,y,options, w=250, h=280}){
 
       if(this.menu) {
         this.menu.options = options;
         this.menu.x = x;
         this.menu.y = y;
+
         this.container.style.display = 'block';
+        this.overlay.show = true;
+        this.menu.show = true;
+
         return;
       }
       // if(this.menu) this.menu.destroy();
 
       this.container = svg.g({ name: 'menu' });
+
       this.scene.appendChild(this.container);
 
-      this.menu = new Instance(Menu, {parent:this, scene:this.container, x,y,w,h, isMenuWindow:true, options});
-      // const textnode = document.createTextNode("Hello World, I am simple HTML you can hook into to parade foreign elements!");
-      // menu.appendChild(textnode);
+      this.overlay = new Instance(Overlay, {parent:this, scene:this.container});
+      this.overlay.start();
+      this.overlay.show = true;
+
+      this.menu = new Instance(Menu, {parent:this, scene:this.container, x,y,w,h, options});
       this.menu.start();
+      this.menu.show = true;
+
+      // this.menu.body.addEventListener('click', e => {
+      //   console.log('Spanko!');
+      //    this.menu.hide();
+      //    this.overlay.hide();
+      // });
+
+      // this.overlay.on('click', ()=>{
+      //   this.overlay.show = false;
+      //   this.menu.show = false;
+      // });
 
     },
 

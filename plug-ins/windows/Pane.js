@@ -226,6 +226,10 @@ export default class Pane {
         },
       });
       this.destructable = ()=>zoom.destroy();
+
+
+
+
       this.on('url',     url=>this.loadXml(this.url));
 
       if(this.getApplication().content) this.loadElements(this.getApplication().content /* this passes on the cheerio tuple */ )

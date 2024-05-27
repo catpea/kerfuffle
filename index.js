@@ -1864,7 +1864,7 @@
     mount() {
       this.mouseDownHandler = (e) => {
         e.stopPropagation();
-        front(this.element());
+        setTimeout(() => front(this.element()), 99);
       };
       this.handle.addEventListener("mousedown", this.mouseDownHandler);
     }
@@ -1898,8 +1898,6 @@
       mount() {
         this.draw();
         if (this.isRootWindow)
-          return;
-        if (this.isMenuWindow)
           return;
         let caption = new Instance(Caption, { h: 24, text: this.caption });
         this.on("caption", (v) => caption.text = v);
@@ -2178,7 +2176,6 @@
       this.contextMenuHandler = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("SCALE", this.scale());
         let x = e.x;
         let y = e.y;
         this.show({ x, y });
@@ -2538,31 +2535,63 @@
     };
   };
 
-  // plug-ins/components/Menu.js
-  var Hello = class {
+  // plug-ins/windows/Menu.js
+  var Menu2 = class {
     static {
-      __name(this, "Hello");
+      __name(this, "Menu");
     }
-    static extends = [Application];
+    static extends = [Vertical];
     properties = {};
     observables = {
+      show: false,
       options: {}
     };
     methods = {
+      initialize() {
+        this.r = 5;
+        this.b = 5;
+        this.s = 3;
+        this.p = 3;
+      },
       mount() {
-        this.foreign = new Instance(Foreign);
-        this.createWindowComponent(this.foreign);
-        const textnode = document.createTextNode("I am an HTML context menu, based on foreign object." + JSON.stringify(this.options));
+        this.el.Background = svg.rect({
+          name: this.oo.name,
+          style: { background: "red" },
+          class: "editor-menu",
+          ry: this.r,
+          "stroke-width": 0,
+          "vector-effect": "non-scaling-stroke",
+          x: 0,
+          y: 0
+        });
+        this.on("w", (width) => update(this.el.Background, { width }));
+        this.on("h", (height) => update(this.el.Background, { height }));
+        this.on("x", (x) => update(this.el.Background, { x }));
+        this.on("y", (y) => update(this.el.Background, { y }));
+        this.appendElements();
+        this.foreign = new Instance(Foreign, { parent: this });
+        this.children.create(this.foreign);
+        const textnode = document.createTextNode("X: I am an HTML context menu, based on foreign object." + JSON.stringify(this.options));
         this.foreign.appendChild(textnode);
         this.on("options", (options) => {
           textnode.textContent = "I am an HTML context menu, based on foreign object." + JSON.stringify(this.options);
         });
         this.foreign.body.addEventListener("click", (e) => {
-          this.scene.style.display = "none";
+          this.parent.closeMenu();
         });
         this.on("h", (h) => {
           console.log({ h });
           this.foreign.h = h;
+        });
+        this.on("show", (show) => {
+          console.log("menu on show", show);
+          if (show) {
+            this.el.Background.style.display = "block";
+            this.foreign.body.style.display = "block";
+          } else {
+            this.el.Background.style.display = "none";
+            this.foreign.body.style.display = "none";
+          }
         });
       },
       stop() {
@@ -2575,6 +2604,69 @@
     };
   };
 
+  // plug-ins/windows/Overlay.js
+  var Overlay = class {
+    static {
+      __name(this, "Overlay");
+    }
+    static extends = [Component];
+    properties = {
+      layout: null
+    };
+    observables = {
+      show: false,
+      children: []
+    };
+    methods = {
+      initialize() {
+        this.debouncedDnResizeWindow = debounce_default(this.onResizeWindow.bind(this), 10);
+        this.on("show", (show) => {
+          if (show) {
+            update(this.el.Overlay, { style: { display: "block" } });
+          } else {
+            update(this.el.Overlay, { style: { display: "none" } });
+          }
+        }, { autorun: false });
+      },
+      drawOverlay() {
+        this.el.Overlay = svg.rect({
+          name: this.oo.name,
+          style: { display: "none" },
+          class: "editor-overlay",
+          ry: this.r,
+          "stroke-width": 0,
+          "vector-effect": "non-scaling-stroke",
+          x: 0,
+          y: 0
+        });
+        this.on("w", (width) => update(this.el.Overlay, { width }));
+        this.on("h", (height) => update(this.el.Overlay, { height }));
+        this.appendElements();
+        this.el.Overlay.addEventListener("click", (e) => {
+          console.log("Overlay click");
+          this.parent.closeMenu();
+        });
+      },
+      mount() {
+        this.drawOverlay();
+        this.resizeToFullWindow();
+      },
+      destroy() {
+        window.removeEventListener("resize", this.debouncedDnResizeWindow);
+        this.removeElements();
+      },
+      resizeToFullWindow() {
+        window.addEventListener("resize", this.debouncedDnResizeWindow);
+        this.onResizeWindow();
+      },
+      onResizeWindow() {
+        console.log(this);
+        update(this.el.Overlay, { width: this.getRoot().svg.clientWidth });
+        update(this.el.Overlay, { height: this.getRoot().svg.clientHeight });
+      }
+    };
+  };
+
   // plug-ins/components/Window.js
   var Window2 = class {
     static {
@@ -2583,19 +2675,31 @@
     static extends = [Application];
     properties = {};
     methods = {
-      openMenu({ x, y, options, w = 200, h = 320 }) {
-        console.log({ x, y, options });
+      // TODO: menu should be destroyed/recreated each time
+      closeMenu() {
+        console.log("Close Menu");
+        this.overlay.show = false;
+        this.menu.show = false;
+        this.container.style.display = "none";
+      },
+      openMenu({ x, y, options, w = 250, h = 280 }) {
         if (this.menu) {
           this.menu.options = options;
           this.menu.x = x;
           this.menu.y = y;
           this.container.style.display = "block";
+          this.overlay.show = true;
+          this.menu.show = true;
           return;
         }
         this.container = svg.g({ name: "menu" });
         this.scene.appendChild(this.container);
-        this.menu = new Instance(Hello, { parent: this, scene: this.container, x, y, w, h, isMenuWindow: true, options });
+        this.overlay = new Instance(Overlay, { parent: this, scene: this.container });
+        this.overlay.start();
+        this.overlay.show = true;
+        this.menu = new Instance(Menu2, { parent: this, scene: this.container, x, y, w, h, options });
         this.menu.start();
+        this.menu.show = true;
       },
       mount() {
         this.pane = new Instance(Pane);
@@ -2787,6 +2891,14 @@
     input.value = value == null ? "" : value;
   }
   __name(set_input_value, "set_input_value");
+  function set_style(node, key, value, important) {
+    if (value == null) {
+      node.style.removeProperty(key);
+    } else {
+      node.style.setProperty(key, value, important ? "important" : "");
+    }
+  }
+  __name(set_style, "set_style");
   function get_custom_elements_slots(element2) {
     const result = {};
     element2.childNodes.forEach(
@@ -3290,6 +3402,7 @@
 
   // plug-ins/components/hello/index.svelte
   function create_fragment(ctx) {
+    let div7;
     let div2;
     let t1;
     let label0;
@@ -3342,6 +3455,7 @@
     let dispose;
     return {
       c() {
+        div7 = element("div");
         div2 = element("div");
         div2.innerHTML = `<div class="col"><input type="text" class="form-control" placeholder="First name" aria-label="First name"/></div> <div class="col"><input type="text" class="form-control" placeholder="Last name" aria-label="Last name"/></div>`;
         t1 = space();
@@ -3437,66 +3551,69 @@
         attr(input4, "id", "customRange2");
         attr(input5, "type", "number");
         attr(input6, "type", "number");
+        attr(div7, "class", "container pt-3");
+        set_style(div7, "overflow-y", "scroll");
       },
       m(target, anchor) {
-        insert(target, div2, anchor);
-        insert(target, t1, anchor);
-        insert(target, label0, anchor);
-        insert(target, t3, anchor);
-        insert(target, input2, anchor);
-        insert(target, t4, anchor);
-        insert(target, datalist, anchor);
+        insert(target, div7, anchor);
+        append(div7, div2);
+        append(div7, t1);
+        append(div7, label0);
+        append(div7, t3);
+        append(div7, input2);
+        append(div7, t4);
+        append(div7, datalist);
         append(datalist, option0);
         append(datalist, option1);
         append(datalist, option2);
         append(datalist, option3);
         append(datalist, option4);
-        insert(target, t5, anchor);
-        insert(target, hr0, anchor);
-        insert(target, t6, anchor);
-        insert(target, label1, anchor);
-        insert(target, t8, anchor);
-        insert(target, input3, anchor);
-        insert(target, t9, anchor);
-        insert(target, hr1, anchor);
-        insert(target, t10, anchor);
-        insert(target, label2, anchor);
+        append(div7, t5);
+        append(div7, hr0);
+        append(div7, t6);
+        append(div7, label1);
+        append(div7, t8);
+        append(div7, input3);
+        append(div7, t9);
+        append(div7, hr1);
+        append(div7, t10);
+        append(div7, label2);
         append(label2, t11);
         append(label2, t12);
-        insert(target, t13, anchor);
-        insert(target, input4, anchor);
+        append(div7, t13);
+        append(div7, input4);
         set_input_value(
           input4,
           /*c*/
           ctx[2]
         );
-        insert(target, t14, anchor);
-        insert(target, hr2, anchor);
-        insert(target, t15, anchor);
-        insert(target, input5, anchor);
+        append(div7, t14);
+        append(div7, hr2);
+        append(div7, t15);
+        append(div7, input5);
         set_input_value(
           input5,
           /*a*/
           ctx[0]
         );
-        insert(target, t16, anchor);
-        insert(target, input6, anchor);
+        append(div7, t16);
+        append(div7, input6);
         set_input_value(
           input6,
           /*b*/
           ctx[1]
         );
-        insert(target, t17, anchor);
-        insert(target, p2, anchor);
+        append(div7, t17);
+        append(div7, p2);
         append(p2, t18);
         append(p2, t19);
         append(p2, t20);
         append(p2, t21);
         append(p2, t22);
-        insert(target, t23, anchor);
-        insert(target, hr3, anchor);
-        insert(target, t24, anchor);
-        insert(target, form, anchor);
+        append(div7, t23);
+        append(div7, hr3);
+        append(div7, t24);
+        append(div7, form);
         if (!mounted) {
           dispose = [
             listen(
@@ -3585,37 +3702,7 @@
       o: noop,
       d(detaching) {
         if (detaching) {
-          detach(div2);
-          detach(t1);
-          detach(label0);
-          detach(t3);
-          detach(input2);
-          detach(t4);
-          detach(datalist);
-          detach(t5);
-          detach(hr0);
-          detach(t6);
-          detach(label1);
-          detach(t8);
-          detach(input3);
-          detach(t9);
-          detach(hr1);
-          detach(t10);
-          detach(label2);
-          detach(t13);
-          detach(input4);
-          detach(t14);
-          detach(hr2);
-          detach(t15);
-          detach(input5);
-          detach(t16);
-          detach(input6);
-          detach(t17);
-          detach(p2);
-          detach(t23);
-          detach(hr3);
-          detach(t24);
-          detach(form);
+          detach(div7);
         }
         mounted = false;
         run_all(dispose);
@@ -3652,7 +3739,7 @@
     ];
   }
   __name(instance, "instance");
-  var Hello2 = class extends SvelteComponent {
+  var Hello = class extends SvelteComponent {
     static {
       __name(this, "Hello");
     }
@@ -3661,10 +3748,10 @@
       init(this, options, instance, create_fragment, safe_not_equal, {});
     }
   };
-  var hello_default = Hello2;
+  var hello_default = Hello;
 
   // plug-ins/components/Hello.js
-  var Hello3 = class {
+  var Hello2 = class {
     static {
       __name(this, "Hello");
     }
@@ -3860,7 +3947,7 @@
     Workspace: Window2,
     Window: Window2,
     Port,
-    Hello: Hello3,
+    Hello: Hello2,
     Terminal: Window3,
     Editor: Window4
   };

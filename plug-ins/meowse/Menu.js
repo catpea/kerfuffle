@@ -23,7 +23,7 @@ export default class Menu {
       e.preventDefault();
       e.stopPropagation();
 
-      console.log('SCALE', this.scale());
+      // console.log('SCALE', this.scale());
       let x = e.x;//*this.scale();
       let y = e.y;//*this.scale();
 

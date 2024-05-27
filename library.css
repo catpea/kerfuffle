@@ -11522,6 +11522,7 @@ fieldset:disabled .btn {
   --mozilla-light: #565656;
   --mozilla-twilight: #3c3c3c;
   --mozilla-dark: #1c1b22;
+  --fedora-dark: #2f2f2f;
   --codemirror-dark: #282c34;
   --editor-foreground-primary: var(--mozilla-light);
   --editor-foreground-secondary: var(--mozilla-twilight);
@@ -11553,6 +11554,13 @@ svg.editor-interface {
 }
 .editor-scene {
   fill: transparent;
+}
+.editor-overlay {
+  opacity: 0.5;
+}
+.editor-menu {
+  stroke: var(--editor-border);
+  fill: var(--fedora-dark);
 }
 .viewport-background.workspace {
   stroke: var(--editor-border);

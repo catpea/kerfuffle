@@ -47,7 +47,7 @@ export default class Window {
       this.draw(); // WARNING: you must draw the window before drawing the caption, so that the caption is on top
 
       if(this.isRootWindow) return;
-      if(this.isMenuWindow) return;
+ 
 
       let caption = new Instance(Caption, {h: 24, text: this.caption});
       this.on('caption', v=>caption.text=v)
