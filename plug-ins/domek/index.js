@@ -13,7 +13,7 @@ const update = function(elements, properties) {
 					el.style[name] = value[name];
 				}
 				continue;
- 
+
 			}else if(typeof value == 'object'){
 				value = Object.entries(value).map(([k,v])=>`${k}: ${v};`).join(' ')
 			}
@@ -114,11 +114,23 @@ function front(element) {
 	const parentElement = element.parentNode;
 
 	// Remove element from its current position...
-	parentElement.removeChild(element);
+	// parentElement.removeChild(element);
 
 	// And add it back, so it will be the last one (and thus at the front in SVG)
-	parentElement.appendChild(element);
+	// parentElement.appendChild(element);
+
+	 const siblings = Array.from(parentElement.children).filter(item=>item!==element);
+	 // console.log(`ZZZ: ${element.id} has ${siblings.length} siblings: `, siblings.map(o=>o.id).join(' > '));
+
+		for (const item of siblings) {
+				parentElement.insertBefore(item, element);
+		}
+
 }
+
+
+
+
 
 function keyboard(verify, callback) {
 	// Create a function to handle the keydown event

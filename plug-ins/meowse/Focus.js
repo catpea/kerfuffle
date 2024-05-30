@@ -27,8 +27,7 @@ export default class Focus {
 
 		this.mouseDownHandler = (e) => {
       e.stopPropagation();
-      //TODO: ANOMALY: Focus is delayed as using front function intereferes with form input, this ma just need a check if the focus is already here...
-      // setTimeout(()=>front(this.element()), 99);
+      front( this.element() );
 		};
 
 		this.handle.addEventListener('mousedown', this.mouseDownHandler);

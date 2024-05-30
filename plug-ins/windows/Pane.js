@@ -184,7 +184,7 @@ export default class Pane {
         const Ui = this.components[node.type]||this.components['Hello'];
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
 
-        let root = svg.g({ name: 'element' });
+        let root = svg.g({ id:node.id, name: 'element' });
         paneBody.content.appendChild(root);
 
         const options = { node, scene: root, parent: this, id:node.id, content:node.content, library:node.library };

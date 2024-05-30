@@ -759,8 +759,10 @@
   }, "text");
   function front(element2) {
     const parentElement = element2.parentNode;
-    parentElement.removeChild(element2);
-    parentElement.appendChild(element2);
+    const siblings = Array.from(parentElement.children).filter((item) => item !== element2);
+    for (const item of siblings) {
+      parentElement.insertBefore(item, element2);
+    }
   }
   __name(front, "front");
   function click(element2, callback) {
@@ -1868,6 +1870,7 @@
     mount() {
       this.mouseDownHandler = (e) => {
         e.stopPropagation();
+        front(this.element());
       };
       this.handle.addEventListener("mousedown", this.mouseDownHandler);
     }
@@ -3375,7 +3378,7 @@
           const Ui = this.components[node.type] || this.components["Hello"];
           if (!Ui)
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-          let root = svg.g({ name: "element" });
+          let root = svg.g({ id: node.id, name: "element" });
           paneBody.content.appendChild(root);
           const options = { node, scene: root, parent: this, id: node.id, content: node.content, library: node.library };
           const attributes = {};
