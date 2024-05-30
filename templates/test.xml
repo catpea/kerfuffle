@@ -5,33 +5,26 @@
   <Window id="test-a" x="100" y="100" w="1000" h="1000" showMenu="true" showStatus="true">
     <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
 
+    <Editor id="test-d" x="100" y="1200" w="1000" h="1000">
+    </Editor>
+
     <Terminal id="test-c" x="100" y="100" w="1000" h="800">
     </Terminal>
 
   </Window>
 
-  <Window id="test-emitter-nodes" x="1200" y="100" w="1000" h="1000" >
+  <Window id="test-emitter-nodes" x="1200" y="100" w="1000" h="1000" zoom=".8" showStatus="true" library="emitter-network">
 
-    <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
-
+    <Queue  id="test-1" x="200" y="100" w="170" h="256"></Queue>
+    <Filter id="test-2" x="500" y="100" w="170" h="256" link-out="test-3/in"></Filter>
+    <Map    id="test-3" x="800" y="100" w="170" h="256"></Map>
+    <Reduce id="test-4" x="800" y="500" w="170" h="256"></Reduce>
 
   </Window>
 
-  <Terminal id="test-c" x="2300" y="100" w="1000" h="1000">
-  </Terminal>
-
-
-  <Editor id="test-d" x="100" y="1200" w="1000" h="1000">
-  </Editor>
-
-
-
-
-
-
 
   <Hello id="test-foreign-1" x="1200" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-2" x="2400" y="1200" w="1000" h="1000"></Hello>
+  <!-- <Hello id="test-foreign-2" x="2400" y="1200" w="1000" h="1000"></Hello>
   <Hello id="test-foreign-3" x="3600" y="1200" w="1000" h="1000"></Hello>
   <Hello id="test-foreign-4" x="4800" y="1200" w="1000" h="1000"></Hello>
   <Hello id="test-foreign-5" x="6000" y="1200" w="1000" h="1000"></Hello>
@@ -40,7 +33,7 @@
   <Hello id="test-foreign-8" x="9600" y="1200" w="1000" h="1000"></Hello>
   <Hello id="test-foreign-9" x="10800" y="1200" w="1000" h="1000"></Hello>
   <Hello id="test-foreign-10" x="12000" y="1200" w="1000" h="1000"></Hello>
-
+ -->
 
 
 

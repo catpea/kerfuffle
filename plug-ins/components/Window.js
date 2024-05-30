@@ -67,10 +67,11 @@ export default class Window {
 
     mount(){
 
-      this.pane = new Instance(Pane);
+      this.pane = new Instance(Pane, {library: this.library});
 
       this.on("node", (node) => {
         node.on("url", url => this.pane.url = url);
+        node.on("zoom", zoom => this.pane.zoom = zoom);
        });
 
       this.createWindowComponent( this.pane );

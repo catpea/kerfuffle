@@ -9,7 +9,6 @@ import Menu from "/plug-ins/meowse/Menu.js";
 import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
-import components from "/plug-ins/components/index.js";
 
 import Viewport from "/plug-ins/windows/Viewport.js";
 import Container from "/plug-ins/windows/Container.js";
@@ -23,6 +22,13 @@ import Label from "/plug-ins/windows/Label.js";
 
 const uuid = bundle['uuid'];
 const cheerio = bundle['cheerio'];
+
+import components from "/plug-ins/components/index.js";
+import emitterNetwork from "/plug-ins/emitter-network/index.js";
+
+const libraries = {
+  'emitter-network': emitterNetwork,
+};
 
 const through = (...functions) => {
   return (data) => {
@@ -46,6 +52,7 @@ export default class Pane {
 
   observables = {
     url:null,
+    library:null,
 
     panX: 0,
     panY: 0,
@@ -56,7 +63,7 @@ export default class Pane {
     anchors: [],
     pipes: [],
 
-    components,
+    components:{...components},
 
   };
 
@@ -64,6 +71,26 @@ export default class Pane {
 
     initialize(){
       this.name = 'pane';
+
+      if(this.library){
+        this.library.split(',').map(s=>s.trim()).filter(s=>s).forEach((name)=>{
+          if(libraries[name]){
+            this.components = {...components, ...libraries[name]}
+          }else{
+            console.info('No such library', name);
+          }
+        })
+      }
+
+      console.log('XXX', this.components);
+
+
+
+
+
+
+
+
       if(this.getRootContainer().isRootWindow) return;
       // this.h = 400;
       this.flexible = true;
@@ -152,13 +179,15 @@ export default class Pane {
 
       this.on("elements.created", (node) => {
 
-        const Ui = this.components[node.type];
+        console.log('XXX this.components', node.type, this.components[node.type]?'OK':'X', this.components);
+
+        const Ui = this.components[node.type]||this.components['Hello'];
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
 
         let root = svg.g({ name: 'element' });
         paneBody.content.appendChild(root);
 
-        const options = { node, scene: root, parent: this, id:node.id, content:node.content };
+        const options = { node, scene: root, parent: this, id:node.id, content:node.content, library:node.library };
         const attributes = {};
         for (const name of node.oo.attributes) { attributes[name] = node[name] }
         const ui = new Instance(Ui, Object.assign(attributes, options));

@@ -618,6 +618,7 @@
       b: 0,
       p: 0,
       s: 0,
+      zoom: void 0,
       selected: false,
       source: void 0,
       target: void 0,
@@ -625,8 +626,10 @@
       // JSON url
       src: void 0,
       // JSON url
-      data: void 0
+      data: void 0,
       // JSON data
+      library: void 0
+      // CSV libraries to use
     };
     types = {
       x: "Float",
@@ -637,7 +640,8 @@
       r: "Integer",
       b: "Integer",
       p: "Integer",
-      s: "Integer"
+      s: "Integer",
+      zoom: "Float"
     };
     methods = {
       assign(meta, data, content) {
@@ -1864,7 +1868,6 @@
     mount() {
       this.mouseDownHandler = (e) => {
         e.stopPropagation();
-        setTimeout(() => front(this.element()), 99);
       };
       this.handle.addEventListener("mousedown", this.mouseDownHandler);
     }
@@ -2292,199 +2295,6 @@
     };
   };
 
-  // plug-ins/windows/Pane.js
-  var uuid3 = bundle["uuid"];
-  var cheerio = bundle["cheerio"];
-  var Pane = class {
-    static {
-      __name(this, "Pane");
-    }
-    static extends = [Vertical];
-    properties = {
-      contain: true,
-      classes: "",
-      // css classes
-      feed: []
-    };
-    observables = {
-      url: null,
-      panX: 0,
-      panY: 0,
-      zoom: 0.4,
-      applications: [],
-      elements: [],
-      anchors: [],
-      pipes: [],
-      components: components_default
-    };
-    methods = {
-      initialize() {
-        this.name = "pane";
-        if (this.getRootContainer().isRootWindow)
-          return;
-        this.flexible = true;
-      },
-      mount() {
-        this.getApplication().on("showMenu", (showMenu) => {
-          if (showMenu) {
-            const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
-              [Label, { h: 24, W: 32, text: "File", parent: this }, (c, p2) => p2.children.create(c)],
-              [Label, { h: 24, W: 32, text: "Info", parent: this }, (c, p2) => p2.children.create(c)],
-              [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
-            ], (c) => this.children.create(c));
-            this.disposable = click(addButton.handle, (e) => {
-              const id = uuid3();
-              const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
-              this.elements.create(node);
-            });
-          }
-        });
-        const paneBody = new Instance(Viewport, { parent: this, classes: this.classes, flexible: true });
-        this.viewport = paneBody;
-        this.getApplication().viewport = paneBody;
-        this.children.create(paneBody);
-        globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
-        this.getApplication().on("showStatus", (showStatus) => {
-          if (showStatus) {
-            const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
-              [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
-              [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
-            ], (c) => this.children.create(c));
-            this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-            const resize = new Resize({
-              area: window,
-              minimumX: 320,
-              minimumY: 200,
-              handle: resizeHandle.el.Container,
-              scale: () => this.getParentScale(this),
-              box: this.getApplication(this),
-              before: () => {
-              },
-              movement: ({ x, y }) => {
-              },
-              after: () => {
-              }
-            });
-            this.destructable = () => resize.destroy();
-          }
-        });
-        if (this.parent.isRootWindow) {
-          this.parent.on("h", (parentH) => {
-            const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
-            const spacers = this.parent.s * 1 * (this.children.length > 0 ? this.children.length - 1 : 0);
-            const freeSpace = parentH - childrenHeight - this.parent.b * 2 - this.parent.p * 2 - spacers;
-            paneBody.h = freeSpace;
-            paneBody.H = freeSpace;
-          });
-        }
-        ;
-        this.on("panX", (panX) => paneBody.panX = panX);
-        this.on("panY", (panY) => paneBody.panY = panY);
-        this.on("zoom", (zoom2) => paneBody.zoom = zoom2);
-        this.on("elements.created", (node) => {
-          const Ui = this.components[node.type];
-          if (!Ui)
-            return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
-          let root = svg.g({ name: "element" });
-          paneBody.content.appendChild(root);
-          const options = { node, scene: root, parent: this, id: node.id, content: node.content };
-          const attributes = {};
-          for (const name2 of node.oo.attributes) {
-            attributes[name2] = node[name2];
-          }
-          const ui = new Instance(Ui, Object.assign(attributes, options));
-          this.applications.create(ui);
-          ui.start();
-        }, { replay: true });
-        this.on("elements.removed", ({ id }) => {
-          this.applications.get(id).stop();
-          this.applications.get(id).destroy();
-          this.applications.remove(id);
-        });
-        this.appendElements();
-        const menu = new Menu({
-          area: paneBody.body,
-          scale: () => this.getScale(this),
-          pan: () => ({ x: this.getRoot().pane.panX, y: this.getRoot().pane.panY }),
-          show: ({ x, y }) => {
-            const root = this.getRoot();
-            console.log({ x, y, root });
-            root.openMenu({
-              x,
-              y,
-              options: { data: [
-                { root: this.getApplication().node.id, text: "Bueno", value: "bueno", click: () => console.log("Bueno!") }
-              ] }
-            });
-          }
-        });
-        this.destructable = () => menu.destroy();
-        const pan = new Pan_default({
-          area: window,
-          handle: paneBody.background,
-          scale: () => this.getParentScale(this),
-          before: () => {
-          },
-          movement: ({ x, y }) => {
-            this.panX -= x;
-            this.panY -= y;
-          },
-          after: () => {
-          }
-        });
-        this.destructable = () => pan.destroy();
-        const zoom = new Zoom({
-          magnitude: 0.1,
-          area: paneBody.background,
-          component: paneBody,
-          handle: paneBody.background,
-          getter: (key) => this[key],
-          transforms: () => this.getTransforms(this),
-          before: () => {
-          },
-          change: ({ zoom: zoom2, panX, panY }) => {
-            this.zoom = zoom2;
-            this.panX = panX;
-            this.panY = panY;
-          },
-          feedback: (debug) => {
-          },
-          after: (data, debug) => {
-          }
-        });
-        this.destructable = () => zoom.destroy();
-        this.on("url", (url) => this.loadXml(this.url));
-        if (this.getApplication().content)
-          this.loadElements(
-            this.getApplication().content
-            /* this passes on the cheerio tuple */
-          );
-      },
-      async loadXml(url) {
-        if (!url)
-          return;
-        const xml = await (await fetch(url)).text();
-        const $ = cheerio.load(xml, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
-        for (const el of $("Workspace").children()) {
-          const node = new Instance(Node, { origin: this.getApplication().id });
-          const data = {};
-          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
-          this.elements.create(node);
-        }
-      },
-      loadElements([$, children2]) {
-        if (!children2)
-          return;
-        for (const el of children2) {
-          const node = new Instance(Node, { origin: this.getApplication().id });
-          const data = {};
-          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
-          this.elements.create(node);
-        }
-      }
-    };
-  };
-
   // plug-ins/windows/Foreign.js
   var Foreign = class {
     static {
@@ -2531,210 +2341,6 @@
       },
       destroy() {
         this.removeElements();
-      }
-    };
-  };
-
-  // plug-ins/windows/Menu.js
-  var Menu2 = class {
-    static {
-      __name(this, "Menu");
-    }
-    static extends = [Vertical];
-    properties = {};
-    observables = {
-      show: false,
-      options: {}
-    };
-    methods = {
-      initialize() {
-        this.r = 5;
-        this.b = 5;
-        this.s = 3;
-        this.p = 3;
-      },
-      mount() {
-        this.el.Background = svg.rect({
-          name: this.oo.name,
-          style: { background: "red" },
-          class: "editor-menu",
-          ry: this.r,
-          "stroke-width": 0,
-          "vector-effect": "non-scaling-stroke",
-          x: 0,
-          y: 0
-        });
-        this.on("w", (width) => update(this.el.Background, { width }));
-        this.on("h", (height) => update(this.el.Background, { height }));
-        this.on("x", (x) => update(this.el.Background, { x }));
-        this.on("y", (y) => update(this.el.Background, { y }));
-        this.appendElements();
-        this.foreign = new Instance(Foreign, { parent: this });
-        this.children.create(this.foreign);
-        const textnode = document.createTextNode("X: I am an HTML context menu, based on foreign object." + JSON.stringify(this.options));
-        this.foreign.appendChild(textnode);
-        this.on("options", (options) => {
-          textnode.textContent = "I am an HTML context menu, based on foreign object." + JSON.stringify(this.options);
-        });
-        this.foreign.body.addEventListener("click", (e) => {
-          this.parent.closeMenu();
-        });
-        this.on("h", (h) => {
-          console.log({ h });
-          this.foreign.h = h;
-        });
-        this.on("show", (show) => {
-          console.log("menu on show", show);
-          if (show) {
-            this.el.Background.style.display = "block";
-            this.foreign.body.style.display = "block";
-          } else {
-            this.el.Background.style.display = "none";
-            this.foreign.body.style.display = "none";
-          }
-        });
-      },
-      stop() {
-        console.log("todo: stopping root application");
-      },
-      destroy() {
-        console.log("todo: destroying root application");
-        this.dispose();
-      }
-    };
-  };
-
-  // plug-ins/windows/Overlay.js
-  var Overlay = class {
-    static {
-      __name(this, "Overlay");
-    }
-    static extends = [Component];
-    properties = {
-      layout: null
-    };
-    observables = {
-      show: false,
-      children: []
-    };
-    methods = {
-      initialize() {
-        this.debouncedDnResizeWindow = debounce_default(this.onResizeWindow.bind(this), 10);
-        this.on("show", (show) => {
-          if (show) {
-            update(this.el.Overlay, { style: { display: "block" } });
-          } else {
-            update(this.el.Overlay, { style: { display: "none" } });
-          }
-        }, { autorun: false });
-      },
-      drawOverlay() {
-        this.el.Overlay = svg.rect({
-          name: this.oo.name,
-          style: { display: "none" },
-          class: "editor-overlay",
-          ry: this.r,
-          "stroke-width": 0,
-          "vector-effect": "non-scaling-stroke",
-          x: 0,
-          y: 0
-        });
-        this.on("w", (width) => update(this.el.Overlay, { width }));
-        this.on("h", (height) => update(this.el.Overlay, { height }));
-        this.appendElements();
-        this.el.Overlay.addEventListener("click", (e) => {
-          console.log("Overlay click");
-          this.parent.closeMenu();
-        });
-      },
-      mount() {
-        this.drawOverlay();
-        this.resizeToFullWindow();
-      },
-      destroy() {
-        window.removeEventListener("resize", this.debouncedDnResizeWindow);
-        this.removeElements();
-      },
-      resizeToFullWindow() {
-        window.addEventListener("resize", this.debouncedDnResizeWindow);
-        this.onResizeWindow();
-      },
-      onResizeWindow() {
-        console.log(this);
-        update(this.el.Overlay, { width: this.getRoot().svg.clientWidth });
-        update(this.el.Overlay, { height: this.getRoot().svg.clientHeight });
-      }
-    };
-  };
-
-  // plug-ins/components/Window.js
-  var Window2 = class {
-    static {
-      __name(this, "Window");
-    }
-    static extends = [Application];
-    properties = {};
-    methods = {
-      // TODO: menu should be destroyed/recreated each time
-      closeMenu() {
-        console.log("Close Menu");
-        this.overlay.show = false;
-        this.menu.show = false;
-        this.container.style.display = "none";
-      },
-      openMenu({ x, y, options, w = 250, h = 280 }) {
-        if (this.menu) {
-          this.menu.options = options;
-          this.menu.x = x;
-          this.menu.y = y;
-          this.container.style.display = "block";
-          this.overlay.show = true;
-          this.menu.show = true;
-          return;
-        }
-        this.container = svg.g({ name: "menu" });
-        this.scene.appendChild(this.container);
-        this.overlay = new Instance(Overlay, { parent: this, scene: this.container });
-        this.overlay.start();
-        this.overlay.show = true;
-        this.menu = new Instance(Menu2, { parent: this, scene: this.container, x, y, w, h, options });
-        this.menu.start();
-        this.menu.show = true;
-      },
-      mount() {
-        this.pane = new Instance(Pane);
-        this.on("node", (node) => {
-          node.on("url", (url) => this.pane.url = url);
-        });
-        this.createWindowComponent(this.pane);
-      },
-      stop() {
-        console.log("todo: stopping root application");
-      },
-      destroy() {
-        console.log("todo: destroying root application");
-        this.dispose();
-      }
-    };
-  };
-
-  // plug-ins/components/Port.js
-  var Port = class {
-    static {
-      __name(this, "Port");
-    }
-    static extends = [Application];
-    properties = {};
-    methods = {
-      mount() {
-        console.log("I am the mighty port child of", this.parent.oo.name, "I exist in two places in a window and outside it");
-      },
-      stop() {
-        console.log("todo: stopping root application");
-      },
-      destroy() {
-        console.log("todo: destroying root application");
-        this.dispose();
       }
     };
   };
@@ -3077,7 +2683,7 @@
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
   __name(make_dirty, "make_dirty");
-  function init(component, options, instance2, create_fragment2, not_equal, props, append_styles = null, dirty = [-1]) {
+  function init(component, options, instance2, create_fragment6, not_equal, props, append_styles = null, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -3116,7 +2722,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment2 ? create_fragment2($$.ctx) : false;
+    $$.fragment = create_fragment6 ? create_fragment6($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -3400,8 +3006,682 @@
   if (typeof window !== "undefined")
     (window.__svelte || (window.__svelte = { v: /* @__PURE__ */ new Set() })).v.add(PUBLIC_VERSION);
 
-  // plug-ins/components/hello/index.svelte
+  // plug-ins/emitter-network/queue/Queue.svelte
   function create_fragment(ctx) {
+    let div;
+    return {
+      c() {
+        div = element("div");
+        div.innerHTML = `<h1>Queue!</h1>`;
+        attr(div, "class", "container pt-3");
+        set_style(div, "overflow-y", "scroll");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+      },
+      p: noop,
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching) {
+          detach(div);
+        }
+      }
+    };
+  }
+  __name(create_fragment, "create_fragment");
+  var Queue = class extends SvelteComponent {
+    static {
+      __name(this, "Queue");
+    }
+    constructor(options) {
+      super();
+      init(this, options, null, create_fragment, safe_not_equal, {});
+    }
+  };
+  var Queue_default = Queue;
+
+  // plug-ins/emitter-network/queue/Queue.js
+  var Queue2 = class {
+    static {
+      __name(this, "Queue");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        new Queue_default({
+          target: this.foreign.body
+        });
+        this.on("h", (h) => {
+          console.log({ h });
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/emitter-network/filter/Filter.svelte
+  function create_fragment2(ctx) {
+    let div;
+    return {
+      c() {
+        div = element("div");
+        div.innerHTML = `<h1>Filter!</h1>`;
+        attr(div, "class", "container pt-3");
+        set_style(div, "overflow-y", "scroll");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+      },
+      p: noop,
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching) {
+          detach(div);
+        }
+      }
+    };
+  }
+  __name(create_fragment2, "create_fragment");
+  var Filter = class extends SvelteComponent {
+    static {
+      __name(this, "Filter");
+    }
+    constructor(options) {
+      super();
+      init(this, options, null, create_fragment2, safe_not_equal, {});
+    }
+  };
+  var Filter_default = Filter;
+
+  // plug-ins/emitter-network/filter/Filter.js
+  var Filter2 = class {
+    static {
+      __name(this, "Filter");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        new Filter_default({
+          target: this.foreign.body
+        });
+        this.on("h", (h) => {
+          console.log({ h });
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/emitter-network/map/Map.svelte
+  function create_fragment3(ctx) {
+    let div;
+    return {
+      c() {
+        div = element("div");
+        div.innerHTML = `<h1>Map!</h1>`;
+        attr(div, "class", "container pt-3");
+        set_style(div, "overflow-y", "scroll");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+      },
+      p: noop,
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching) {
+          detach(div);
+        }
+      }
+    };
+  }
+  __name(create_fragment3, "create_fragment");
+  var Map2 = class extends SvelteComponent {
+    static {
+      __name(this, "Map");
+    }
+    constructor(options) {
+      super();
+      init(this, options, null, create_fragment3, safe_not_equal, {});
+    }
+  };
+  var Map_default = Map2;
+
+  // plug-ins/emitter-network/map/Map.js
+  var Map3 = class {
+    static {
+      __name(this, "Map");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        new Map_default({
+          target: this.foreign.body
+        });
+        this.on("h", (h) => {
+          console.log({ h });
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/emitter-network/reduce/Reduce.svelte
+  function create_fragment4(ctx) {
+    let div;
+    return {
+      c() {
+        div = element("div");
+        div.innerHTML = `<h1>Reduce!</h1>`;
+        attr(div, "class", "container pt-3");
+        set_style(div, "overflow-y", "scroll");
+      },
+      m(target, anchor) {
+        insert(target, div, anchor);
+      },
+      p: noop,
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching) {
+          detach(div);
+        }
+      }
+    };
+  }
+  __name(create_fragment4, "create_fragment");
+  var Reduce = class extends SvelteComponent {
+    static {
+      __name(this, "Reduce");
+    }
+    constructor(options) {
+      super();
+      init(this, options, null, create_fragment4, safe_not_equal, {});
+    }
+  };
+  var Reduce_default = Reduce;
+
+  // plug-ins/emitter-network/reduce/Reduce.js
+  var Reduce2 = class {
+    static {
+      __name(this, "Reduce");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        this.foreign = new Instance(Foreign);
+        this.createWindowComponent(this.foreign);
+        new Reduce_default({
+          target: this.foreign.body
+        });
+        this.on("h", (h) => {
+          console.log({ h });
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/emitter-network/index.js
+  var components = {
+    Queue: Queue2,
+    Filter: Filter2,
+    Map: Map3,
+    Reduce: Reduce2
+  };
+  var emitter_network_default = components;
+
+  // plug-ins/windows/Pane.js
+  var uuid3 = bundle["uuid"];
+  var cheerio = bundle["cheerio"];
+  var libraries = {
+    "emitter-network": emitter_network_default
+  };
+  var Pane = class {
+    static {
+      __name(this, "Pane");
+    }
+    static extends = [Vertical];
+    properties = {
+      contain: true,
+      classes: "",
+      // css classes
+      feed: []
+    };
+    observables = {
+      url: null,
+      library: null,
+      panX: 0,
+      panY: 0,
+      zoom: 0.4,
+      applications: [],
+      elements: [],
+      anchors: [],
+      pipes: [],
+      components: { ...components_default }
+    };
+    methods = {
+      initialize() {
+        this.name = "pane";
+        if (this.library) {
+          this.library.split(",").map((s) => s.trim()).filter((s) => s).forEach((name2) => {
+            if (libraries[name2]) {
+              this.components = { ...components_default, ...libraries[name2] };
+            } else {
+              console.info("No such library", name2);
+            }
+          });
+        }
+        console.log("XXX", this.components);
+        if (this.getRootContainer().isRootWindow)
+          return;
+        this.flexible = true;
+      },
+      mount() {
+        this.getApplication().on("showMenu", (showMenu) => {
+          if (showMenu) {
+            const [horizontal1, [addButton, delButton]] = nest(Horizontal, [
+              [Label, { h: 24, W: 32, text: "File", parent: this }, (c, p2) => p2.children.create(c)],
+              [Label, { h: 24, W: 32, text: "Info", parent: this }, (c, p2) => p2.children.create(c)],
+              [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
+            ], (c) => this.children.create(c));
+            this.disposable = click(addButton.handle, (e) => {
+              const id = uuid3();
+              const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
+              this.elements.create(node);
+            });
+          }
+        });
+        const paneBody = new Instance(Viewport, { parent: this, classes: this.classes, flexible: true });
+        this.viewport = paneBody;
+        this.getApplication().viewport = paneBody;
+        this.children.create(paneBody);
+        globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
+        this.getApplication().on("showStatus", (showStatus) => {
+          if (showStatus) {
+            const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
+              [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p2) => p2.children.create(c)],
+              [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p2) => p2.children.create(c)]
+            ], (c) => this.children.create(c));
+            this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
+            const resize = new Resize({
+              area: window,
+              minimumX: 320,
+              minimumY: 200,
+              handle: resizeHandle.el.Container,
+              scale: () => this.getParentScale(this),
+              box: this.getApplication(this),
+              before: () => {
+              },
+              movement: ({ x, y }) => {
+              },
+              after: () => {
+              }
+            });
+            this.destructable = () => resize.destroy();
+          }
+        });
+        if (this.parent.isRootWindow) {
+          this.parent.on("h", (parentH) => {
+            const childrenHeight = this.children.filter((c) => !(c === paneBody)).reduce((total, c) => total + c.h, 0);
+            const spacers = this.parent.s * 1 * (this.children.length > 0 ? this.children.length - 1 : 0);
+            const freeSpace = parentH - childrenHeight - this.parent.b * 2 - this.parent.p * 2 - spacers;
+            paneBody.h = freeSpace;
+            paneBody.H = freeSpace;
+          });
+        }
+        ;
+        this.on("panX", (panX) => paneBody.panX = panX);
+        this.on("panY", (panY) => paneBody.panY = panY);
+        this.on("zoom", (zoom2) => paneBody.zoom = zoom2);
+        this.on("elements.created", (node) => {
+          console.log("XXX this.components", node.type, this.components[node.type] ? "OK" : "X", this.components);
+          const Ui = this.components[node.type] || this.components["Hello"];
+          if (!Ui)
+            return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
+          let root = svg.g({ name: "element" });
+          paneBody.content.appendChild(root);
+          const options = { node, scene: root, parent: this, id: node.id, content: node.content, library: node.library };
+          const attributes = {};
+          for (const name2 of node.oo.attributes) {
+            attributes[name2] = node[name2];
+          }
+          const ui = new Instance(Ui, Object.assign(attributes, options));
+          this.applications.create(ui);
+          ui.start();
+        }, { replay: true });
+        this.on("elements.removed", ({ id }) => {
+          this.applications.get(id).stop();
+          this.applications.get(id).destroy();
+          this.applications.remove(id);
+        });
+        this.appendElements();
+        const menu = new Menu({
+          area: paneBody.body,
+          scale: () => this.getScale(this),
+          pan: () => ({ x: this.getRoot().pane.panX, y: this.getRoot().pane.panY }),
+          show: ({ x, y }) => {
+            const root = this.getRoot();
+            console.log({ x, y, root });
+            root.openMenu({
+              x,
+              y,
+              options: { data: [
+                { root: this.getApplication().node.id, text: "Bueno", value: "bueno", click: () => console.log("Bueno!") }
+              ] }
+            });
+          }
+        });
+        this.destructable = () => menu.destroy();
+        const pan = new Pan_default({
+          area: window,
+          handle: paneBody.background,
+          scale: () => this.getParentScale(this),
+          before: () => {
+          },
+          movement: ({ x, y }) => {
+            this.panX -= x;
+            this.panY -= y;
+          },
+          after: () => {
+          }
+        });
+        this.destructable = () => pan.destroy();
+        const zoom = new Zoom({
+          magnitude: 0.1,
+          area: paneBody.background,
+          component: paneBody,
+          handle: paneBody.background,
+          getter: (key) => this[key],
+          transforms: () => this.getTransforms(this),
+          before: () => {
+          },
+          change: ({ zoom: zoom2, panX, panY }) => {
+            this.zoom = zoom2;
+            this.panX = panX;
+            this.panY = panY;
+          },
+          feedback: (debug) => {
+          },
+          after: (data, debug) => {
+          }
+        });
+        this.destructable = () => zoom.destroy();
+        this.on("url", (url) => this.loadXml(this.url));
+        if (this.getApplication().content)
+          this.loadElements(
+            this.getApplication().content
+            /* this passes on the cheerio tuple */
+          );
+      },
+      async loadXml(url) {
+        if (!url)
+          return;
+        const xml = await (await fetch(url)).text();
+        const $ = cheerio.load(xml, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
+        for (const el of $("Workspace").children()) {
+          const node = new Instance(Node, { origin: this.getApplication().id });
+          const data = {};
+          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
+          this.elements.create(node);
+        }
+      },
+      loadElements([$, children2]) {
+        if (!children2)
+          return;
+        for (const el of children2) {
+          const node = new Instance(Node, { origin: this.getApplication().id });
+          const data = {};
+          node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
+          this.elements.create(node);
+        }
+      }
+    };
+  };
+
+  // plug-ins/windows/Menu.js
+  var Menu2 = class {
+    static {
+      __name(this, "Menu");
+    }
+    static extends = [Vertical];
+    properties = {};
+    observables = {
+      show: false,
+      options: {}
+    };
+    methods = {
+      initialize() {
+        this.r = 5;
+        this.b = 5;
+        this.s = 3;
+        this.p = 3;
+      },
+      mount() {
+        this.el.Background = svg.rect({
+          name: this.oo.name,
+          style: { background: "red" },
+          class: "editor-menu",
+          ry: this.r,
+          "stroke-width": 0,
+          "vector-effect": "non-scaling-stroke",
+          x: 0,
+          y: 0
+        });
+        this.on("w", (width) => update(this.el.Background, { width }));
+        this.on("h", (height) => update(this.el.Background, { height }));
+        this.on("x", (x) => update(this.el.Background, { x }));
+        this.on("y", (y) => update(this.el.Background, { y }));
+        this.appendElements();
+        this.foreign = new Instance(Foreign, { parent: this });
+        this.children.create(this.foreign);
+        const textnode = document.createTextNode("X: I am an HTML context menu, based on foreign object." + JSON.stringify(this.options));
+        this.foreign.appendChild(textnode);
+        this.on("options", (options) => {
+          textnode.textContent = "I am an HTML context menu, based on foreign object." + JSON.stringify(this.options);
+        });
+        this.foreign.body.addEventListener("click", (e) => {
+          this.parent.closeMenu();
+        });
+        this.on("h", (h) => {
+          console.log({ h });
+          this.foreign.h = h;
+        });
+        this.on("show", (show) => {
+          console.log("menu on show", show);
+          if (show) {
+            this.el.Background.style.display = "block";
+            this.foreign.body.style.display = "block";
+          } else {
+            this.el.Background.style.display = "none";
+            this.foreign.body.style.display = "none";
+          }
+        });
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/windows/Overlay.js
+  var Overlay = class {
+    static {
+      __name(this, "Overlay");
+    }
+    static extends = [Component];
+    properties = {
+      layout: null
+    };
+    observables = {
+      show: false,
+      children: []
+    };
+    methods = {
+      initialize() {
+        this.debouncedDnResizeWindow = debounce_default(this.onResizeWindow.bind(this), 10);
+        this.on("show", (show) => {
+          if (show) {
+            update(this.el.Overlay, { style: { display: "block" } });
+          } else {
+            update(this.el.Overlay, { style: { display: "none" } });
+          }
+        }, { autorun: false });
+      },
+      drawOverlay() {
+        this.el.Overlay = svg.rect({
+          name: this.oo.name,
+          style: { display: "none" },
+          class: "editor-overlay",
+          ry: this.r,
+          "stroke-width": 0,
+          "vector-effect": "non-scaling-stroke",
+          x: 0,
+          y: 0
+        });
+        this.on("w", (width) => update(this.el.Overlay, { width }));
+        this.on("h", (height) => update(this.el.Overlay, { height }));
+        this.appendElements();
+        this.el.Overlay.addEventListener("click", (e) => {
+          console.log("Overlay click");
+          this.parent.closeMenu();
+        });
+      },
+      mount() {
+        this.drawOverlay();
+        this.resizeToFullWindow();
+      },
+      destroy() {
+        window.removeEventListener("resize", this.debouncedDnResizeWindow);
+        this.removeElements();
+      },
+      resizeToFullWindow() {
+        window.addEventListener("resize", this.debouncedDnResizeWindow);
+        this.onResizeWindow();
+      },
+      onResizeWindow() {
+        console.log(this);
+        update(this.el.Overlay, { width: this.getRoot().svg.clientWidth });
+        update(this.el.Overlay, { height: this.getRoot().svg.clientHeight });
+      }
+    };
+  };
+
+  // plug-ins/components/Window.js
+  var Window2 = class {
+    static {
+      __name(this, "Window");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      // TODO: menu should be destroyed/recreated each time
+      closeMenu() {
+        console.log("Close Menu");
+        this.overlay.show = false;
+        this.menu.show = false;
+        this.container.style.display = "none";
+      },
+      openMenu({ x, y, options, w = 250, h = 280 }) {
+        if (this.menu) {
+          this.menu.options = options;
+          this.menu.x = x;
+          this.menu.y = y;
+          this.container.style.display = "block";
+          this.overlay.show = true;
+          this.menu.show = true;
+          return;
+        }
+        this.container = svg.g({ name: "menu" });
+        this.scene.appendChild(this.container);
+        this.overlay = new Instance(Overlay, { parent: this, scene: this.container });
+        this.overlay.start();
+        this.overlay.show = true;
+        this.menu = new Instance(Menu2, { parent: this, scene: this.container, x, y, w, h, options });
+        this.menu.start();
+        this.menu.show = true;
+      },
+      mount() {
+        this.pane = new Instance(Pane, { library: this.library });
+        this.on("node", (node) => {
+          node.on("url", (url) => this.pane.url = url);
+          node.on("zoom", (zoom) => this.pane.zoom = zoom);
+        });
+        this.createWindowComponent(this.pane);
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/Port.js
+  var Port = class {
+    static {
+      __name(this, "Port");
+    }
+    static extends = [Application];
+    properties = {};
+    methods = {
+      mount() {
+        console.log("I am the mighty port child of", this.parent.oo.name, "I exist in two places in a window and outside it");
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/hello/index.svelte
+  function create_fragment5(ctx) {
     let div7;
     let div2;
     let t1;
@@ -3709,7 +3989,7 @@
       }
     };
   }
-  __name(create_fragment, "create_fragment");
+  __name(create_fragment5, "create_fragment");
   function instance($$self, $$props, $$invalidate) {
     let a = 1;
     let b = 2;
@@ -3745,7 +4025,7 @@
     }
     constructor(options) {
       super();
-      init(this, options, instance, create_fragment, safe_not_equal, {});
+      init(this, options, instance, create_fragment5, safe_not_equal, {});
     }
   };
   var hello_default = Hello;
@@ -3943,7 +4223,7 @@
   };
 
   // plug-ins/components/index.js
-  var components = {
+  var components2 = {
     Workspace: Window2,
     Window: Window2,
     Port,
@@ -3951,7 +4231,7 @@
     Terminal: Window3,
     Editor: Window4
   };
-  var components_default = components;
+  var components_default = components2;
 
   // src/System.js
   var System = class {

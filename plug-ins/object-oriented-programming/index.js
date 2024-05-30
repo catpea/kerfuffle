@@ -269,6 +269,7 @@ export class Instance {
     // Enable Observing
     this.on = function(eventPath, observerCallback, options, control){
       const [name, path] = eventPath.split('.', 2);
+      // if(!observableData[name]) console.info(`property "${name}" not defined on ${this.oo.name} (${Object.keys(observableData).join(', ')})`);
       if(!observableData[name]) throw new Error(`property "${name}" not defined on ${this.oo.name} (${Object.keys(observableData).join(', ')})`);
 
 
