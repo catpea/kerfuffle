@@ -202,17 +202,26 @@ export class Instance {
     const observableData = {};
     this.oo.createObservable = (observableName, observableValue=undefined, internal=false) => {
 
+
       if(!internal){
         // this is a user defined observable
         this.oo.attributes.push(observableName);
       }
 
-      // TODO: inherited.observables[observableName] = observableValue; // (for serialization)
+
 
       const isArray = Array.isArray(observableValue)?true:false;
-      if(observableName in this === false){
+      const observableExists = observableData[observableName]; // (observableName in this === false);
+
+
+      if(!observableExists && (observableName in this === true)){
+        console.info(`createObservable: property "${observableName}" converted to observable on class ${this.oo.name}`, this[observableName]);
+      }
+
+      if(!observableExists){
 
         if(isArray){
+          // console.log('Creating array');
           observableData[observableName] = new List(observableName, observableValue);
           Object.defineProperty(this, observableName, {
             get: () => observableData[observableName].value,
@@ -220,6 +229,7 @@ export class Instance {
             configurable: false,
           });
         }else{ // primitive
+          // console.log('Creating primitive');
           observableData[observableName] = new Primitive(observableName, observableValue);
           Object.defineProperty(this, observableName, {
             get: () => observableData[observableName].value,
@@ -227,6 +237,9 @@ export class Instance {
             configurable: false,
           });
         }
+
+        // console.log('xx xx', observableData[observableName]);
+
 
       }
     }
@@ -270,7 +283,19 @@ export class Instance {
     this.on = function(eventPath, observerCallback, options, control){
       const [name, path] = eventPath.split('.', 2);
       // if(!observableData[name]) console.info(`property "${name}" not defined on ${this.oo.name} (${Object.keys(observableData).join(', ')})`);
-      if(!observableData[name]) throw new Error(`property "${name}" not defined on ${this.oo.name} (${Object.keys(observableData).join(', ')})`);
+      const observableMissing = (name in this === false);
+
+      if(!observableData[name]){
+        // console.log(`Observable ${name}`, observableData[name], this[name]);
+        // console.warn(`property "${name}" not defined on ${this.oo.name} (${Object.keys(observableData).join(', ')})`);
+        // console.log(`Creating a dynamic "${name}" observable via .on`, observableData, observableData[name]);
+        this.oo.createObservable(name, this[name] );
+        // console.log(`Created a dynamic "${name}" observable via .on`, observableData[name]);
+        if(!observableData[name]){
+          console.log(this);
+          throw new Error(`Failed to create a dynamic observable "${name}" via .on on object ${this.oo.name}`)
+        }
+      }
 
 
       if(control?.manualDispose){
@@ -286,7 +311,7 @@ export class Instance {
         const packet = Object.fromEntries(entries);
         functions.map(ƒ=>ƒ(packet));
       }
-      console.info('must manually dispose!');
+      // console.info('must manually dispose!');
       return observables.map(event=>this.on(event, callback2, undefined, {manualDispose: true}));
     }
 
@@ -298,7 +323,7 @@ export class Instance {
         if(isReady) functions.map(ƒ=>ƒ(packet));
 ;
       }
-      console.info('must manually dispose!');
+      // console.info('must manually dispose!');
       return observables.map(event=>this.on(event, callback2, undefined, {manualDispose: true}));
     }
 

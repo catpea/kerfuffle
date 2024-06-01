@@ -40,15 +40,16 @@ export default class Node {
     p:0,
     s:0,
 
-    zoom:undefined,
+    zoom: undefined,
 
     selected: false,
-    source: undefined,
-    target: undefined,
-    url: undefined, // JSON url
-    src: undefined, // JSON url
-    data: undefined, // JSON data
-    library: undefined, // CSV libraries to use
+
+    // source: undefined,
+    // target: undefined,
+    // url: undefined, // JSON url
+    // src: undefined, // JSON url
+    // // data: undefined, // JSON data
+    // library: undefined, // CSV libraries to use
 
 
 

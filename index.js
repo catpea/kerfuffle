@@ -140,7 +140,11 @@
           this.oo.attributes.push(observableName);
         }
         const isArray = Array.isArray(observableValue) ? true : false;
-        if (observableName in this === false) {
+        const observableExists = observableData[observableName];
+        if (!observableExists && observableName in this === true) {
+          console.info(`createObservable: property "${observableName}" converted to observable on class ${this.oo.name}`, this[observableName]);
+        }
+        if (!observableExists) {
           if (isArray) {
             observableData[observableName] = new List(observableName, observableValue);
             Object.defineProperty(this, observableName, {
@@ -181,8 +185,14 @@
       };
       this.on = function(eventPath, observerCallback, options, control) {
         const [name2, path] = eventPath.split(".", 2);
-        if (!observableData[name2])
-          throw new Error(`property "${name2}" not defined on ${this.oo.name} (${Object.keys(observableData).join(", ")})`);
+        const observableMissing = name2 in this === false;
+        if (!observableData[name2]) {
+          this.oo.createObservable(name2, this[name2]);
+          if (!observableData[name2]) {
+            console.log(this);
+            throw new Error(`Failed to create a dynamic observable "${name2}" via .on on object ${this.oo.name}`);
+          }
+        }
         if (control?.manualDispose) {
           return observableData[name2].observe(path || name2, observerCallback, options);
         } else {
@@ -195,7 +205,6 @@
           const packet = Object.fromEntries(entries);
           functions.map((\u0192) => \u0192(packet));
         }, "callback2");
-        console.info("must manually dispose!");
         return observables.map((event) => this.on(event, callback2, void 0, { manualDispose: true }));
       };
       this.all = function(observables, ...functions) {
@@ -207,7 +216,6 @@
             functions.map((\u0192) => \u0192(packet));
           ;
         }, "callback2");
-        console.info("must manually dispose!");
         return observables.map((event) => this.on(event, callback2, void 0, { manualDispose: true }));
       };
       const stateConstraints = {};
@@ -619,17 +627,13 @@
       p: 0,
       s: 0,
       zoom: void 0,
-      selected: false,
-      source: void 0,
-      target: void 0,
-      url: void 0,
-      // JSON url
-      src: void 0,
-      // JSON url
-      data: void 0,
-      // JSON data
-      library: void 0
-      // CSV libraries to use
+      selected: false
+      // source: undefined,
+      // target: undefined,
+      // url: undefined, // JSON url
+      // src: undefined, // JSON url
+      // // data: undefined, // JSON data
+      // library: undefined, // CSV libraries to use
     };
     types = {
       x: "Float",
