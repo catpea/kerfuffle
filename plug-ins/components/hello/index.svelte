@@ -4,7 +4,7 @@
   let c = 3;
 </script>
 
-<div class="container pt-3" style="overflow-y: scroll;">
+<div class="container-fluid pt-3" style="overflow-y: scroll;">
 
 <div class="row">
   <div class="col">

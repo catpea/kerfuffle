@@ -65,7 +65,14 @@ export default class Window {
 
     },
 
+    initialize(){
+      this.createSocket('in', 0);
+      this.createSocket('out', 1);
+    },
+
     mount(){
+
+
 
       this.pane = new Instance(Pane, {library: this.library});
 

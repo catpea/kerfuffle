@@ -56,7 +56,10 @@ export class Layout {
 		return 600 * Math.random();
 	}
 
-	above(parent, child) { return parent[this.source].slice(0, parent[this.source].indexOf(child)); }
+	above(parent, child, f=x=>true) {
+		 return parent[this.source].filter(o=>f(o)).slice(0, parent[this.source].filter(o=>f(o)).indexOf(child));
+	}
+
 	#cleanup = [];
 	cleanup(...arg){ this.#cleanup.push(...arg); }
 
@@ -186,14 +189,14 @@ export class VerticalLayout extends Layout {
 
 	  const freeSpace = this.parent.h - childrenHeight - (this.parent.b*2) - (this.parent.p*2) - childrenHeightGaps;
 
-		console.table('flexibleChild.h', {
-			application:this.parent.getApplication().oo.name,
-			'application.h': this.parent.getApplication().h,
-			h:flexibleChild.h,
-			'this.parent.h': this.parent.h,
-			size: children.length,
-			freeSpace,
-		});
+		// console.table('flexibleChild.h', {
+		// 	application:this.parent.getApplication().oo.name,
+		// 	'application.h': this.parent.getApplication().h,
+		// 	h:flexibleChild.h,
+		// 	'this.parent.h': this.parent.h,
+		// 	size: children.length,
+		// 	freeSpace,
+		// });
 
 
 
@@ -351,6 +354,43 @@ export class AnchorLayout extends Layout {
 			this.above(this.parent, child).filter(o=>o.side==child.side).reduce((total, child) => total + child.h, 0) +
 			((this.parent.s * 2) * this.above(this.parent, child).length);
 
+		return response;
+	}
+
+}
+
+export class SocketLayout extends Layout {
+
+	manage(child) {
+
+		child.x = this.calculateChildX(child);
+		child.y = this.calculateChildY(child);
+
+		this.parent.on('x', () => child.x = this.calculateChildX(child) );
+		this.parent.on('y', () => child.y = this.calculateChildY(child) );
+		this.parent.on('w', () => child.x = this.calculateChildX(child) );
+
+		this.parent.on('h', () => child.y = this.calculateChildY(child) );
+
+	}
+
+	calculateChildX(child){
+		if(!child.side){ // LEFT or 0 side
+			return this.parent.x - child.r - child.s;
+		}else{ // RIGHT or "1" side
+			return this.parent.x + this.parent.w + child.r + child.s;
+		}
+		this.parent.b + this.parent.p
+	}
+
+	calculateChildY(child){
+		const response =
+			this.parent.y +
+			this.parent.b +
+			this.parent.p +
+			child.r +
+			this.above(this.parent, child, o=>o.side==child.side).reduce((total, child) => total + child.h, 0) +
+			((this.parent.s * 2) * this.above(this.parent, child, o=>o.side==child.side).length);
 		return response;
 	}
 

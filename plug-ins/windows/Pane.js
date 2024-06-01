@@ -15,9 +15,6 @@ import Container from "/plug-ins/windows/Container.js";
 import Vertical from "/plug-ins/windows/Vertical.js";
 import Horizontal from "/plug-ins/windows/Horizontal.js";
 
-import Junction from "/plug-ins/windows/Junction.js";
-import Line from "/plug-ins/windows/Line.js";
-
 import Label from "/plug-ins/windows/Label.js";
 
 const uuid = bundle['uuid'];
@@ -82,7 +79,7 @@ export default class Pane {
         })
       }
 
-      console.log('XXX', this.components);
+      // console.log('XXX', this.components);
 
 
 
@@ -179,7 +176,7 @@ export default class Pane {
 
       this.on("elements.created", (node) => {
 
-        console.log('XXX this.components', node.type, this.components[node.type]?'OK':'X', this.components);
+        // console.log('XXX this.components', node.type, this.components[node.type]?'OK':'X', this.components);
 
         const Ui = this.components[node.type]||this.components['Hello'];
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);

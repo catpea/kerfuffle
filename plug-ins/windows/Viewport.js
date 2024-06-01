@@ -73,7 +73,7 @@ export default class Viewport {
       })
 
       this.getApplication().on("node", (node) => {
-        console.log('node-type', node.type);
+        // console.log('node-type', node.type);
           this.background.classList.add(node.type.toLowerCase());
       });
 

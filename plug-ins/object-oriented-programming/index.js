@@ -212,9 +212,9 @@ export class Instance {
 
       const isArray = Array.isArray(observableValue)?true:false;
       const observableExists = observableData[observableName]; // (observableName in this === false);
+      const propertyUpgrade = (!observableExists && (observableName in this === true))
 
-
-      if(!observableExists && (observableName in this === true)){
+      if(propertyUpgrade){
         console.info(`createObservable: property "${observableName}" converted to observable on class ${this.oo.name}`, this[observableName]);
       }
 
@@ -306,6 +306,7 @@ export class Instance {
     }
 
     this.any = function(observables, ...functions){
+      if(typeof observables === 'string') observables = observables.split(' ');
       const callback2 = ()=>{
         const entries = observables.map(key => [key, this[key]])
         const packet = Object.fromEntries(entries);
@@ -316,6 +317,8 @@ export class Instance {
     }
 
     this.all = function(observables, ...functions){
+      if(typeof observables === 'string') observables = observables.split(' ');
+      
       const callback2 = ()=>{
         const entries = observables.map(key => [key, this[key]])
         const packet = Object.fromEntries(entries);

@@ -12,7 +12,9 @@ export default class Hello {
   };
 
   methods = {
-
+    initialize(){
+      this.createSocket('out', 1);
+    },
     mount(){
 
       this.foreign = new Instance(Foreign);
@@ -24,7 +26,7 @@ export default class Hello {
 
 
       this.on('h', (h)=>{
-        console.log({h});
+        // console.log({h});
       });
 
 

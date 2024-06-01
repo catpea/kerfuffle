@@ -56,7 +56,6 @@ export default class Window {
               parent: this.foreign.body
             });
 
-            console.log(this.editorView);
             // this.any(['w','h'], ({w,h})=>this.editorView.setSize(w, h));
 
 

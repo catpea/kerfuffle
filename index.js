@@ -141,7 +141,8 @@
         }
         const isArray = Array.isArray(observableValue) ? true : false;
         const observableExists = observableData[observableName];
-        if (!observableExists && observableName in this === true) {
+        const propertyUpgrade = !observableExists && observableName in this === true;
+        if (propertyUpgrade) {
           console.info(`createObservable: property "${observableName}" converted to observable on class ${this.oo.name}`, this[observableName]);
         }
         if (!observableExists) {
@@ -200,6 +201,8 @@
         }
       };
       this.any = function(observables, ...functions) {
+        if (typeof observables === "string")
+          observables = observables.split(" ");
         const callback2 = /* @__PURE__ */ __name(() => {
           const entries = observables.map((key) => [key, this[key]]);
           const packet = Object.fromEntries(entries);
@@ -208,6 +211,8 @@
         return observables.map((event) => this.on(event, callback2, void 0, { manualDispose: true }));
       };
       this.all = function(observables, ...functions) {
+        if (typeof observables === "string")
+          observables = observables.split(" ");
         const callback2 = /* @__PURE__ */ __name(() => {
           const entries = observables.map((key) => [key, this[key]]);
           const packet = Object.fromEntries(entries);
@@ -440,15 +445,15 @@
       }
     }
     remove(input) {
-      let id;
+      let id2;
       if (typeof input === "string") {
-        id = input;
+        id2 = input;
       } else {
         if (!input.id)
           throw new Error("Only stingId and onbect with an id property is supported");
-        id = input.id;
+        id2 = input.id;
       }
-      const item = this.#value.find((o) => o.id === id);
+      const item = this.#value.find((o) => o.id === id2);
       this.#value = this.#value.filter((o) => o !== item);
       this.notify("removed", item);
       this.notify("changed", this);
@@ -462,8 +467,8 @@
         throw new TypeError("Needs a function.");
       return this.#value.find(callback);
     }
-    get(id) {
-      return this.#value.find((o) => o.id === id);
+    get(id2) {
+      return this.#value.find((o) => o.id === id2);
     }
     map(callback) {
       if (typeof callback !== "function")
@@ -537,10 +542,10 @@
     };
     methods = {
       initialize() {
-        this.on("theme.before", (id) => {
+        this.on("theme.before", (id2) => {
         });
-        this.on("theme", (id, old) => {
-          document.querySelector("html").dataset.uiTheme = id;
+        this.on("theme", (id2, old) => {
+          document.querySelector("html").dataset.uiTheme = id2;
         });
         this.on("themes.created", (list) => {
           p;
@@ -779,194 +784,6 @@
   }
   __name(click, "click");
 
-  // plug-ins/layout-manager/index.js
-  var BOTH_SIDES = 2;
-  var Layout = class {
-    static {
-      __name(this, "Layout");
-    }
-    parent;
-    source;
-    constructor(parent, { source } = { source: "children" }) {
-      this.parent = parent;
-      this.source = source;
-    }
-    manage(child) {
-    }
-    calculateChildW() {
-      return 320 * Math.random();
-    }
-    calculateH() {
-      return 200 * Math.random();
-    }
-    calculateChildX(parent, child) {
-      return 800 * Math.random();
-    }
-    calculateChildY(parent, child) {
-      return 600 * Math.random();
-    }
-    above(parent, child) {
-      return parent[this.source].slice(0, parent[this.source].indexOf(child));
-    }
-    #cleanup = [];
-    cleanup(...arg) {
-      this.#cleanup.push(...arg);
-    }
-  };
-  var VerticalLayout = class extends Layout {
-    static {
-      __name(this, "VerticalLayout");
-    }
-    manage(child) {
-      child.x = this.calculateChildX(child);
-      child.y = this.calculateChildY(child);
-      child.w = this.calculateChildW(child);
-      this.parent.on("x", () => child.x = this.calculateChildX(child));
-      this.parent.on("y", () => child.y = this.calculateChildY(child));
-      this.parent.on("w", () => child.w = this.calculateChildW(child));
-      child.on("h", () => {
-      });
-      this.parent.on("h", () => child.y = this.calculateChildY(child));
-      this.parent.on("h", () => {
-        if (child.flexible)
-          child.h = this.calculateGrowChildH(child);
-      });
-    }
-    calculateChildW(child) {
-      const response = this.parent.w - (this.parent.b + this.parent.p) * BOTH_SIDES;
-      return response;
-    }
-    calculateH() {
-      let heightOfChildren = 0;
-      const children2 = this.parent[this.source];
-      heightOfChildren = children2.reduce((total, c) => total + c.h, 0) + this.parent.s * 2 * (children2.length > 0 ? children2.length - 1 : 0);
-      let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
-      if (response < this.parent.H) {
-        response = this.parent.H;
-      }
-      return response;
-    }
-    calculateChildX() {
-      const response = this.parent.x + // use my own x
-      this.parent.b + // add border
-      this.parent.p;
-      return response;
-    }
-    calculateChildY(child) {
-      const response = this.parent.y + this.parent.b + this.parent.p + this.above(this.parent, child).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
-      return response;
-    }
-    calculateGrowChildH(flexibleChild) {
-      let response = flexibleChild.h;
-      const onlyChild = this.parent.children.length === 1;
-      if (onlyChild) {
-        return this.parent.h;
-      }
-      const children2 = this.parent.children.filter((c) => c !== flexibleChild);
-      const childrenHeight = children2.reduce((total, c) => total + c.h, 0);
-      const childrenHeightGaps = this.parent.s * 1 * this.parent.children.length;
-      const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2 - childrenHeightGaps;
-      console.table("flexibleChild.h", {
-        application: this.parent.getApplication().oo.name,
-        "application.h": this.parent.getApplication().h,
-        h: flexibleChild.h,
-        "this.parent.h": this.parent.h,
-        size: children2.length,
-        freeSpace
-      });
-      if (children2.length && freeSpace) {
-        return freeSpace;
-      }
-      return response;
-    }
-  };
-  var HorizontalLayout = class extends Layout {
-    static {
-      __name(this, "HorizontalLayout");
-    }
-    manage(child) {
-      const children2 = this.parent[this.source];
-      const childCount = children2.length;
-      const siblingCount = this.above(this.parent, child).length;
-      child.x = this.calculateChildX(child);
-      child.y = this.calculateChildY(child);
-      child.w = this.calculateChildW(child);
-      this.parent.on("x", () => child.x = this.calculateChildX(child));
-      this.parent.on("y", () => child.y = this.calculateChildY(child));
-      this.parent.on("h", () => child.y = this.calculateChildY(child));
-      this.parent.on("children.changed", (list) => list.forEach((child2) => {
-        child2.w = this.calculateChildW(child2);
-        child2.x = this.calculateChildX(child2);
-      }));
-      this.parent.on("w", () => {
-        child.w = this.calculateChildW(child);
-        child.x = this.calculateChildX(child);
-      });
-      child.on("h", () => this.parent.h = this.calculateH());
-    }
-    calculateChildX(child) {
-      const response = this.parent.x + this.parent.b + this.parent.p + this.above(this.parent, child).reduce((total, child2) => total + child2.w, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
-      return response;
-    }
-    calculateChildW1(child) {
-      const children2 = this.parent[this.source];
-      const childCount = children2.length;
-      const siblingCount = this.above(this.parent, child).length;
-      let response = this.parent.w / childCount;
-      return response;
-    }
-    calculateChildW(child) {
-      if (!(child.W === void 0))
-        return child.W < 1 ? this.parent.w * child.W : child.W;
-      const children2 = this.parent[this.source];
-      let softElements = children2.filter((child2) => child2.W === void 0);
-      let hardElements = children2.filter((child2) => !(child2.W === void 0));
-      let hardSpace = hardElements.reduce((total, child2) => total + (child2.W < 1 ? this.parent.w * child2.W : child2.W), 0);
-      let spacers = this.parent.s * 2 * (children2.length > 0 ? children2.length - 1 : 0);
-      let availableSoftSpace = this.parent.w - hardSpace - spacers;
-      let softUnit = availableSoftSpace / (softElements.length || 1);
-      return softUnit;
-    }
-    calculateChildY(child) {
-      const response = this.parent.y + this.parent.b + this.parent.p;
-      return response;
-    }
-    calculateH() {
-      let heightOfChildren = 0;
-      const children2 = this.parent[this.source];
-      heightOfChildren = children2.reduce((max, c) => c.h > max ? c.h : max, 0);
-      let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
-      if (response < this.parent.H)
-        response = this.parent.H;
-      return response;
-    }
-  };
-  var AnchorLayout = class extends Layout {
-    static {
-      __name(this, "AnchorLayout");
-    }
-    manage(child) {
-      child.x = this.calculateChildX(child);
-      child.y = this.calculateChildY(child);
-      this.parent.on("x", () => child.x = this.calculateChildX(child));
-      this.parent.on("y", () => child.y = this.calculateChildY(child));
-      this.parent.on("w", () => child.x = this.calculateChildX(child));
-      this.parent.on("h", () => child.y = this.calculateChildY(child));
-    }
-    calculateChildX(child) {
-      if (!child.side) {
-        return this.parent.x - child.r - child.s;
-      } else {
-        return this.parent.x + this.parent.w + child.r + child.s;
-      }
-      this.parent.b + this.parent.p;
-    }
-    calculateChildY(child) {
-      const response = this.parent.y + this.parent.b + this.parent.p + child.r + this.above(this.parent, child).filter((o) => o.side == child.side).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
-      return response;
-    }
-  };
-
   // plug-ins/windows/Component.js
   var Component = class {
     static {
@@ -1087,9 +904,9 @@
         return Math.floor(Math.random() * (maxFloored - minCeiled + 1) + minCeiled);
       },
       pipe(name2) {
-        const id = [name2, this.getRootContainer().id].join(":");
+        const id2 = [name2, this.getRootContainer().id].join(":");
         const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-        const pipe = origin.root.pipes.get(id);
+        const pipe = origin.root.pipes.get(id2);
         return pipe;
       },
       // getRootContainer() {
@@ -1196,51 +1013,6 @@
           }
           ;
         });
-      }
-    };
-  };
-
-  // plug-ins/windows/Container.js
-  var Container = class {
-    static {
-      __name(this, "Container");
-    }
-    static extends = [Component];
-    properties = {
-      layout: null
-    };
-    observables = {
-      children: []
-    };
-    methods = {
-      initialize() {
-        this.on("children.created", (child) => {
-          child.scene = this.scene;
-          child.start();
-          this.layout.manage(child);
-        }, { replay: true });
-        this.on("children.removed", (child) => {
-          child.stop();
-          this.layout.forget(child);
-        });
-      },
-      mount() {
-      },
-      destroy() {
-        this.removeElements();
-      }
-    };
-  };
-
-  // plug-ins/windows/Vertical.js
-  var Vertical = class {
-    static {
-      __name(this, "Vertical");
-    }
-    static extends = [Container];
-    methods = {
-      initialize() {
-        this.layout = new VerticalLayout(this);
       }
     };
   };
@@ -1393,8 +1165,324 @@
     }
   };
 
-  // plug-ins/windows/Anchor.js
+  // plug-ins/windows/Socket.js
   var Anchor = class {
+    static {
+      __name(this, "Anchor");
+    }
+    static extends = [Component];
+    properties = {
+      pad: null
+    };
+    observables = {
+      side: 0,
+      color: "transparent"
+    };
+    constraints = {
+      mount: {
+        ".scene is required": function() {
+          if (!this.scene) {
+            return { error: ".svg not found" };
+          }
+        }
+      }
+    };
+    methods = {
+      initialize() {
+        this.r = 8;
+        this.s = 2;
+        this.w = this.r * 2;
+        this.h = this.r * 2 + this.s;
+        this.x = 0;
+        this.y = 0;
+      },
+      mount() {
+        this.el.Primary = svg.circle({
+          name: this.name,
+          class: "editor-socket",
+          // 'vector-effect': 'non-scaling-stroke',
+          r: this.r,
+          cx: this.x,
+          cy: this.y
+        });
+        this.on("selected", (selected) => selected ? this.el.Primary.classList.add("selected") : this.el.Primary.classList.remove("selected"));
+        const select = new Select({
+          component: this,
+          handle: this.el.Primary
+        });
+        this.destructable = () => select.destroy();
+        this.el.Primary.dataset.target = [this.name, this.getRootContainer().id].join(":");
+        this.pad = this.el.Primary;
+        this.on("name", (name2) => update(this.el.Primary, { name: name2 }));
+        this.on("x", (cx) => update(this.el.Primary, { cx }));
+        this.on("y", (cy) => update(this.el.Primary, { cy }));
+        this.on("r", (r) => update(this.el.Primary, { r }));
+        this.appendElements();
+        const connect = new Connect({
+          anchor: this,
+          zone: window,
+          parent: this
+        });
+        this.destructable = () => connect.destroy();
+      },
+      destroy() {
+        this.removeElements();
+      }
+    };
+  };
+
+  // plug-ins/layout-manager/index.js
+  var BOTH_SIDES = 2;
+  var Layout = class {
+    static {
+      __name(this, "Layout");
+    }
+    parent;
+    source;
+    constructor(parent, { source } = { source: "children" }) {
+      this.parent = parent;
+      this.source = source;
+    }
+    manage(child) {
+    }
+    calculateChildW() {
+      return 320 * Math.random();
+    }
+    calculateH() {
+      return 200 * Math.random();
+    }
+    calculateChildX(parent, child) {
+      return 800 * Math.random();
+    }
+    calculateChildY(parent, child) {
+      return 600 * Math.random();
+    }
+    above(parent, child, f = (x) => true) {
+      return parent[this.source].filter((o) => f(o)).slice(0, parent[this.source].filter((o) => f(o)).indexOf(child));
+    }
+    #cleanup = [];
+    cleanup(...arg) {
+      this.#cleanup.push(...arg);
+    }
+  };
+  var VerticalLayout = class extends Layout {
+    static {
+      __name(this, "VerticalLayout");
+    }
+    manage(child) {
+      child.x = this.calculateChildX(child);
+      child.y = this.calculateChildY(child);
+      child.w = this.calculateChildW(child);
+      this.parent.on("x", () => child.x = this.calculateChildX(child));
+      this.parent.on("y", () => child.y = this.calculateChildY(child));
+      this.parent.on("w", () => child.w = this.calculateChildW(child));
+      child.on("h", () => {
+      });
+      this.parent.on("h", () => child.y = this.calculateChildY(child));
+      this.parent.on("h", () => {
+        if (child.flexible)
+          child.h = this.calculateGrowChildH(child);
+      });
+    }
+    calculateChildW(child) {
+      const response = this.parent.w - (this.parent.b + this.parent.p) * BOTH_SIDES;
+      return response;
+    }
+    calculateH() {
+      let heightOfChildren = 0;
+      const children2 = this.parent[this.source];
+      heightOfChildren = children2.reduce((total, c) => total + c.h, 0) + this.parent.s * 2 * (children2.length > 0 ? children2.length - 1 : 0);
+      let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
+      if (response < this.parent.H) {
+        response = this.parent.H;
+      }
+      return response;
+    }
+    calculateChildX() {
+      const response = this.parent.x + // use my own x
+      this.parent.b + // add border
+      this.parent.p;
+      return response;
+    }
+    calculateChildY(child) {
+      const response = this.parent.y + this.parent.b + this.parent.p + this.above(this.parent, child).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
+      return response;
+    }
+    calculateGrowChildH(flexibleChild) {
+      let response = flexibleChild.h;
+      const onlyChild = this.parent.children.length === 1;
+      if (onlyChild) {
+        return this.parent.h;
+      }
+      const children2 = this.parent.children.filter((c) => c !== flexibleChild);
+      const childrenHeight = children2.reduce((total, c) => total + c.h, 0);
+      const childrenHeightGaps = this.parent.s * 1 * this.parent.children.length;
+      const freeSpace = this.parent.h - childrenHeight - this.parent.b * 2 - this.parent.p * 2 - childrenHeightGaps;
+      if (children2.length && freeSpace) {
+        return freeSpace;
+      }
+      return response;
+    }
+  };
+  var HorizontalLayout = class extends Layout {
+    static {
+      __name(this, "HorizontalLayout");
+    }
+    manage(child) {
+      const children2 = this.parent[this.source];
+      const childCount = children2.length;
+      const siblingCount = this.above(this.parent, child).length;
+      child.x = this.calculateChildX(child);
+      child.y = this.calculateChildY(child);
+      child.w = this.calculateChildW(child);
+      this.parent.on("x", () => child.x = this.calculateChildX(child));
+      this.parent.on("y", () => child.y = this.calculateChildY(child));
+      this.parent.on("h", () => child.y = this.calculateChildY(child));
+      this.parent.on("children.changed", (list) => list.forEach((child2) => {
+        child2.w = this.calculateChildW(child2);
+        child2.x = this.calculateChildX(child2);
+      }));
+      this.parent.on("w", () => {
+        child.w = this.calculateChildW(child);
+        child.x = this.calculateChildX(child);
+      });
+      child.on("h", () => this.parent.h = this.calculateH());
+    }
+    calculateChildX(child) {
+      const response = this.parent.x + this.parent.b + this.parent.p + this.above(this.parent, child).reduce((total, child2) => total + child2.w, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
+      return response;
+    }
+    calculateChildW1(child) {
+      const children2 = this.parent[this.source];
+      const childCount = children2.length;
+      const siblingCount = this.above(this.parent, child).length;
+      let response = this.parent.w / childCount;
+      return response;
+    }
+    calculateChildW(child) {
+      if (!(child.W === void 0))
+        return child.W < 1 ? this.parent.w * child.W : child.W;
+      const children2 = this.parent[this.source];
+      let softElements = children2.filter((child2) => child2.W === void 0);
+      let hardElements = children2.filter((child2) => !(child2.W === void 0));
+      let hardSpace = hardElements.reduce((total, child2) => total + (child2.W < 1 ? this.parent.w * child2.W : child2.W), 0);
+      let spacers = this.parent.s * 2 * (children2.length > 0 ? children2.length - 1 : 0);
+      let availableSoftSpace = this.parent.w - hardSpace - spacers;
+      let softUnit = availableSoftSpace / (softElements.length || 1);
+      return softUnit;
+    }
+    calculateChildY(child) {
+      const response = this.parent.y + this.parent.b + this.parent.p;
+      return response;
+    }
+    calculateH() {
+      let heightOfChildren = 0;
+      const children2 = this.parent[this.source];
+      heightOfChildren = children2.reduce((max, c) => c.h > max ? c.h : max, 0);
+      let response = this.parent.b + this.parent.p + heightOfChildren + this.parent.p + this.parent.b;
+      if (response < this.parent.H)
+        response = this.parent.H;
+      return response;
+    }
+  };
+  var AnchorLayout = class extends Layout {
+    static {
+      __name(this, "AnchorLayout");
+    }
+    manage(child) {
+      child.x = this.calculateChildX(child);
+      child.y = this.calculateChildY(child);
+      this.parent.on("x", () => child.x = this.calculateChildX(child));
+      this.parent.on("y", () => child.y = this.calculateChildY(child));
+      this.parent.on("w", () => child.x = this.calculateChildX(child));
+      this.parent.on("h", () => child.y = this.calculateChildY(child));
+    }
+    calculateChildX(child) {
+      if (!child.side) {
+        return this.parent.x - child.r - child.s;
+      } else {
+        return this.parent.x + this.parent.w + child.r + child.s;
+      }
+      this.parent.b + this.parent.p;
+    }
+    calculateChildY(child) {
+      const response = this.parent.y + this.parent.b + this.parent.p + child.r + this.above(this.parent, child).filter((o) => o.side == child.side).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
+      return response;
+    }
+  };
+  var SocketLayout = class extends Layout {
+    static {
+      __name(this, "SocketLayout");
+    }
+    manage(child) {
+      child.x = this.calculateChildX(child);
+      child.y = this.calculateChildY(child);
+      this.parent.on("x", () => child.x = this.calculateChildX(child));
+      this.parent.on("y", () => child.y = this.calculateChildY(child));
+      this.parent.on("w", () => child.x = this.calculateChildX(child));
+      this.parent.on("h", () => child.y = this.calculateChildY(child));
+    }
+    calculateChildX(child) {
+      if (!child.side) {
+        return this.parent.x - child.r - child.s;
+      } else {
+        return this.parent.x + this.parent.w + child.r + child.s;
+      }
+      this.parent.b + this.parent.p;
+    }
+    calculateChildY(child) {
+      const response = this.parent.y + this.parent.b + this.parent.p + child.r + this.above(this.parent, child, (o) => o.side == child.side).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child, (o) => o.side == child.side).length;
+      return response;
+    }
+  };
+
+  // plug-ins/windows/Container.js
+  var Container = class {
+    static {
+      __name(this, "Container");
+    }
+    static extends = [Component];
+    properties = {
+      layout: null
+    };
+    observables = {
+      children: []
+    };
+    methods = {
+      initialize() {
+        this.on("children.created", (child) => {
+          child.scene = this.scene;
+          child.start();
+          this.layout.manage(child);
+        }, { replay: true });
+        this.on("children.removed", (child) => {
+          child.stop();
+          this.layout.forget(child);
+        });
+      },
+      mount() {
+      },
+      destroy() {
+        this.removeElements();
+      }
+    };
+  };
+
+  // plug-ins/windows/Vertical.js
+  var Vertical = class {
+    static {
+      __name(this, "Vertical");
+    }
+    static extends = [Container];
+    methods = {
+      initialize() {
+        this.layout = new VerticalLayout(this);
+      }
+    };
+  };
+
+  // plug-ins/windows/Anchor.js
+  var Anchor2 = class {
     static {
       __name(this, "Anchor");
     }
@@ -1467,9 +1555,9 @@
     }
     id;
     direction;
-    constructor(id, direction) {
+    constructor(id2, direction) {
       super();
-      this.id = id;
+      this.id = id2;
       this.direction = direction;
     }
     input(data) {
@@ -1517,16 +1605,16 @@
         this.appendElements();
       },
       createPipe(name2, direction) {
-        const id = [name2, this.getRootContainer().id].join(":");
-        const pipe = new Pipe(id, direction);
+        const id2 = [name2, this.getRootContainer().id].join(":");
+        const pipe = new Pipe(id2, direction);
         const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
         origin.root.pipes.create(pipe);
       },
       removePipe(name2) {
-        const id = [name2, this.getRootContainer().id].join(":");
+        const id2 = [name2, this.getRootContainer().id].join(":");
         const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-        origin.root.pipes.get(id).stop();
-        origin.root.pipes.remove(id);
+        origin.root.pipes.get(id2).stop();
+        origin.root.pipes.remove(id2);
       },
       createControlAnchor({ name: name2, side }) {
         console.log("TODO: createControlAnchor is disabled");
@@ -1535,16 +1623,16 @@
           throw new Error(`It is not possible to create an anchor without an anchor name.`);
         if (!side === void 0)
           throw new Error(`It is not possible to create an anchor without specifying a side, 0 or 1.`);
-        const id = [name2, this.getRootContainer().id].join(":");
-        const anchor = new Instance(Anchor, { id, name: name2, side, parent: this, scene: this.scene });
+        const id2 = [name2, this.getRootContainer().id].join(":");
+        const anchor = new Instance(Anchor2, { id: id2, name: name2, side, parent: this, scene: this.scene });
         const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
         origin.root.anchors.create(anchor);
         this.anchors.create(anchor);
       },
-      removeControlAnchor(id) {
-        this.anchors.remove(id);
+      removeControlAnchor(id2) {
+        this.anchors.remove(id2);
         const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-        origin.root.anchors.remove(id);
+        origin.root.anchors.remove(id2);
       },
       destroy() {
         console.warn("TODO: DESTROY ALL ANCHORS");
@@ -1891,8 +1979,11 @@
     static extends = [Vertical];
     observables = {
       caption: "Untitled",
+      showCaption: true,
       showMenu: false,
-      showStatus: false
+      showStatus: false,
+      socketRegistry: [],
+      sockets: []
     };
     properties = {
       contain: true
@@ -1909,38 +2000,64 @@
         this.draw();
         if (this.isRootWindow)
           return;
-        let caption = new Instance(Caption, { h: 24, text: this.caption });
-        this.on("caption", (v) => caption.text = v);
-        this.createWindowComponent(caption);
-        this.on("node", (node) => {
-          if (node.caption)
-            node.on("caption", (caption2) => this.caption = caption2);
-        });
-        const move = new Move_default({
-          area: window,
-          handle: caption.handle,
-          scale: () => this.getScale(this),
-          before: () => {
-          },
-          movement: ({ x, y }) => {
-            this.node.x -= x;
-            this.node.y -= y;
-          },
-          after: () => {
-          }
-        });
-        this.destructable = () => move.destroy();
-        const focus2 = new Focus({
+        if (this.showCaption) {
+          let caption = new Instance(Caption, { h: 24, text: this.caption });
+          this.on("caption", (v) => caption.text = v);
+          this.createWindowComponent(caption);
+          this.on("node", (node) => {
+            if (node.caption)
+              node.on("caption", (caption2) => this.caption = caption2);
+          });
+          const move = new Move_default({
+            area: window,
+            handle: caption.handle,
+            scale: () => this.getScale(this),
+            before: () => {
+            },
+            movement: ({ x, y }) => {
+              this.node.x -= x;
+              this.node.y -= y;
+            },
+            after: () => {
+            }
+          });
+          this.destructable = () => move.destroy();
+        }
+        const focus = new Focus({
           handle: this.scene,
           // TIP: set to caption above to react to window captions only
           component: this,
-          element: () => this.getApplication().scene
+          element: () => this.scene
         });
-        this.destructable = () => focus2.destroy();
+        this.destructable = () => focus.destroy();
+        this.socketLayout = new SocketLayout(this, { source: "sockets" });
+        this.on("sockets.created", (socket) => {
+          socket.start();
+          this.socketLayout.manage(socket);
+          this.getApplication().socketRegistry.create(socket);
+        }, { replay: true });
+        this.on("sockets.removed", (socket) => {
+          socket.stop();
+          this.getApplication().socketRegistry.remove(id);
+          this.removeControlAnchor(socket.id);
+          this.socketLayout.forget(socket);
+        });
       },
       createWindowComponent(component) {
         component.parent = this;
         this.children.create(component);
+      },
+      createSocket(name2, side) {
+        if (!name2)
+          throw new Error(`It is not possible to create an socket without an socket name.`);
+        if (!side === void 0)
+          throw new Error(`It is not possible to create an socket without specifying a side, 0 or 1.`);
+        const id2 = [this.id, name2].join("/");
+        const socket = new Instance(Anchor, { id: id2, name: name2, side, parent: this, scene: this.scene });
+        this.sockets.create(socket);
+      },
+      removeSocket(id2) {
+        this.sockets.remove(id2);
       }
     };
     constraints = {};
@@ -2273,7 +2390,6 @@
           style: { "transform-origin": "0px 0px" }
         });
         this.getApplication().on("node", (node) => {
-          console.log("node-type", node.type);
           this.background.classList.add(node.type.toLowerCase());
         });
         this.body.appendChild(this.background);
@@ -3053,17 +3169,17 @@
     static {
       __name(this, "Queue");
     }
-    static extends = [Application];
+    static extends = [Window];
     properties = {};
     methods = {
+      initialize() {
+        this.createSocket("out", 1);
+      },
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
         new Queue_default({
           target: this.foreign.body
-        });
-        this.on("h", (h) => {
-          console.log({ h });
         });
       },
       stop() {
@@ -3116,17 +3232,18 @@
     static {
       __name(this, "Filter");
     }
-    static extends = [Application];
-    properties = {};
+    static extends = [Window];
     methods = {
+      initialize() {
+        this.createSocket("in", 0);
+        this.createSocket("function", 0);
+        this.createSocket("out", 1);
+      },
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
         new Filter_default({
           target: this.foreign.body
-        });
-        this.on("h", (h) => {
-          console.log({ h });
         });
       },
       stop() {
@@ -3179,17 +3296,19 @@
     static {
       __name(this, "Map");
     }
-    static extends = [Application];
+    static extends = [Window];
     properties = {};
     methods = {
+      initialize() {
+        this.createSocket("in", 0);
+        this.createSocket("function", 0);
+        this.createSocket("out", 1);
+      },
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
         new Map_default({
           target: this.foreign.body
-        });
-        this.on("h", (h) => {
-          console.log({ h });
         });
       },
       stop() {
@@ -3242,17 +3361,19 @@
     static {
       __name(this, "Reduce");
     }
-    static extends = [Application];
+    static extends = [Window];
     properties = {};
     methods = {
+      initialize() {
+        this.createSocket("in", 0);
+        this.createSocket("function", 0);
+        this.createSocket("out", 1);
+      },
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
         new Reduce_default({
           target: this.foreign.body
-        });
-        this.on("h", (h) => {
-          console.log({ h });
         });
       },
       stop() {
@@ -3315,7 +3436,6 @@
             }
           });
         }
-        console.log("XXX", this.components);
         if (this.getRootContainer().isRootWindow)
           return;
         this.flexible = true;
@@ -3329,8 +3449,8 @@
               [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
             ], (c) => this.children.create(c));
             this.disposable = click(addButton.handle, (e) => {
-              const id = uuid3();
-              const node = new Instance(Node, { id, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
+              const id2 = uuid3();
+              const node = new Instance(Node, { id: id2, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
               this.elements.create(node);
             });
           }
@@ -3378,7 +3498,6 @@
         this.on("panY", (panY) => paneBody.panY = panY);
         this.on("zoom", (zoom2) => paneBody.zoom = zoom2);
         this.on("elements.created", (node) => {
-          console.log("XXX this.components", node.type, this.components[node.type] ? "OK" : "X", this.components);
           const Ui = this.components[node.type] || this.components["Hello"];
           if (!Ui)
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
@@ -3393,10 +3512,10 @@
           this.applications.create(ui);
           ui.start();
         }, { replay: true });
-        this.on("elements.removed", ({ id }) => {
-          this.applications.get(id).stop();
-          this.applications.get(id).destroy();
-          this.applications.remove(id);
+        this.on("elements.removed", ({ id: id2 }) => {
+          this.applications.get(id2).stop();
+          this.applications.get(id2).destroy();
+          this.applications.remove(id2);
         });
         this.appendElements();
         const menu = new Menu({
@@ -3648,6 +3767,10 @@
         this.menu.start();
         this.menu.show = true;
       },
+      initialize() {
+        this.createSocket("in", 0);
+        this.createSocket("out", 1);
+      },
       mount() {
         this.pane = new Instance(Pane, { library: this.library });
         this.on("node", (node) => {
@@ -3838,7 +3961,7 @@
         attr(input4, "id", "customRange2");
         attr(input5, "type", "number");
         attr(input6, "type", "number");
-        attr(div7, "class", "container pt-3");
+        attr(div7, "class", "container-fluid pt-3");
         set_style(div7, "overflow-y", "scroll");
       },
       m(target, anchor) {
@@ -4045,6 +4168,9 @@
     static extends = [Application];
     properties = {};
     methods = {
+      initialize() {
+        this.createSocket("out", 1);
+      },
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
@@ -4052,7 +4178,6 @@
           target: this.foreign.body
         });
         this.on("h", (h) => {
-          console.log({ h });
         });
       },
       stop() {
@@ -4216,8 +4341,157 @@
           extensions,
           parent: this.foreign.body
         });
-        console.log(this.editorView);
         this.destructable = click(this.foreign.body, () => this.editorView.focus());
+      },
+      stop() {
+        console.log("todo: stopping root application");
+      },
+      destroy() {
+        console.log("todo: destroying root application");
+        this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/geometrique/midpoint.js
+  function midpoint({ x1, y1, x2, y2 }) {
+    const cx = (x1 + x2) / 2;
+    const cy = (y1 + y2) / 2;
+    return { cx, cy };
+  }
+  __name(midpoint, "midpoint");
+
+  // plug-ins/geometrique/edgepoint.js
+  function edgepoint(cx, cy, r, x1, y1, x2, y2) {
+    const angleRadians = Math.atan2(y2 - y1, x2 - x1);
+    const x = cx + r * Math.cos(angleRadians);
+    const y = cy + r * Math.sin(angleRadians);
+    return [x, y];
+  }
+  __name(edgepoint, "edgepoint");
+
+  // plug-ins/windows/Connector.js
+  var Connector = class {
+    static {
+      __name(this, "Connector");
+    }
+    static extends = [Component];
+    properties = {};
+    observables = {
+      from: null,
+      to: null,
+      out: null,
+      in: null,
+      x1: 0,
+      y1: 0,
+      x2: 0,
+      y2: 0
+    };
+    constraints = {
+      mount: {
+        ".scene is required to start the universe": function() {
+          if (!this.scene) {
+            return { error: ".svg not found" };
+          }
+        }
+      }
+    };
+    methods = {
+      initialize() {
+      },
+      mount() {
+        this.el.Primary = svg.line({
+          name: this.name,
+          class: "editor-connector",
+          "vector-effect": "non-scaling-stroke"
+        });
+        this.el.Midpoint = svg.circle({
+          name: this.name,
+          class: "editor-connector-midpoint",
+          "vector-effect": "non-scaling-stroke",
+          r: 4
+        });
+        this.on("name", (name2) => update(this.el.Primary, { name: name2 }));
+        this.on("node", (node) => {
+          node.on("from", (v) => this.from = v);
+          node.on("to", (v) => this.to = v);
+          node.on("out", (v) => this.out = v);
+          node.on("in", (v) => this.in = v);
+        });
+        this.desctructible = this.any("from out", ({ from: nodeId, out: portName }) => {
+          const socketId = [nodeId, portName].join("/");
+          const socket = this.getApplication().socketRegistry.get(socketId);
+          socket.on("x", (x) => this.x1 = x);
+          socket.on("y", (y) => this.y1 = y);
+        });
+        this.desctructible = this.any("to in", ({ to: nodeId, in: portName }) => {
+          const socketId = [nodeId, portName].join("/");
+          const socket = this.getApplication().socketRegistry.get(socketId);
+          socket.on("x", (x) => this.x2 = x);
+          socket.on("y", (y) => this.y2 = y);
+        });
+        this.on("source", (id2) => {
+          if (!id2)
+            throw new Error(`Primary requires source id`);
+          if (!id2.includes(":"))
+            throw new Error(`Id must contain ":".`);
+          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
+          const component = origin.root.anchors.get(id2);
+          component.on("x", (x) => this.x1 = x);
+          component.on("y", (y) => this.y1 = y);
+        });
+        this.on("target", (id2) => {
+          if (!id2)
+            throw new Error(`Primary requires target id`);
+          if (!id2.includes(":"))
+            throw new Error(`Id must contain ":".`);
+          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
+          const component = origin.root.anchors.get(id2);
+          component.on("x", (x) => this.x2 = x);
+          component.on("y", (y) => this.y2 = y);
+        });
+        this.all(["source", "target"], ({ source, target }) => {
+          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
+          globalThis.project.pipe(origin, source, target);
+        });
+        this.any(["x1", "y1", "x2", "y2"], (packet) => update(this.el.Midpoint, midpoint(packet)));
+        this.any(["x1", "y1", "x2", "y2"], ({ x1, y1, x2, y2 }) => {
+          const [x3, y3] = edgepoint(x1, y1, 12, x1, y1, x2, y2);
+          const [x4, y4] = edgepoint(x2, y2, -12, x1, y1, x2, y2);
+          update(this.el.Primary, { x1: x3, y1: y3, x2: x4, y2: y4 });
+        });
+        this.appendElements();
+      },
+      destroy() {
+        this.removeElements();
+      }
+    };
+  };
+
+  // plug-ins/components/Pipe.js
+  var Pipe2 = class {
+    static {
+      __name(this, "Pipe");
+    }
+    static extends = [Window];
+    methods = {
+      initialize() {
+        this.showCaption = false;
+      },
+      mount() {
+        this.connector = new Instance(Connector, {
+          scene: this.scene,
+          parent: this,
+          from: this.node.from,
+          to: this.node.to,
+          out: this.node.out,
+          in: this.node.in
+        });
+        this.node.on("from", (v) => this.pipe.from = v);
+        this.node.on("to", (v) => this.pipe.to = v);
+        this.node.on("out", (v) => this.pipe.out = v);
+        this.node.on("in", (v) => this.pipe.in = v);
+        this.connector.start();
       },
       stop() {
         console.log("todo: stopping root application");
@@ -4232,6 +4506,7 @@
   // plug-ins/components/index.js
   var components2 = {
     Workspace: Window2,
+    Pipe: Pipe2,
     Window: Window2,
     Port,
     Hello: Hello2,

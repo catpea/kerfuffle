@@ -89,6 +89,7 @@ svg.editor-interface {
 }
 
 
+
 .viewport-background {
   /* fill: var(--editor-background-primary); */
 }
@@ -101,7 +102,8 @@ svg.editor-interface {
     fill: var(--editor-background);
 }
 
-.container-background.application {
+/* note .application is a domin, and .window is just some component using the window subclass*/
+.container-background.application, .container-background.window {
   /* filter: url(#shadow); */
   fill: var(--editor-foreground-secondary);
 
@@ -120,10 +122,10 @@ svg.editor-interface {
   editor-component-what
 */
 
-.editor-anchor {
+.editor-socket {
 
   stroke: var(--editor-primary);
-  fill: var(--editor-dark);
+  fill: var(--fedora-dark);
 
   stroke-width: 2;
 
@@ -153,15 +155,15 @@ svg.editor-interface {
 }
 
 
-.editor-line {
-    stroke: var(--editor-border);
+.editor-connector {
+    stroke: var(--editor-primary);
   stroke-width: 2;
   &.selected {
     stroke: var(--editor-warning);
   }
 }
 
-.editor-line-midpoint {
+.editor-connector-midpoint {
   fill: var(--editor-primary);
   stroke: var(--editor-primary);
   &.selected {

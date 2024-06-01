@@ -11579,12 +11579,13 @@ svg.editor-interface {
   stroke: var(--editor-light);
   fill: var(--editor-background);
 }
-.container-background.application {
+.container-background.application,
+.container-background.window {
   fill: var(--editor-foreground-secondary);
 }
-.editor-anchor {
+.editor-socket {
   stroke: var(--editor-primary);
-  fill: var(--editor-dark);
+  fill: var(--fedora-dark);
   stroke-width: 2;
   &.compatible {
     fill: var(--editor-success);
@@ -11600,14 +11601,14 @@ svg.editor-interface {
   stroke: var(--editor-primary);
   stroke-width: 2;
 }
-.editor-line {
-  stroke: var(--editor-border);
+.editor-connector {
+  stroke: var(--editor-primary);
   stroke-width: 2;
   &.selected {
     stroke: var(--editor-warning);
   }
 }
-.editor-line-midpoint {
+.editor-connector-midpoint {
   fill: var(--editor-primary);
   stroke: var(--editor-primary);
   &.selected {

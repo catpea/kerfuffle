@@ -1,17 +1,25 @@
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
-import Application from "/plug-ins/windows/Application.js";
+import Window from "/plug-ins/windows/Window.js";
 import Foreign from "/plug-ins/windows/Foreign.js";
 
 import Test from "./Reduce.svelte";
 
 
 export default class Reduce {
-  static extends = [Application];
+  static extends = [Window];
 
   properties = {
   };
 
   methods = {
+
+    initialize (){
+
+      this.createSocket('in', 0);
+      this.createSocket('function', 0);
+      this.createSocket('out', 1);
+
+    },
 
     mount(){
 
@@ -22,10 +30,6 @@ export default class Reduce {
           target: this.foreign.body,
       });
 
-
-      this.on('h', (h)=>{
-        console.log({h});
-      });
 
 
     },
