@@ -12,12 +12,17 @@ import Stepper from "../api/Stepper.js";
 export default class Filter {
   static extends = [Stepper, Window];
 
-  properties = {
+  observables = {
+    displayTitle: 'Filter',
+    displayStatus: {counter:0, percent:0, length:100},
+    displaySample: '(none)',
   };
 
   methods = {
 
     initialize (){
+      this.caption = this.oo.name;
+
       this.createSocket('in', 0);
       this.createSocket('function', 0);
       this.createSocket('out', 1);
@@ -26,7 +31,14 @@ export default class Filter {
     mount(){
       this.foreign = new Instance(Foreign);
       this.createWindowComponent( this.foreign );
-      this.ui = new Test({ target: this.foreign.body, });
+      this.ui = new Test({
+        target: this.foreign.body,
+        control: this.control,
+      });
+      this.on('displayTitle', displayTitle=> this.ui.$set({displayTitle}));
+      this.on('displayStatus', displayStatus=> this.ui.$set({displayStatus}));
+      this.on('displaySample', displaySample=> this.ui.$set({displaySample}));
+
     },
 
     stop(){

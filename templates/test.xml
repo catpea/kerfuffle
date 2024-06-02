@@ -15,10 +15,10 @@
 
   <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" zoom=".8" showStatus="true" library="emitter-network">
 
-    <Queue  id="test-1" x="200" y="100" w="170" h="256"/>
+    <Queue  id="test-1" x="100" y="100" w="320" h="256"/>
     <Filter id="test-2" x="500" y="100" w="170" h="256"/>
-    <Map    id="test-3" x="800" y="100" w="170" h="256"/>
-    <Reduce id="test-4" x="800" y="500" w="170" h="256"/>
+    <Filter id="test-3" x="800" y="100" w="170" h="256"/>
+    <Filter id="test-4" x="800" y="500" w="170" h="256"/>
 
     <Filter id="test-5" x="1100" y="100" w="170" h="256"/>
     <Filter id="test-6" x="1400" y="100" w="170" h="256"/>

@@ -1,6 +1,42 @@
 (() => {
+  var __create = Object.create;
   var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getProtoOf = Object.getPrototypeOf;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
   var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+  var __commonJS = (cb, mod) => function __require() {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    // If the importer is in node compatibility mode or this is not an ESM
+    // file that has been converted to a CommonJS file using a Babel-
+    // compatible transform (i.e. "__esModule" has not been set), then set
+    // "default" to the CommonJS "module.exports" for node compatibility.
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
+
+  // node_modules/calculate-percent/index.js
+  var require_calculate_percent = __commonJS({
+    "node_modules/calculate-percent/index.js"(exports, module) {
+      module.exports = function(val, max, min = 0) {
+        const range = Math.abs(max - min);
+        const value = val - min;
+        let percent = 100 * parseFloat(value) / parseFloat(range) / 100;
+        return parseInt(percent * 100);
+      };
+    }
+  });
 
   // plug-ins/object-oriented-programming/index.js
   var Inheritance = class {
@@ -2141,7 +2177,8 @@
     methods = {
       initialize() {
         this.controller = new EventEmitter();
-        this.intervalId = setInterval((x) => this.controller.emit("step"), 1e3);
+        this.intervalId = setInterval((x) => this.controller.emit("step"), 666);
+        this.controller.emit("step");
         this.getRoot().origins.create(this);
       }
     };
@@ -2532,6 +2569,9 @@
       }
     };
   };
+
+  // plug-ins/emitter-network/queue/Queue.js
+  var import_calculate_percent = __toESM(require_calculate_percent(), 1);
 
   // node_modules/svelte/src/runtime/internal/utils.js
   function noop() {
@@ -3196,52 +3236,138 @@
 
   // plug-ins/emitter-network/queue/Queue.svelte
   function create_fragment(ctx) {
-    let div;
-    let h1;
-    let t0;
-    let t1_value = (
-      /*count*/
-      (ctx[0] || "") + ""
+    let div4;
+    let div3;
+    let div2;
+    let div1;
+    let div0;
+    let t0_value = (
+      /*displayStatus*/
+      ctx[1].counter + ""
     );
+    let t0;
     let t1;
+    let t2_value = (
+      /*displayStatus*/
+      ctx[1].length + ""
+    );
+    let t2;
+    let div1_aria_valuenow_value;
+    let div1_aria_valuemax_value;
+    let t3;
+    let small;
+    let t4;
     return {
       c() {
-        div = element("div");
-        h1 = element("h1");
-        t0 = text2("Queue! ");
-        t1 = text2(t1_value);
-        attr(div, "class", "container pt-3");
-        set_style(div, "overflow-y", "scroll");
+        div4 = element("div");
+        div3 = element("div");
+        div2 = element("div");
+        div1 = element("div");
+        div0 = element("div");
+        t0 = text2(t0_value);
+        t1 = text2("/");
+        t2 = text2(t2_value);
+        t3 = space();
+        small = element("small");
+        t4 = text2(
+          /*displayTitle*/
+          ctx[0]
+        );
+        attr(div0, "class", "progress-bar");
+        set_style(
+          div0,
+          "width",
+          /*displayStatus*/
+          ctx[1].percent + "%"
+        );
+        attr(div1, "class", "progress");
+        attr(div1, "role", "progressbar");
+        attr(div1, "aria-label", "Queue Progress");
+        attr(div1, "aria-valuenow", div1_aria_valuenow_value = /*displayStatus*/
+        ctx[1].counter);
+        attr(div1, "aria-valuemin", "0");
+        attr(div1, "aria-valuemax", div1_aria_valuemax_value = /*displayStatus*/
+        ctx[1].length);
+        attr(div2, "class", "card-text mb-2");
+        attr(small, "class", "card-subtitle mb-2 text-body-secondary text-truncate d-block");
+        attr(div3, "class", "card-body");
+        attr(div4, "class", "card");
       },
       m(target, anchor) {
-        insert(target, div, anchor);
-        append(div, h1);
-        append(h1, t0);
-        append(h1, t1);
+        insert(target, div4, anchor);
+        append(div4, div3);
+        append(div3, div2);
+        append(div2, div1);
+        append(div1, div0);
+        append(div0, t0);
+        append(div0, t1);
+        append(div0, t2);
+        append(div3, t3);
+        append(div3, small);
+        append(small, t4);
       },
       p(ctx2, [dirty]) {
-        if (dirty & /*count*/
-        1 && t1_value !== (t1_value = /*count*/
-        (ctx2[0] || "") + ""))
-          set_data(t1, t1_value);
+        if (dirty & /*displayStatus*/
+        2 && t0_value !== (t0_value = /*displayStatus*/
+        ctx2[1].counter + ""))
+          set_data(t0, t0_value);
+        if (dirty & /*displayStatus*/
+        2 && t2_value !== (t2_value = /*displayStatus*/
+        ctx2[1].length + ""))
+          set_data(t2, t2_value);
+        if (dirty & /*displayStatus*/
+        2) {
+          set_style(
+            div0,
+            "width",
+            /*displayStatus*/
+            ctx2[1].percent + "%"
+          );
+        }
+        if (dirty & /*displayStatus*/
+        2 && div1_aria_valuenow_value !== (div1_aria_valuenow_value = /*displayStatus*/
+        ctx2[1].counter)) {
+          attr(div1, "aria-valuenow", div1_aria_valuenow_value);
+        }
+        if (dirty & /*displayStatus*/
+        2 && div1_aria_valuemax_value !== (div1_aria_valuemax_value = /*displayStatus*/
+        ctx2[1].length)) {
+          attr(div1, "aria-valuemax", div1_aria_valuemax_value);
+        }
+        if (dirty & /*displayTitle*/
+        1)
+          set_data(
+            t4,
+            /*displayTitle*/
+            ctx2[0]
+          );
       },
       i: noop,
       o: noop,
       d(detaching) {
         if (detaching) {
-          detach(div);
+          detach(div4);
         }
       }
     };
   }
   __name(create_fragment, "create_fragment");
   function instance($$self, $$props, $$invalidate) {
-    let { count } = $$props;
+    let { control } = $$props;
+    let { displayTitle = "Node" } = $$props;
+    let { displayStatus = { counter: 0, percent: 0, length: 100 } } = $$props;
+    let { displaySample = "(none)" } = $$props;
     $$self.$$set = ($$props2) => {
-      if ("count" in $$props2)
-        $$invalidate(0, count = $$props2.count);
+      if ("control" in $$props2)
+        $$invalidate(2, control = $$props2.control);
+      if ("displayTitle" in $$props2)
+        $$invalidate(0, displayTitle = $$props2.displayTitle);
+      if ("displayStatus" in $$props2)
+        $$invalidate(1, displayStatus = $$props2.displayStatus);
+      if ("displaySample" in $$props2)
+        $$invalidate(3, displaySample = $$props2.displaySample);
     };
-    return [count];
+    return [displayTitle, displayStatus, control, displaySample];
   }
   __name(instance, "instance");
   var Queue = class extends SvelteComponent {
@@ -3250,7 +3376,12 @@
     }
     constructor(options) {
       super();
-      init(this, options, instance, create_fragment, safe_not_equal, { count: 0 });
+      init(this, options, instance, create_fragment, safe_not_equal, {
+        control: 2,
+        displayTitle: 0,
+        displayStatus: 1,
+        displaySample: 3
+      });
     }
   };
   var Queue_default = Queue;
@@ -3261,18 +3392,44 @@
       __name(this, "Queue");
     }
     static extends = [Window];
+    observables = {
+      displayTitle: "Queue",
+      displayStatus: { counter: 0, percent: 0, length: 100 },
+      displaySample: "(none)",
+      feedUrl: "sample/data/catpea.32.json",
+      feedData: void 0
+    };
     methods = {
       initialize() {
-        this.counter = 1;
+        this.caption = this.oo.name;
         this.createSocket("out", 1);
       },
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        this.ui = new Queue_default({ target: this.foreign.body });
-        this.getApplication().controller.on("step", (x) => {
-          if (this.counter < 10)
-            this.step();
+        this.ui = new Queue_default({
+          target: this.foreign.body,
+          control: this.control
+        });
+        this.on("displayTitle", (displayTitle) => this.ui.$set({ displayTitle }));
+        this.on("displayStatus", (displayStatus) => this.ui.$set({ displayStatus }));
+        this.on("displaySample", (displaySample) => this.ui.$set({ displaySample }));
+        this.on("feedUrl", async (url) => this.feedData = { data: (await (await fetch(url)).json()).reverse() });
+        this.on("feedData", (feed) => {
+          let counter = 0;
+          let percent = 0;
+          let length = feed.data.length;
+          this.getApplication().controller.on("step", (x) => {
+            if (feed.data.length) {
+              const fragment = feed.data.pop();
+              counter++;
+              this.displayTitle = fragment.attr.title;
+              this.displaySample = fragment.snip;
+              percent = (0, import_calculate_percent.default)(counter, length, 0);
+              this.step(fragment);
+            }
+            this.displayStatus = { counter, length, percent };
+          });
         });
       },
       stop() {
@@ -3283,13 +3440,8 @@
         this.dispose();
       },
       // --- //
-      step() {
-        const packet = {
-          count: this.counter++,
-          timestamp: (/* @__PURE__ */ new Date()).toISOString()
-        };
-        this.ui.$set({ count: packet.count });
-        this.pipe.emit("out", { source: this, detail: packet });
+      step(data) {
+        this.pipe.emit("out", { source: this, detail: data });
         this.el.ComponentBackground.classList.add("indicate");
         setTimeout(() => this.el.ComponentBackground.classList.remove("indicate"), 333);
         this.packet = null;
@@ -3298,53 +3450,183 @@
   };
 
   // plug-ins/emitter-network/filter/Filter.svelte
-  function create_fragment2(ctx) {
-    let div;
-    let h1;
+  function create_if_block(ctx) {
+    let div2;
     let t0;
+    let div1;
+    let div0;
     let t1_value = (
-      /*count*/
-      (ctx[0] || "") + ""
+      /*displayStatus*/
+      ctx[1].counter + ""
     );
     let t1;
+    let t2;
+    let t3_value = (
+      /*displayStatus*/
+      ctx[1].length + ""
+    );
+    let t3;
+    let div1_aria_valuenow_value;
+    let div1_aria_valuemax_value;
     return {
       c() {
-        div = element("div");
-        h1 = element("h1");
-        t0 = text2("Filter! ");
+        div2 = element("div");
+        t0 = text2("Buffer\n      ");
+        div1 = element("div");
+        div0 = element("div");
         t1 = text2(t1_value);
-        attr(div, "class", "container pt-3");
-        set_style(div, "overflow-y", "scroll");
+        t2 = text2("/");
+        t3 = text2(t3_value);
+        attr(div0, "class", "progress-bar");
+        set_style(
+          div0,
+          "width",
+          /*displayStatus*/
+          ctx[1].percent + "%"
+        );
+        attr(div1, "class", "progress");
+        attr(div1, "role", "progressbar");
+        attr(div1, "aria-label", "Queue Progress");
+        attr(div1, "aria-valuenow", div1_aria_valuenow_value = /*displayStatus*/
+        ctx[1].counter);
+        attr(div1, "aria-valuemin", "0");
+        attr(div1, "aria-valuemax", div1_aria_valuemax_value = /*displayStatus*/
+        ctx[1].length);
+        attr(div2, "class", "card-text mb-2");
       },
       m(target, anchor) {
-        insert(target, div, anchor);
-        append(div, h1);
-        append(h1, t0);
-        append(h1, t1);
+        insert(target, div2, anchor);
+        append(div2, t0);
+        append(div2, div1);
+        append(div1, div0);
+        append(div0, t1);
+        append(div0, t2);
+        append(div0, t3);
+      },
+      p(ctx2, dirty) {
+        if (dirty & /*displayStatus*/
+        2 && t1_value !== (t1_value = /*displayStatus*/
+        ctx2[1].counter + ""))
+          set_data(t1, t1_value);
+        if (dirty & /*displayStatus*/
+        2 && t3_value !== (t3_value = /*displayStatus*/
+        ctx2[1].length + ""))
+          set_data(t3, t3_value);
+        if (dirty & /*displayStatus*/
+        2) {
+          set_style(
+            div0,
+            "width",
+            /*displayStatus*/
+            ctx2[1].percent + "%"
+          );
+        }
+        if (dirty & /*displayStatus*/
+        2 && div1_aria_valuenow_value !== (div1_aria_valuenow_value = /*displayStatus*/
+        ctx2[1].counter)) {
+          attr(div1, "aria-valuenow", div1_aria_valuenow_value);
+        }
+        if (dirty & /*displayStatus*/
+        2 && div1_aria_valuemax_value !== (div1_aria_valuemax_value = /*displayStatus*/
+        ctx2[1].length)) {
+          attr(div1, "aria-valuemax", div1_aria_valuemax_value);
+        }
+      },
+      d(detaching) {
+        if (detaching) {
+          detach(div2);
+        }
+      }
+    };
+  }
+  __name(create_if_block, "create_if_block");
+  function create_fragment2(ctx) {
+    let div1;
+    let div0;
+    let t0;
+    let small;
+    let t1;
+    let if_block = (
+      /*displayStatus*/
+      ctx[1].counter && create_if_block(ctx)
+    );
+    return {
+      c() {
+        div1 = element("div");
+        div0 = element("div");
+        if (if_block)
+          if_block.c();
+        t0 = space();
+        small = element("small");
+        t1 = text2(
+          /*displayTitle*/
+          ctx[0]
+        );
+        attr(small, "class", "card-subtitle mb-2 text-body-secondary text-truncate d-block");
+        attr(div0, "class", "card-body");
+        attr(div1, "class", "card");
+      },
+      m(target, anchor) {
+        insert(target, div1, anchor);
+        append(div1, div0);
+        if (if_block)
+          if_block.m(div0, null);
+        append(div0, t0);
+        append(div0, small);
+        append(small, t1);
       },
       p(ctx2, [dirty]) {
-        if (dirty & /*count*/
-        1 && t1_value !== (t1_value = /*count*/
-        (ctx2[0] || "") + ""))
-          set_data(t1, t1_value);
+        if (
+          /*displayStatus*/
+          ctx2[1].counter
+        ) {
+          if (if_block) {
+            if_block.p(ctx2, dirty);
+          } else {
+            if_block = create_if_block(ctx2);
+            if_block.c();
+            if_block.m(div0, t0);
+          }
+        } else if (if_block) {
+          if_block.d(1);
+          if_block = null;
+        }
+        if (dirty & /*displayTitle*/
+        1)
+          set_data(
+            t1,
+            /*displayTitle*/
+            ctx2[0]
+          );
       },
       i: noop,
       o: noop,
       d(detaching) {
         if (detaching) {
-          detach(div);
+          detach(div1);
         }
+        if (if_block)
+          if_block.d();
       }
     };
   }
   __name(create_fragment2, "create_fragment");
   function instance2($$self, $$props, $$invalidate) {
-    let { count } = $$props;
+    let { control } = $$props;
+    let { displayTitle = "Node" } = $$props;
+    let { displayStatus = { counter: 0, percent: 0, length: 0 } } = $$props;
+    let { displaySample = "(none)" } = $$props;
     $$self.$$set = ($$props2) => {
-      if ("count" in $$props2)
-        $$invalidate(0, count = $$props2.count);
+      if ("control" in $$props2)
+        $$invalidate(2, control = $$props2.control);
+      if ("displayTitle" in $$props2)
+        $$invalidate(0, displayTitle = $$props2.displayTitle);
+      if ("displayStatus" in $$props2)
+        $$invalidate(1, displayStatus = $$props2.displayStatus);
+      if ("displaySample" in $$props2)
+        $$invalidate(3, displaySample = $$props2.displaySample);
     };
-    return [count];
+    return [displayTitle, displayStatus, control, displaySample];
   }
   __name(instance2, "instance");
   var Filter = class extends SvelteComponent {
@@ -3353,35 +3635,49 @@
     }
     constructor(options) {
       super();
-      init(this, options, instance2, create_fragment2, safe_not_equal, { count: 0 });
+      init(this, options, instance2, create_fragment2, safe_not_equal, {
+        control: 2,
+        displayTitle: 0,
+        displayStatus: 1,
+        displaySample: 3
+      });
     }
   };
   var Filter_default = Filter;
 
   // plug-ins/emitter-network/api/Stepper.js
+  var import_calculate_percent2 = __toESM(require_calculate_percent(), 1);
   var Stepper = class {
     static {
       __name(this, "Stepper");
     }
     methods = {
       initialize() {
+        this.control = new EventEmitter();
         this.dataQueue = [];
+        let counter = 0;
+        let waterLevel = 0;
         this.pipe.on("in", (packet) => {
-          this.dataQueue.push(packet);
+          this.dataQueue.push(packet.detail);
+          waterLevel = this.dataQueue.length > waterLevel ? waterLevel = this.dataQueue.length : waterLevel;
         });
         this.getApplication().controller.on("step", (x) => {
           if (this.dataQueue.length && !this.job) {
             this.job = this.dataQueue.shift();
-            console.log("Got Job");
+            console.log("Got Job", this.job);
+            this.displayTitle = this.job.attr.title;
           } else if (this.job) {
-            this.ui.$set({ count: this.job.detail.count });
             this.step(this.job);
             this.job = null;
+            this.displayTitle = "";
+            ;
+            counter++;
           }
+          this.displayStatus = { counter: this.dataQueue.length, length: waterLevel, percent: (0, import_calculate_percent2.default)(this.dataQueue.length, waterLevel) };
         });
       },
       step(packet) {
-        this.pipe.emit("out", { source: this, detail: packet.detail });
+        this.pipe.emit("out", { source: this, detail: packet });
         this.el.ComponentBackground.classList.add("indicate");
         setTimeout(() => this.el.ComponentBackground.classList.remove("indicate"), 333);
       }
@@ -3394,9 +3690,14 @@
       __name(this, "Filter");
     }
     static extends = [Stepper, Window];
-    properties = {};
+    observables = {
+      displayTitle: "Filter",
+      displayStatus: { counter: 0, percent: 0, length: 100 },
+      displaySample: "(none)"
+    };
     methods = {
       initialize() {
+        this.caption = this.oo.name;
         this.createSocket("in", 0);
         this.createSocket("function", 0);
         this.createSocket("out", 1);
@@ -3404,7 +3705,13 @@
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        this.ui = new Filter_default({ target: this.foreign.body });
+        this.ui = new Filter_default({
+          target: this.foreign.body,
+          control: this.control
+        });
+        this.on("displayTitle", (displayTitle) => this.ui.$set({ displayTitle }));
+        this.on("displayStatus", (displayStatus) => this.ui.$set({ displayStatus }));
+        this.on("displaySample", (displaySample) => this.ui.$set({ displaySample }));
       },
       stop() {
         console.log("todo: stopping root application");

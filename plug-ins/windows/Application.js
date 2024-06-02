@@ -18,7 +18,8 @@ export default class Application {
     initialize(){
       this.controller = new EventEmitter();
 
-      this.intervalId = setInterval(x=>this.controller.emit('step'), 1000);
+      this.intervalId = setInterval(x=>this.controller.emit('step'), 666);
+      this.controller.emit('step');
 
       // All Applications Register Themselves
       this.getRoot().origins.create(this);

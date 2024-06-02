@@ -1,13 +1,22 @@
 <script>
-  export let count;
 
-  let a = 1;
-  let b = 2;
-  let c = 3;
+  export let control;
+
+  export let displayTitle = 'Node';
+  export let displayStatus = {counter:0, percent:0, length:100};
+  export let displaySample = '(none)';
+
 </script>
 
-<div class="container pt-3" style="overflow-y: scroll;">
-
- <h1>Queue! {count||''}</h1>
-
+<div class="card">
+  <div class="card-body">
+    <div class="card-text mb-2">
+      <div class="progress" role="progressbar" aria-label="Queue Progress" aria-valuenow="{displayStatus.counter}" aria-valuemin="0" aria-valuemax="{displayStatus.length}">
+        <div class="progress-bar" style="width: {displayStatus.percent}%">
+           {displayStatus.counter}/{displayStatus.length}
+        </div>
+      </div>
+    </div>
+    <small class="card-subtitle mb-2 text-body-secondary text-truncate d-block">{displayTitle}</small>
+  </div>
 </div>

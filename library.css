@@ -11562,6 +11562,8 @@ svg.editor-interface {
   stroke: var(--editor-border);
   fill: var(--fedora-dark);
 }
+.card {
+}
 .viewport-background.workspace {
   stroke: var(--editor-border);
   fill: var(--editor-background-secondary);
