@@ -57,7 +57,7 @@ export default class Zoom {
       console.info('switched to remote translateCursor this is experimental');
      const [cursorX, cursorY] = translateCursor(e.clientX, e.clientY, this.transforms());
 
-     // const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
+     //XXXDQD const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
 
      const transformed = this.#translateZoom({ zoom: this.getter('zoom'), panX: this.getter('panX'), panY: this.getter('panY'), cursorX, cursorY, deltaZoom: zoomDirection, magnitude: this.magnitude });
 
@@ -88,8 +88,8 @@ export default class Zoom {
     const zoomChange = zoom1 - zoom;
     console.info('switched to remote translateCursor this is experimental'); // uncomment //XXX / zoom; if broken
 
-    const panX1 = panX - (cursorX * zoomChange) //XXX / zoom;
-    const panY1 = panY - (cursorY * zoomChange) //XXX / zoom;
+    const panX1 = panX - (cursorX * zoomChange) //XXXDQD / zoom;
+    const panY1 = panY - (cursorY * zoomChange) //XXXDQD / zoom;
     const response = { zoom: zoom1, panX: panX1, panY: panY1 };
     return response;
   }
