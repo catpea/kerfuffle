@@ -9,6 +9,7 @@ import Menu from "/plug-ins/meowse/Menu.js";
 import Node from "/plug-ins/node/Node.js";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
+import translateCursor from '/plug-ins/translate-cursor/index.js';
 
 import Viewport from "/plug-ins/windows/Viewport.js";
 import Container from "/plug-ins/windows/Container.js";
@@ -53,7 +54,7 @@ export default class Pane {
 
     panX: 0,
     panY: 0,
-    zoom: .4,
+    zoom: .5,
 
     applications: [],
     elements: [],
@@ -72,7 +73,7 @@ export default class Pane {
       if(this.library){
         this.library.split(',').map(s=>s.trim()).filter(s=>s).forEach((name)=>{
           if(libraries[name]){
-            this.components = {...components, ...libraries[name]}
+            this.components = {...libraries[name], ...components, }
           }else{
             console.info('No such library', name);
           }
@@ -201,20 +202,64 @@ export default class Pane {
 
       this.appendElements();
 
+      // Attach context menu to background
+      // NOTE: this uses meowse/Menu, triggers openMenu on root window, which will open /windows/menu
+
+
       const menu = new Menu({
         area: paneBody.body,
-        scale: ()=>this.getScale(this),
-        pan: ()=>({ x: this.getRoot().pane.panX, y:this.getRoot().pane.panY}),
-        show: ({x,y})=>{
-          const root = this.getRoot();
-          console.log({x,y, root});
-          root.openMenu({
+        // zoom: ()=>this.zoom,
+        // scale: ()=>this.getScale(this),
+        // pan: ()=>({ x: this.getRoot().pane.panX, y:this.getRoot().pane.panY}),
+        transforms: ()=>this.getTransforms(this),
+        show: ({x,y,tx,ty})=>{ // NOTE: tx and ty are translated
+
+          const availableComponents = Object.keys(this.components)
+          .map(className=>({
+            x,y,
+            root: this.getApplication().node.id,
+            text: `New ${className}`,
+            value: className,
+            action:()=>{
+
+              console.log('Creating', className, this.panX, this.panY, this.zoom);
+
+
+
+
+              const node = new Instance(Node, {
+                id:1,
+                origin: this.getApplication().id,
+                type:className,
+                // 
+                // x:tx/this.zoom,
+                // y:ty/this.zoom,
+
+                x:tx,
+                y:ty,
+
+                w:170,
+                h:256,
+              });
+              const data = {}; //? NOTE: this can use await...
+              node.assign({ }, data);
+              this.elements.create( node ); // -> see project #onStart for creation.
+
+            }
+          }));
+          console.log(availableComponents);
+
+          const rootWindow = this.getRoot();
+
+          rootWindow.openMenu({
             x,
             y,
-            options: {data:[
-              {root: this.getApplication().node.id, text: 'Bueno', value:'bueno', click:()=>console.log('Bueno!')}
-            ]}
-          })
+            options: {
+              data: availableComponents,
+            }
+          });
+
+
         },
       });
       this.destructable = ()=>menu.destroy();

@@ -45,8 +45,8 @@
     }
     instance;
     root;
-    constructor({ Class, instance: instance6, specification }) {
-      this.instance = instance6;
+    constructor({ Class, instance: instance7, specification }) {
+      this.instance = instance7;
       this.instance.oo.extends.push(Class);
       this.collectClasses(Class.extends);
       this.instantiateSuperclasses();
@@ -62,10 +62,10 @@
     instantiateSuperclasses() {
       let parent;
       for (const Class of this.instance.oo.extends) {
-        const instance6 = new Class();
-        this.instance.oo.specifications.push(instance6);
-        instance6.parent = parent;
-        parent = instance6;
+        const instance7 = new Class();
+        this.instance.oo.specifications.push(instance7);
+        instance7.parent = parent;
+        parent = instance7;
       }
     }
   };
@@ -1890,10 +1890,10 @@
     if (!Type)
       return;
     const { Object: attr2, Array: children2, Function: init2 } = byType(input);
-    const instance6 = new Instance(Type, attr2);
+    const instance7 = new Instance(Type, attr2);
     if (init2)
-      init2(instance6, this ? this.parent : null);
-    return [instance6, children2?.map((child) => nest.bind({ parent: instance6 })(...child)).map(([ins, chi]) => chi ? [ins, chi] : ins)];
+      init2(instance7, this ? this.parent : null);
+    return [instance7, children2?.map((child) => nest.bind({ parent: instance7 })(...child)).map(([ins, chi]) => chi ? [ins, chi] : ins)];
   }
   __name(nest, "nest");
 
@@ -2237,7 +2237,6 @@
         this.feedback({ cursorX, cursorY });
       };
       this.wheelHandler = (e) => {
-        e.stopPropagation();
         this.before(this);
         const INTO = 1;
         const OUTOF = -1;
@@ -2384,6 +2383,36 @@
     }
   };
 
+  // plug-ins/translate-cursor/index.js
+  function translate(x0, y0, localList) {
+    let x1 = x0;
+    let y1 = y0;
+    let parentZoom = 1;
+    let locationX = 0;
+    let locationY = 0;
+    for (const [i, t] of localList.entries()) {
+      let curX = t.x * parentZoom;
+      locationX = locationX + curX;
+      let curY = t.y * parentZoom;
+      locationY = locationY + curY;
+      let curPanX = t.panX * parentZoom;
+      locationX = locationX + curPanX;
+      let curPanY = t.panY * parentZoom;
+      locationY = locationY + curPanY;
+      parentZoom = parentZoom * t.zoom;
+    }
+    x1 = x1 - locationX;
+    y1 = y1 - locationY;
+    const self = localList[localList.length - 1];
+    const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / self.zoom;
+    x1 = x1 / finalZoom;
+    y1 = y1 / finalZoom;
+    x1 = x1 / self.zoom;
+    y1 = y1 / self.zoom;
+    return [x1, y1];
+  }
+  __name(translate, "translate");
+
   // plug-ins/meowse/Menu.js
   var Menu = class {
     static {
@@ -2392,22 +2421,25 @@
     area = window;
     scale = null;
     show = null;
+    transforms = null;
     mouseDownHandler;
     mouseMoveHandler;
     mouseUpHandler;
-    constructor({ area, scale, show }) {
+    constructor({ area, scale, show, transforms }) {
       this.area = area;
       this.scale = scale;
       this.show = show;
+      this.transforms = transforms;
       this.#mount();
     }
     #mount() {
       this.contextMenuHandler = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        let x = e.x;
-        let y = e.y;
-        this.show({ x, y });
+        let x = e.clientX;
+        let y = e.clientY;
+        let [tx, ty] = translate(x, y, this.transforms());
+        this.show({ x, y, tx, ty });
       };
       this.area.addEventListener("contextmenu", this.contextMenuHandler);
     }
@@ -2553,7 +2585,11 @@
           x: this.x,
           y: this.y
         });
-        this.body = html.div({});
+        this.body = html.div({
+          style: {
+            "overflow-y": "scroll"
+          }
+        });
         this.el.ForeignObject.appendChild(this.body);
         this.on("name", (name2) => update(this.el.ForeignObject, { name: name2 }));
         this.on("w", (width) => update(this.el.ForeignObject, { width }));
@@ -2681,6 +2717,13 @@
     }
   }
   __name(detach, "detach");
+  function destroy_each(iterations, detaching) {
+    for (let i = 0; i < iterations.length; i += 1) {
+      if (iterations[i])
+        iterations[i].d(detaching);
+    }
+  }
+  __name(destroy_each, "destroy_each");
   function element(name2) {
     return document.createElement(name2);
   }
@@ -2842,6 +2885,12 @@
   }
   __name(transition_in, "transition_in");
 
+  // node_modules/svelte/src/runtime/internal/each.js
+  function ensure_array_like(array_like_or_iterator) {
+    return array_like_or_iterator?.length !== void 0 ? array_like_or_iterator : Array.from(array_like_or_iterator);
+  }
+  __name(ensure_array_like, "ensure_array_like");
+
   // node_modules/svelte/src/shared/boolean_attributes.js
   var _boolean_attributes = (
     /** @type {const} */
@@ -2911,7 +2960,7 @@
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
   __name(make_dirty, "make_dirty");
-  function init(component, options, instance6, create_fragment6, not_equal, props, append_styles = null, dirty = [-1]) {
+  function init(component, options, instance7, create_fragment7, not_equal, props, append_styles = null, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -2937,7 +2986,7 @@
     };
     append_styles && append_styles($$.root);
     let ready = false;
-    $$.ctx = instance6 ? instance6(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance7 ? instance7(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -2950,7 +2999,7 @@
     $$.update();
     ready = true;
     run_all($$.before_update);
-    $$.fragment = create_fragment6 ? create_fragment6($$.ctx) : false;
+    $$.fragment = create_fragment7 ? create_fragment7($$.ctx) : false;
     if (options.target) {
       if (options.hydrate) {
         start_hydrating();
@@ -3932,7 +3981,7 @@
       library: null,
       panX: 0,
       panY: 0,
-      zoom: 0.4,
+      zoom: 0.5,
       applications: [],
       elements: [],
       anchors: [],
@@ -3945,7 +3994,7 @@
         if (this.library) {
           this.library.split(",").map((s) => s.trim()).filter((s) => s).forEach((name2) => {
             if (libraries[name2]) {
-              this.components = { ...components_default, ...libraries[name2] };
+              this.components = { ...libraries[name2], ...components_default };
             } else {
               console.info("No such library", name2);
             }
@@ -4035,17 +4084,44 @@
         this.appendElements();
         const menu = new Menu({
           area: paneBody.body,
-          scale: () => this.getScale(this),
-          pan: () => ({ x: this.getRoot().pane.panX, y: this.getRoot().pane.panY }),
-          show: ({ x, y }) => {
-            const root = this.getRoot();
-            console.log({ x, y, root });
-            root.openMenu({
+          // zoom: ()=>this.zoom,
+          // scale: ()=>this.getScale(this),
+          // pan: ()=>({ x: this.getRoot().pane.panX, y:this.getRoot().pane.panY}),
+          transforms: () => this.getTransforms(this),
+          show: ({ x, y, tx, ty }) => {
+            const availableComponents = Object.keys(this.components).map((className) => ({
               x,
               y,
-              options: { data: [
-                { root: this.getApplication().node.id, text: "Bueno", value: "bueno", click: () => console.log("Bueno!") }
-              ] }
+              root: this.getApplication().node.id,
+              text: `New ${className}`,
+              value: className,
+              action: () => {
+                console.log("Creating", className, this.panX, this.panY, this.zoom);
+                const node = new Instance(Node, {
+                  id: 1,
+                  origin: this.getApplication().id,
+                  type: className,
+                  // 
+                  // x:tx/this.zoom,
+                  // y:ty/this.zoom,
+                  x: tx,
+                  y: ty,
+                  w: 170,
+                  h: 256
+                });
+                const data = {};
+                node.assign({}, data);
+                this.elements.create(node);
+              }
+            }));
+            console.log(availableComponents);
+            const rootWindow = this.getRoot();
+            rootWindow.openMenu({
+              x,
+              y,
+              options: {
+                data: availableComponents
+              }
             });
           }
         });
@@ -4116,8 +4192,160 @@
     };
   };
 
+  // plug-ins/windows/ui/Menu.svelte
+  function get_each_context(ctx, list, i) {
+    const child_ctx = ctx.slice();
+    child_ctx[2] = list[i].text;
+    child_ctx[3] = list[i].value;
+    child_ctx[4] = list[i].action;
+    child_ctx[6] = i;
+    return child_ctx;
+  }
+  __name(get_each_context, "get_each_context");
+  function create_each_block(ctx) {
+    let li;
+    let t_value = (
+      /*text*/
+      ctx[2] + ""
+    );
+    let t;
+    let mounted;
+    let dispose;
+    return {
+      c() {
+        li = element("li");
+        t = text2(t_value);
+        attr(li, "class", "list-group-item");
+      },
+      m(target, anchor) {
+        insert(target, li, anchor);
+        append(li, t);
+        if (!mounted) {
+          dispose = listen(li, "click", function() {
+            if (is_function(
+              /*action*/
+              ctx[4]
+            ))
+              ctx[4].apply(this, arguments);
+          });
+          mounted = true;
+        }
+      },
+      p(new_ctx, dirty) {
+        ctx = new_ctx;
+        if (dirty & /*options*/
+        1 && t_value !== (t_value = /*text*/
+        ctx[2] + ""))
+          set_data(t, t_value);
+      },
+      d(detaching) {
+        if (detaching) {
+          detach(li);
+        }
+        mounted = false;
+        dispose();
+      }
+    };
+  }
+  __name(create_each_block, "create_each_block");
+  function create_fragment5(ctx) {
+    let div1;
+    let div0;
+    let t1;
+    let ul;
+    let each_value = ensure_array_like(
+      /*options*/
+      ctx[0].data
+    );
+    let each_blocks = [];
+    for (let i = 0; i < each_value.length; i += 1) {
+      each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    }
+    return {
+      c() {
+        div1 = element("div");
+        div0 = element("div");
+        div0.textContent = "Operations";
+        t1 = space();
+        ul = element("ul");
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].c();
+        }
+        attr(div0, "class", "card-header");
+        attr(ul, "class", "list-group list-group-flush");
+        attr(div1, "class", "card");
+      },
+      m(target, anchor) {
+        insert(target, div1, anchor);
+        append(div1, div0);
+        append(div1, t1);
+        append(div1, ul);
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          if (each_blocks[i]) {
+            each_blocks[i].m(ul, null);
+          }
+        }
+      },
+      p(ctx2, [dirty]) {
+        if (dirty & /*options*/
+        1) {
+          each_value = ensure_array_like(
+            /*options*/
+            ctx2[0].data
+          );
+          let i;
+          for (i = 0; i < each_value.length; i += 1) {
+            const child_ctx = get_each_context(ctx2, each_value, i);
+            if (each_blocks[i]) {
+              each_blocks[i].p(child_ctx, dirty);
+            } else {
+              each_blocks[i] = create_each_block(child_ctx);
+              each_blocks[i].c();
+              each_blocks[i].m(ul, null);
+            }
+          }
+          for (; i < each_blocks.length; i += 1) {
+            each_blocks[i].d(1);
+          }
+          each_blocks.length = each_value.length;
+        }
+      },
+      i: noop,
+      o: noop,
+      d(detaching) {
+        if (detaching) {
+          detach(div1);
+        }
+        destroy_each(each_blocks, detaching);
+      }
+    };
+  }
+  __name(create_fragment5, "create_fragment");
+  function instance5($$self, $$props, $$invalidate) {
+    let { control } = $$props;
+    let { options = { data: [] } } = $$props;
+    $$self.$$set = ($$props2) => {
+      if ("control" in $$props2)
+        $$invalidate(1, control = $$props2.control);
+      if ("options" in $$props2)
+        $$invalidate(0, options = $$props2.options);
+    };
+    return [options, control];
+  }
+  __name(instance5, "instance");
+  var Menu2 = class extends SvelteComponent {
+    static {
+      __name(this, "Menu");
+    }
+    constructor(options) {
+      super();
+      init(this, options, instance5, create_fragment5, safe_not_equal, { control: 1, options: 0 });
+    }
+  };
+  var Menu_default = Menu2;
+
   // plug-ins/windows/Menu.js
-  var Menu2 = class {
+  var Menu3 = class {
     static {
       __name(this, "Menu");
     }
@@ -4152,17 +4380,17 @@
         this.appendElements();
         this.foreign = new Instance(Foreign, { parent: this });
         this.children.create(this.foreign);
-        const textnode = document.createTextNode("X: I am an HTML context menu, based on foreign object." + JSON.stringify(this.options));
-        this.foreign.appendChild(textnode);
-        this.on("options", (options) => {
-          textnode.textContent = "I am an HTML context menu, based on foreign object." + JSON.stringify(this.options);
+        this.ui = new Menu_default({
+          target: this.foreign.body,
+          control: this.control
         });
+        this.on("options", (options) => this.ui.$set({ options }));
         this.foreign.body.addEventListener("click", (e) => {
           this.parent.closeMenu();
         });
         this.on("h", (h) => {
           console.log({ h });
-          this.foreign.h = h;
+          this.foreign.h = h - this.p * 2 - this.b * 2;
         });
         this.on("show", (show) => {
           console.log("menu on show", show);
@@ -4278,7 +4506,7 @@
         this.overlay = new Instance(Overlay, { parent: this, scene: this.container });
         this.overlay.start();
         this.overlay.show = true;
-        this.menu = new Instance(Menu2, { parent: this, scene: this.container, x, y, w, h, options });
+        this.menu = new Instance(Menu3, { parent: this, scene: this.container, x, y, w, h, options });
         this.menu.start();
         this.menu.show = true;
       },
@@ -4326,7 +4554,7 @@
   };
 
   // plug-ins/components/hello/index.svelte
-  function create_fragment5(ctx) {
+  function create_fragment6(ctx) {
     let div7;
     let div2;
     let t1;
@@ -4634,8 +4862,8 @@
       }
     };
   }
-  __name(create_fragment5, "create_fragment");
-  function instance5($$self, $$props, $$invalidate) {
+  __name(create_fragment6, "create_fragment");
+  function instance6($$self, $$props, $$invalidate) {
     let a = 1;
     let b = 2;
     let c = 3;
@@ -4663,14 +4891,14 @@
       input6_input_handler
     ];
   }
-  __name(instance5, "instance");
+  __name(instance6, "instance");
   var Hello = class extends SvelteComponent {
     static {
       __name(this, "Hello");
     }
     constructor(options) {
       super();
-      init(this, options, instance5, create_fragment5, safe_not_equal, {});
+      init(this, options, instance6, create_fragment6, safe_not_equal, {});
     }
   };
   var hello_default = Hello;

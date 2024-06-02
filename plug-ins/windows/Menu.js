@@ -2,6 +2,8 @@ import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 import Vertical from "/plug-ins/windows/Vertical.js";
 import Foreign from "/plug-ins/windows/Foreign.js";
 import { svg, update } from "/plug-ins/domek/index.js"
+import UI from "./ui/Menu.svelte";
+
 
 export default class Menu {
   static extends = [Vertical];
@@ -44,15 +46,15 @@ export default class Menu {
       this.appendElements();
 
       this.foreign = new Instance(Foreign, {parent: this});
-
       this.children.create(this.foreign);
 
-      const textnode = document.createTextNode("X: I am an HTML context menu, based on foreign object." + JSON.stringify(this.options));
-      this.foreign.appendChild(textnode);
+      this.ui = new UI({
+        target: this.foreign.body,
+        control: this.control,
+      });
 
-      this.on('options', options=>{
-        textnode.textContent = "I am an HTML context menu, based on foreign object." + JSON.stringify(this.options);
-      })
+      this.on('options', options=> this.ui.$set({options}));
+
 
       this.foreign.body.addEventListener('click', e => {
          this.parent.closeMenu();
@@ -60,7 +62,7 @@ export default class Menu {
 
       this.on('h', (h)=>{
         console.log({h});
-        this.foreign.h = h;
+        this.foreign.h = h - (this.p*2) - (this.b*2);
       });
 
       this.on('show', (show)=>{

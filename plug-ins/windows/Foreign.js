@@ -39,6 +39,9 @@ export default class Foreign {
       });
 
       this.body = html.div({
+        style: {
+          'overflow-y': 'scroll',
+        }
       });
 
       this.el.ForeignObject.appendChild(this.body)
@@ -52,7 +55,7 @@ export default class Foreign {
       this.on('w', width=>update(this.body, {style:{width: width+'px'}}));
       this.on('h', height=>update(this.body, {style:{height: height+'px'}}));
 
-      
+
 
       this.appendElements();
     },

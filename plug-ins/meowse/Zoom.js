@@ -44,7 +44,7 @@ export default class Zoom {
 
     this.wheelHandler = (e) => {
 
-      e.stopPropagation();
+      //XXX e.stopPropagation();
 
       this.before(this);
 
@@ -77,7 +77,7 @@ export default class Zoom {
     const zoomClamp = v=>Math.min(max, Math.max(min, v)); // using `Math.min(max, value)` to ensure the value doesn't exceed the `max` limit and `Math.max(min, ...)` to ensure the result doesn't fall below the `min` limit.
 
     const controledMagnitude = magnitude*zoom // adjust magnitude to slow it down;
-    
+
     let zoom1 = zoomClamp(zoom + (deltaZoom * controledMagnitude));
     const zoomChange = zoom1 - zoom;
     const panX1 = panX - (cursorX * zoomChange) / zoom;

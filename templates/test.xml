@@ -13,7 +13,7 @@
 
   </Window>
 
-  <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" zoom=".8" showStatus="true" library="emitter-network">
+  <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" zoom=".666" showStatus="true" library="emitter-network">
 
     <Queue  id="test-1" x="100" y="100" w="320" h="256"/>
     <Filter id="test-2" x="500" y="100" w="170" h="256"/>
@@ -29,6 +29,19 @@
 
     <Pipe id="c4" from="test-3" to="test-5" out="out" in="in"/>
     <Pipe id="c5" from="test-5" to="test-6" out="out" in="in"/>
+
+
+
+    <Window id="test-a" x="1100" y="1100" w="1000" h="1000" showMenu="true" showStatus="true">
+      <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
+
+      <Editor id="test-d" x="100" y="1200" w="1000" h="1000">
+      </Editor>
+
+      <Terminal id="test-c" x="100" y="100" w="1000" h="800">
+      </Terminal>
+
+    </Window>
 
   </Window>
 

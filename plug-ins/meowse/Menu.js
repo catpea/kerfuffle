@@ -1,17 +1,21 @@
+import translateCursor from '/plug-ins/translate-cursor/index.js';
+
 export default class Menu {
 
   area = window;
   scale = null;
   show = null;
+  transforms = null;
 
   mouseDownHandler;
   mouseMoveHandler;
   mouseUpHandler;
 
-  constructor({area, scale, show}){
+  constructor({area, scale, show, transforms}){
     this.area = area;
     this.scale = scale;
     this.show = show;
+    this.transforms = transforms;
 
 
     this.#mount();
@@ -24,10 +28,13 @@ export default class Menu {
       e.stopPropagation();
 
       // console.log('SCALE', this.scale());
-      let x = e.x;//*this.scale();
-      let y = e.y;//*this.scale();
+      let x = e.clientX;
+      let y = e.clientY;
 
-      this.show({x,y});
+      let [tx,ty] = translateCursor(x,y, this.transforms());
+
+
+      this.show({x,y,tx,ty});
     };
 
     this.area.addEventListener('contextmenu', this.contextMenuHandler);

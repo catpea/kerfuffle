@@ -52,17 +52,6 @@ export default class Window {
       this.menu.start();
       this.menu.show = true;
 
-      // this.menu.body.addEventListener('click', e => {
-      //   console.log('Spanko!');
-      //    this.menu.hide();
-      //    this.overlay.hide();
-      // });
-
-      // this.overlay.on('click', ()=>{
-      //   this.overlay.show = false;
-      //   this.menu.show = false;
-      // });
-
     },
 
     initialize(){
