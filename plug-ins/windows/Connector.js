@@ -83,35 +83,61 @@ export default class Connector {
         socket.on('y', y=>this.y2=y)
       });
 
-      this.on('source', id=>{
-        if(!id) throw new Error(`Primary requires source id`);
-        if(!id.includes(':')) throw new Error(`Id must contain ":".`);
-        // const component = id.includes(':')?globalThis.project.anchors.get( id ):globalThis.project.applications.get( id );
-        const origin = globalThis.project.origins.get(this.getRootContainer().node.origin); // root container always has a node, node always has an origin, origin has a root
+      this.connectionId = null;
+      this.desctructible = this.all('from out to in', o=>{
 
-        const component = origin.root.anchors.get( id );
-        component.on('x', x=>this.x1=x)
-        component.on('y', y=>this.y1=y)
+        let connectionId = [o.from, o.out, o.to, o.in].join('+');
+
+        if(this.connectionId == connectionId) {
+          console.log('DUPE', this.connectionId);
+          return;
+        }
+
+        let connect = [o.from, o.out, o.to, o.in].every(i=>i);
+
+        if(connect){
+          const socket1 = [o.from, o.out].join('/');
+          const socket2 = [o.to, o.in].join('/');
+          const control1 = this.getApplication().socketRegistry.get(socket1).control;
+          const control2 = this.getApplication().socketRegistry.get(socket2).control;
+          control1.pipe.on(o.out, packet=>control2.pipe.emit(o.in, packet));
+          this.connectionId = connectionId;
+        }else{
+          console.log('DISCO', [o.from, o.out, o.to, o.in]);
+        }
 
 
-      });
-
-      this.on('target',  id=>{
-        if(!id) throw new Error(`Primary requires target id`);
-        if(!id.includes(':')) throw new Error(`Id must contain ":".`);
-        // const component = id.includes(':')?globalThis.project.anchors.get( id ):globalThis.project.applications.get( id );
-        const origin = globalThis.project.origins.get(this.getRootContainer().node.origin); // root container always has a node, node always has an origin, origin has a root
-        const component = origin.root.anchors.get( id );
-        component.on('x', x=>this.x2=x)
-        component.on('y', y=>this.y2=y)
-      });
-
-
-      this.all(['source', 'target'], ({source, target})=>{
-        const origin = globalThis.project.origins.get(this.getRootContainer().node.origin); // root container always has a node, node always has an origin, origin has a root
-        globalThis.project.pipe(origin, source, target );
       })
-      // ;
+
+      // this.on('source', id=>{
+      //   if(!id) throw new Error(`Primary requires source id`);
+      //   if(!id.includes(':')) throw new Error(`Id must contain ":".`);
+      //   // const component = id.includes(':')?globalThis.project.anchors.get( id ):globalThis.project.applications.get( id );
+      //   const origin = globalThis.project.origins.get(this.getRootContainer().node.origin); // root container always has a node, node always has an origin, origin has a root
+      //
+      //   const component = origin.root.anchors.get( id );
+      //   component.on('x', x=>this.x1=x)
+      //   component.on('y', y=>this.y1=y)
+      //
+      //
+      // });
+      //
+      // this.on('target',  id=>{
+      //   if(!id) throw new Error(`Primary requires target id`);
+      //   if(!id.includes(':')) throw new Error(`Id must contain ":".`);
+      //   // const component = id.includes(':')?globalThis.project.anchors.get( id ):globalThis.project.applications.get( id );
+      //   const origin = globalThis.project.origins.get(this.getRootContainer().node.origin); // root container always has a node, node always has an origin, origin has a root
+      //   const component = origin.root.anchors.get( id );
+      //   component.on('x', x=>this.x2=x)
+      //   component.on('y', y=>this.y2=y)
+      // });
+      //
+      //
+      // this.all(['source', 'target'], ({source, target})=>{
+      //   const origin = globalThis.project.origins.get(this.getRootContainer().node.origin); // root container always has a node, node always has an origin, origin has a root
+      //   globalThis.project.pipe(origin, source, target );
+      // })
+      // // ;
 
 
       // this.on('x1',      x1=>update(this.el.Primary,{x1}),     );

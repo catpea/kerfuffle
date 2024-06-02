@@ -1,4 +1,6 @@
 <script>
+  export let count;
+
   let a = 1;
   let b = 2;
   let c = 3;
@@ -6,6 +8,6 @@
 
 <div class="container pt-3" style="overflow-y: scroll;">
 
- <h1>Reduce!</h1>
+ <h1>Reduce! {count||''}</h1>
 
 </div>

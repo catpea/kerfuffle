@@ -9,8 +9,8 @@
     }
     instance;
     root;
-    constructor({ Class, instance: instance2, specification }) {
-      this.instance = instance2;
+    constructor({ Class, instance: instance6, specification }) {
+      this.instance = instance6;
       this.instance.oo.extends.push(Class);
       this.collectClasses(Class.extends);
       this.instantiateSuperclasses();
@@ -26,10 +26,10 @@
     instantiateSuperclasses() {
       let parent;
       for (const Class of this.instance.oo.extends) {
-        const instance2 = new Class();
-        this.instance.oo.specifications.push(instance2);
-        instance2.parent = parent;
-        parent = instance2;
+        const instance6 = new Class();
+        this.instance.oo.specifications.push(instance6);
+        instance6.parent = parent;
+        parent = instance6;
       }
     }
   };
@@ -853,10 +853,10 @@
     };
     traits = {
       draw() {
-        this.el.Container = svg.rect({
+        this.el.ComponentBackground = svg.rect({
           name: this.oo.name,
           style: { "pointer-events": "none" },
-          class: ["container-background", this.isApplication ? "application" : null].filter((i) => i).join(" "),
+          class: ["component-background", this.isApplication ? "application" : null].filter((i) => i).join(" "),
           ry: this.r,
           "stroke-width": 0,
           "vector-effect": "non-scaling-stroke",
@@ -869,14 +869,14 @@
           y: this.y
         });
         this.getApplication().on("node", (node) => {
-          this.el.Container.classList.add(node.type.toLowerCase());
+          this.el.ComponentBackground.classList.add(node.type.toLowerCase());
         });
-        this.on("name", (name2) => update(this.el.Container, { name: name2 }));
-        this.on("w", (width) => update(this.el.Container, { width }));
-        this.on("h", (height) => update(this.el.Container, { height }));
-        this.on("x", (x) => update(this.el.Container, { x }));
-        this.on("y", (y) => update(this.el.Container, { y }));
-        this.on("r", (ry) => update(this.el.Container, { ry }));
+        this.on("name", (name2) => update(this.el.ComponentBackground, { name: name2 }));
+        this.on("w", (width) => update(this.el.ComponentBackground, { width }));
+        this.on("h", (height) => update(this.el.ComponentBackground, { height }));
+        this.on("x", (x) => update(this.el.ComponentBackground, { x }));
+        this.on("y", (y) => update(this.el.ComponentBackground, { y }));
+        this.on("r", (ry) => update(this.el.ComponentBackground, { ry }));
         this.appendElements();
       },
       allAnchors(parent, list = []) {
@@ -1436,6 +1436,93 @@
     }
   };
 
+  // plug-ins/event-emitter/EventEmitter.js
+  var EventEmitter = class {
+    static {
+      __name(this, "EventEmitter");
+    }
+    constructor() {
+      this.events = {};
+    }
+    // Method to subscribe to an event
+    on(eventName, listener) {
+      if (!this.events[eventName]) {
+        this.events[eventName] = [];
+      }
+      this.events[eventName].push(listener);
+    }
+    // Method to unsubscribe from an event
+    off(eventName, listener) {
+      if (!this.events[eventName]) {
+        return;
+      }
+      const idx = this.events[eventName].indexOf(listener);
+      if (idx > -1) {
+        this.events[eventName].splice(idx, 1);
+      }
+    }
+    // Method to emit an event
+    emit(eventName, ...args) {
+      const listeners = this.events[eventName];
+      if (listeners) {
+        listeners.forEach((listener) => listener.apply(this, args));
+      }
+    }
+    // Method to only listen once for an event
+    once(eventName, listener) {
+      const onceListener = /* @__PURE__ */ __name((...args) => {
+        this.off(eventName, onceListener);
+        listener.apply(this, args);
+      }, "onceListener");
+      this.on(eventName, onceListener);
+    }
+  };
+
+  // plug-ins/windows/api/Sockets.js
+  var Sockets = class {
+    static {
+      __name(this, "Sockets");
+    }
+    static extends = [];
+    observables = {
+      socketRegistry: [],
+      sockets: []
+    };
+    methods = {
+      initialize() {
+        this.pipe = new EventEmitter();
+        this.socketLayout = new SocketLayout(this, { source: "sockets" });
+        this.on("sockets.created", (socket) => {
+          socket.start();
+          this.socketLayout.manage(socket);
+          this.getApplication().socketRegistry.create(socket);
+        }, { replay: true });
+        this.on("sockets.removed", (socket) => {
+          socket.stop();
+          this.getApplication().socketRegistry.remove(id);
+          this.removeControlAnchor(socket.id);
+          this.socketLayout.forget(socket);
+        });
+      },
+      createSocket(name2, side) {
+        if (!name2)
+          throw new Error(`It is not possible to create an socket without an socket name.`);
+        if (!side === void 0)
+          throw new Error(`It is not possible to create an socket without specifying a side, 0 or 1.`);
+        const id2 = [this.id, name2].join("/");
+        const socket = new Instance(Anchor, { id: id2, name: name2, side, parent: this, control: this, scene: this.scene });
+        this.sockets.create(socket);
+      },
+      removeSocket(id2) {
+        this.sockets.remove(id2);
+      }
+      // send(name, packet){
+      //   // this.getApplication().pipeRegistry.get(name).emit('data', packet);
+      //   this.pipe.emit(`${name}:data`, packet);
+      // }
+    };
+  };
+
   // plug-ins/windows/Container.js
   var Container = class {
     static {
@@ -1548,8 +1635,8 @@
   };
 
   // plug-ins/pipe/Pipe.js
-  var EventEmitter = bundle["events"];
-  var Pipe = class extends EventEmitter {
+  var EventEmitter2 = bundle["events"];
+  var Pipe = class extends EventEmitter2 {
     static {
       __name(this, "Pipe");
     }
@@ -1767,10 +1854,10 @@
     if (!Type)
       return;
     const { Object: attr2, Array: children2, Function: init2 } = byType(input);
-    const instance2 = new Instance(Type, attr2);
+    const instance6 = new Instance(Type, attr2);
     if (init2)
-      init2(instance2, this ? this.parent : null);
-    return [instance2, children2?.map((child) => nest.bind({ parent: instance2 })(...child)).map(([ins, chi]) => chi ? [ins, chi] : ins)];
+      init2(instance6, this ? this.parent : null);
+    return [instance6, children2?.map((child) => nest.bind({ parent: instance6 })(...child)).map(([ins, chi]) => chi ? [ins, chi] : ins)];
   }
   __name(nest, "nest");
 
@@ -1976,7 +2063,7 @@
     static {
       __name(this, "Window");
     }
-    static extends = [Vertical];
+    static extends = [Sockets, Vertical];
     observables = {
       caption: "Untitled",
       showCaption: true,
@@ -2030,34 +2117,10 @@
           element: () => this.scene
         });
         this.destructable = () => focus.destroy();
-        this.socketLayout = new SocketLayout(this, { source: "sockets" });
-        this.on("sockets.created", (socket) => {
-          socket.start();
-          this.socketLayout.manage(socket);
-          this.getApplication().socketRegistry.create(socket);
-        }, { replay: true });
-        this.on("sockets.removed", (socket) => {
-          socket.stop();
-          this.getApplication().socketRegistry.remove(id);
-          this.removeControlAnchor(socket.id);
-          this.socketLayout.forget(socket);
-        });
       },
       createWindowComponent(component) {
         component.parent = this;
         this.children.create(component);
-      },
-      createSocket(name2, side) {
-        if (!name2)
-          throw new Error(`It is not possible to create an socket without an socket name.`);
-        if (!side === void 0)
-          throw new Error(`It is not possible to create an socket without specifying a side, 0 or 1.`);
-        const id2 = [this.id, name2].join("/");
-        const socket = new Instance(Anchor, { id: id2, name: name2, side, parent: this, scene: this.scene });
-        this.sockets.create(socket);
-      },
-      removeSocket(id2) {
-        this.sockets.remove(id2);
       }
     };
     constraints = {};
@@ -2077,6 +2140,8 @@
     };
     methods = {
       initialize() {
+        this.controller = new EventEmitter();
+        this.intervalId = setInterval((x) => this.controller.emit("step"), 1e3);
         this.getRoot().origins.create(this);
       }
     };
@@ -2806,7 +2871,7 @@
     component.$$.dirty[i / 31 | 0] |= 1 << i % 31;
   }
   __name(make_dirty, "make_dirty");
-  function init(component, options, instance2, create_fragment6, not_equal, props, append_styles = null, dirty = [-1]) {
+  function init(component, options, instance6, create_fragment6, not_equal, props, append_styles = null, dirty = [-1]) {
     const parent_component = current_component;
     set_current_component(component);
     const $$ = component.$$ = {
@@ -2832,7 +2897,7 @@
     };
     append_styles && append_styles($$.root);
     let ready = false;
-    $$.ctx = instance2 ? instance2(component, options.props || {}, (i, ret, ...rest) => {
+    $$.ctx = instance6 ? instance6(component, options.props || {}, (i, ret, ...rest) => {
       const value = rest.length ? rest[0] : ret;
       if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
         if (!$$.skip_bound && $$.bound[i])
@@ -3132,17 +3197,34 @@
   // plug-ins/emitter-network/queue/Queue.svelte
   function create_fragment(ctx) {
     let div;
+    let h1;
+    let t0;
+    let t1_value = (
+      /*count*/
+      (ctx[0] || "") + ""
+    );
+    let t1;
     return {
       c() {
         div = element("div");
-        div.innerHTML = `<h1>Queue!</h1>`;
+        h1 = element("h1");
+        t0 = text2("Queue! ");
+        t1 = text2(t1_value);
         attr(div, "class", "container pt-3");
         set_style(div, "overflow-y", "scroll");
       },
       m(target, anchor) {
         insert(target, div, anchor);
+        append(div, h1);
+        append(h1, t0);
+        append(h1, t1);
       },
-      p: noop,
+      p(ctx2, [dirty]) {
+        if (dirty & /*count*/
+        1 && t1_value !== (t1_value = /*count*/
+        (ctx2[0] || "") + ""))
+          set_data(t1, t1_value);
+      },
       i: noop,
       o: noop,
       d(detaching) {
@@ -3153,13 +3235,22 @@
     };
   }
   __name(create_fragment, "create_fragment");
+  function instance($$self, $$props, $$invalidate) {
+    let { count } = $$props;
+    $$self.$$set = ($$props2) => {
+      if ("count" in $$props2)
+        $$invalidate(0, count = $$props2.count);
+    };
+    return [count];
+  }
+  __name(instance, "instance");
   var Queue = class extends SvelteComponent {
     static {
       __name(this, "Queue");
     }
     constructor(options) {
       super();
-      init(this, options, null, create_fragment, safe_not_equal, {});
+      init(this, options, instance, create_fragment, safe_not_equal, { count: 0 });
     }
   };
   var Queue_default = Queue;
@@ -3170,16 +3261,18 @@
       __name(this, "Queue");
     }
     static extends = [Window];
-    properties = {};
     methods = {
       initialize() {
+        this.counter = 1;
         this.createSocket("out", 1);
       },
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        new Queue_default({
-          target: this.foreign.body
+        this.ui = new Queue_default({ target: this.foreign.body });
+        this.getApplication().controller.on("step", (x) => {
+          if (this.counter < 10)
+            this.step();
         });
       },
       stop() {
@@ -3188,6 +3281,18 @@
       destroy() {
         console.log("todo: destroying root application");
         this.dispose();
+      },
+      // --- //
+      step() {
+        const packet = {
+          count: this.counter++,
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        this.ui.$set({ count: packet.count });
+        this.pipe.emit("out", { source: this, detail: packet });
+        this.el.ComponentBackground.classList.add("indicate");
+        setTimeout(() => this.el.ComponentBackground.classList.remove("indicate"), 333);
+        this.packet = null;
       }
     };
   };
@@ -3195,17 +3300,34 @@
   // plug-ins/emitter-network/filter/Filter.svelte
   function create_fragment2(ctx) {
     let div;
+    let h1;
+    let t0;
+    let t1_value = (
+      /*count*/
+      (ctx[0] || "") + ""
+    );
+    let t1;
     return {
       c() {
         div = element("div");
-        div.innerHTML = `<h1>Filter!</h1>`;
+        h1 = element("h1");
+        t0 = text2("Filter! ");
+        t1 = text2(t1_value);
         attr(div, "class", "container pt-3");
         set_style(div, "overflow-y", "scroll");
       },
       m(target, anchor) {
         insert(target, div, anchor);
+        append(div, h1);
+        append(h1, t0);
+        append(h1, t1);
       },
-      p: noop,
+      p(ctx2, [dirty]) {
+        if (dirty & /*count*/
+        1 && t1_value !== (t1_value = /*count*/
+        (ctx2[0] || "") + ""))
+          set_data(t1, t1_value);
+      },
       i: noop,
       o: noop,
       d(detaching) {
@@ -3216,23 +3338,63 @@
     };
   }
   __name(create_fragment2, "create_fragment");
+  function instance2($$self, $$props, $$invalidate) {
+    let { count } = $$props;
+    $$self.$$set = ($$props2) => {
+      if ("count" in $$props2)
+        $$invalidate(0, count = $$props2.count);
+    };
+    return [count];
+  }
+  __name(instance2, "instance");
   var Filter = class extends SvelteComponent {
     static {
       __name(this, "Filter");
     }
     constructor(options) {
       super();
-      init(this, options, null, create_fragment2, safe_not_equal, {});
+      init(this, options, instance2, create_fragment2, safe_not_equal, { count: 0 });
     }
   };
   var Filter_default = Filter;
+
+  // plug-ins/emitter-network/api/Stepper.js
+  var Stepper = class {
+    static {
+      __name(this, "Stepper");
+    }
+    methods = {
+      initialize() {
+        this.dataQueue = [];
+        this.pipe.on("in", (packet) => {
+          this.dataQueue.push(packet);
+        });
+        this.getApplication().controller.on("step", (x) => {
+          if (this.dataQueue.length && !this.job) {
+            this.job = this.dataQueue.shift();
+            console.log("Got Job");
+          } else if (this.job) {
+            this.ui.$set({ count: this.job.detail.count });
+            this.step(this.job);
+            this.job = null;
+          }
+        });
+      },
+      step(packet) {
+        this.pipe.emit("out", { source: this, detail: packet.detail });
+        this.el.ComponentBackground.classList.add("indicate");
+        setTimeout(() => this.el.ComponentBackground.classList.remove("indicate"), 333);
+      }
+    };
+  };
 
   // plug-ins/emitter-network/filter/Filter.js
   var Filter2 = class {
     static {
       __name(this, "Filter");
     }
-    static extends = [Window];
+    static extends = [Stepper, Window];
+    properties = {};
     methods = {
       initialize() {
         this.createSocket("in", 0);
@@ -3242,9 +3404,7 @@
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        new Filter_default({
-          target: this.foreign.body
-        });
+        this.ui = new Filter_default({ target: this.foreign.body });
       },
       stop() {
         console.log("todo: stopping root application");
@@ -3259,17 +3419,34 @@
   // plug-ins/emitter-network/map/Map.svelte
   function create_fragment3(ctx) {
     let div;
+    let h1;
+    let t0;
+    let t1_value = (
+      /*count*/
+      (ctx[0] || "") + ""
+    );
+    let t1;
     return {
       c() {
         div = element("div");
-        div.innerHTML = `<h1>Map!</h1>`;
+        h1 = element("h1");
+        t0 = text2("Map! ");
+        t1 = text2(t1_value);
         attr(div, "class", "container pt-3");
         set_style(div, "overflow-y", "scroll");
       },
       m(target, anchor) {
         insert(target, div, anchor);
+        append(div, h1);
+        append(h1, t0);
+        append(h1, t1);
       },
-      p: noop,
+      p(ctx2, [dirty]) {
+        if (dirty & /*count*/
+        1 && t1_value !== (t1_value = /*count*/
+        (ctx2[0] || "") + ""))
+          set_data(t1, t1_value);
+      },
       i: noop,
       o: noop,
       d(detaching) {
@@ -3280,13 +3457,22 @@
     };
   }
   __name(create_fragment3, "create_fragment");
+  function instance3($$self, $$props, $$invalidate) {
+    let { count } = $$props;
+    $$self.$$set = ($$props2) => {
+      if ("count" in $$props2)
+        $$invalidate(0, count = $$props2.count);
+    };
+    return [count];
+  }
+  __name(instance3, "instance");
   var Map2 = class extends SvelteComponent {
     static {
       __name(this, "Map");
     }
     constructor(options) {
       super();
-      init(this, options, null, create_fragment3, safe_not_equal, {});
+      init(this, options, instance3, create_fragment3, safe_not_equal, { count: 0 });
     }
   };
   var Map_default = Map2;
@@ -3296,7 +3482,7 @@
     static {
       __name(this, "Map");
     }
-    static extends = [Window];
+    static extends = [Stepper, Window];
     properties = {};
     methods = {
       initialize() {
@@ -3307,9 +3493,7 @@
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        new Map_default({
-          target: this.foreign.body
-        });
+        this.ui = new Map_default({ target: this.foreign.body });
       },
       stop() {
         console.log("todo: stopping root application");
@@ -3324,17 +3508,34 @@
   // plug-ins/emitter-network/reduce/Reduce.svelte
   function create_fragment4(ctx) {
     let div;
+    let h1;
+    let t0;
+    let t1_value = (
+      /*count*/
+      (ctx[0] || "") + ""
+    );
+    let t1;
     return {
       c() {
         div = element("div");
-        div.innerHTML = `<h1>Reduce!</h1>`;
+        h1 = element("h1");
+        t0 = text2("Reduce! ");
+        t1 = text2(t1_value);
         attr(div, "class", "container pt-3");
         set_style(div, "overflow-y", "scroll");
       },
       m(target, anchor) {
         insert(target, div, anchor);
+        append(div, h1);
+        append(h1, t0);
+        append(h1, t1);
       },
-      p: noop,
+      p(ctx2, [dirty]) {
+        if (dirty & /*count*/
+        1 && t1_value !== (t1_value = /*count*/
+        (ctx2[0] || "") + ""))
+          set_data(t1, t1_value);
+      },
       i: noop,
       o: noop,
       d(detaching) {
@@ -3345,13 +3546,22 @@
     };
   }
   __name(create_fragment4, "create_fragment");
+  function instance4($$self, $$props, $$invalidate) {
+    let { count } = $$props;
+    $$self.$$set = ($$props2) => {
+      if ("count" in $$props2)
+        $$invalidate(0, count = $$props2.count);
+    };
+    return [count];
+  }
+  __name(instance4, "instance");
   var Reduce = class extends SvelteComponent {
     static {
       __name(this, "Reduce");
     }
     constructor(options) {
       super();
-      init(this, options, null, create_fragment4, safe_not_equal, {});
+      init(this, options, instance4, create_fragment4, safe_not_equal, { count: 0 });
     }
   };
   var Reduce_default = Reduce;
@@ -3361,7 +3571,7 @@
     static {
       __name(this, "Reduce");
     }
-    static extends = [Window];
+    static extends = [Stepper, Window];
     properties = {};
     methods = {
       initialize() {
@@ -3372,9 +3582,7 @@
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        new Reduce_default({
-          target: this.foreign.body
-        });
+        this.ui = new Reduce_default({ target: this.foreign.body });
       },
       stop() {
         console.log("todo: stopping root application");
@@ -4120,7 +4328,7 @@
     };
   }
   __name(create_fragment5, "create_fragment");
-  function instance($$self, $$props, $$invalidate) {
+  function instance5($$self, $$props, $$invalidate) {
     let a = 1;
     let b = 2;
     let c = 3;
@@ -4148,14 +4356,14 @@
       input6_input_handler
     ];
   }
-  __name(instance, "instance");
+  __name(instance5, "instance");
   var Hello = class extends SvelteComponent {
     static {
       __name(this, "Hello");
     }
     constructor(options) {
       super();
-      init(this, options, instance, create_fragment5, safe_not_equal, {});
+      init(this, options, instance5, create_fragment5, safe_not_equal, {});
     }
   };
   var hello_default = Hello;
@@ -4430,29 +4638,24 @@
           socket.on("x", (x) => this.x2 = x);
           socket.on("y", (y) => this.y2 = y);
         });
-        this.on("source", (id2) => {
-          if (!id2)
-            throw new Error(`Primary requires source id`);
-          if (!id2.includes(":"))
-            throw new Error(`Id must contain ":".`);
-          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-          const component = origin.root.anchors.get(id2);
-          component.on("x", (x) => this.x1 = x);
-          component.on("y", (y) => this.y1 = y);
-        });
-        this.on("target", (id2) => {
-          if (!id2)
-            throw new Error(`Primary requires target id`);
-          if (!id2.includes(":"))
-            throw new Error(`Id must contain ":".`);
-          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-          const component = origin.root.anchors.get(id2);
-          component.on("x", (x) => this.x2 = x);
-          component.on("y", (y) => this.y2 = y);
-        });
-        this.all(["source", "target"], ({ source, target }) => {
-          const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-          globalThis.project.pipe(origin, source, target);
+        this.connectionId = null;
+        this.desctructible = this.all("from out to in", (o) => {
+          let connectionId = [o.from, o.out, o.to, o.in].join("+");
+          if (this.connectionId == connectionId) {
+            console.log("DUPE", this.connectionId);
+            return;
+          }
+          let connect = [o.from, o.out, o.to, o.in].every((i) => i);
+          if (connect) {
+            const socket1 = [o.from, o.out].join("/");
+            const socket2 = [o.to, o.in].join("/");
+            const control1 = this.getApplication().socketRegistry.get(socket1).control;
+            const control2 = this.getApplication().socketRegistry.get(socket2).control;
+            control1.pipe.on(o.out, (packet) => control2.pipe.emit(o.in, packet));
+            this.connectionId = connectionId;
+          } else {
+            console.log("DISCO", [o.from, o.out, o.to, o.in]);
+          }
         });
         this.any(["x1", "y1", "x2", "y2"], (packet) => update(this.el.Midpoint, midpoint(packet)));
         this.any(["x1", "y1", "x2", "y2"], ({ x1, y1, x2, y2 }) => {

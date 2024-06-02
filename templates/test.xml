@@ -13,16 +13,22 @@
 
   </Window>
 
-  <Window id="test-emitter-nodes" x="1200" y="100" w="1000" h="1000" zoom=".8" showStatus="true" library="emitter-network">
+  <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" zoom=".8" showStatus="true" library="emitter-network">
 
     <Queue  id="test-1" x="200" y="100" w="170" h="256"/>
     <Filter id="test-2" x="500" y="100" w="170" h="256"/>
     <Map    id="test-3" x="800" y="100" w="170" h="256"/>
     <Reduce id="test-4" x="800" y="500" w="170" h="256"/>
 
+    <Filter id="test-5" x="1100" y="100" w="170" h="256"/>
+    <Filter id="test-6" x="1400" y="100" w="170" h="256"/>
+
     <Pipe id="c1" from="test-1" to="test-2" out="out" in="in"/>
-    <Pipe id="c1" from="test-2" to="test-3" out="out" in="in"/>
-    <Pipe id="c2" from="test-2" to="test-4" out="out" in="in"/>
+    <Pipe id="c2" from="test-2" to="test-3" out="out" in="in"/>
+    <Pipe id="c3" from="test-2" to="test-4" out="out" in="in"/>
+
+    <Pipe id="c4" from="test-3" to="test-5" out="out" in="in"/>
+    <Pipe id="c5" from="test-5" to="test-6" out="out" in="in"/>
 
   </Window>
 

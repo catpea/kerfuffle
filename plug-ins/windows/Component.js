@@ -52,10 +52,10 @@ export default class Component {
   traits = {
 
     draw(){
-      this.el.Container = svg.rect({
+      this.el.ComponentBackground = svg.rect({
         name: this.oo.name,
         style:{'pointer-events': 'none'},
-        class: ['container-background', this.isApplication?'application':null].filter(i=>i).join(' '),
+        class: ['component-background', this.isApplication?'application':null].filter(i=>i).join(' '),
         ry: this.r,
         'stroke-width': 0,
         'vector-effect': 'non-scaling-stroke',
@@ -70,15 +70,15 @@ export default class Component {
       });
 
       this.getApplication().on("node", (node) => {
-          this.el.Container.classList.add(node.type.toLowerCase());
+          this.el.ComponentBackground.classList.add(node.type.toLowerCase());
       });
 
-      this.on('name',  name=>update(this.el.Container,{name}), );
-      this.on('w',  width=>update(this.el.Container,{width}), );
-      this.on('h', height=>update(this.el.Container,{height}),);
-      this.on('x',      x=>update(this.el.Container,{x}),     );
-      this.on('y',      y=>update(this.el.Container,{y}),     );
-      this.on('r',     ry=>update(this.el.Container,{ry}),     );
+      this.on('name',  name=>update(this.el.ComponentBackground,{name}), );
+      this.on('w',  width=>update(this.el.ComponentBackground,{width}), );
+      this.on('h', height=>update(this.el.ComponentBackground,{height}),);
+      this.on('x',      x=>update(this.el.ComponentBackground,{x}),     );
+      this.on('y',      y=>update(this.el.ComponentBackground,{y}),     );
+      this.on('r',     ry=>update(this.el.ComponentBackground,{ry}),     );
 
       this.appendElements();
     },

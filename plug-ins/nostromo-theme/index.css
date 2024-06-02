@@ -84,7 +84,7 @@ svg.editor-interface {
     fill: var(--editor-background-secondary);
 }
 
-.container-background.application.editor {
+.component-background.application.editor {
     fill: var(--codemirror-dark);
 }
 
@@ -103,11 +103,14 @@ svg.editor-interface {
 }
 
 /* note .application is a domin, and .window is just some component using the window subclass*/
-.container-background.application, .container-background.window {
+.component-background.application, .component-background.window {
   /* filter: url(#shadow); */
   fill: var(--editor-foreground-secondary);
 
+  &.indicate {
+    fill: var(--editor-foreground-primary);
 
+  }
 
 }
 

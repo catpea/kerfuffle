@@ -11570,7 +11570,7 @@ svg.editor-interface {
   stroke: var(--editor-border);
   fill: var(--editor-background-secondary);
 }
-.container-background.application.editor {
+.component-background.application.editor {
   fill: var(--codemirror-dark);
 }
 .viewport-background {
@@ -11579,9 +11579,12 @@ svg.editor-interface {
   stroke: var(--editor-light);
   fill: var(--editor-background);
 }
-.container-background.application,
-.container-background.window {
+.component-background.application,
+.component-background.window {
   fill: var(--editor-foreground-secondary);
+  &.indicate {
+    fill: var(--editor-foreground-primary);
+  }
 }
 .editor-socket {
   stroke: var(--editor-primary);
