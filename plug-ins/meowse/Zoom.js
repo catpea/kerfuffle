@@ -1,3 +1,5 @@
+import translateCursor from '/plug-ins/translate-cursor/index.js';
+
 const segments = new Map(); // for debug
 
 export default class Zoom {
@@ -52,7 +54,11 @@ export default class Zoom {
       const OUTOF = -1;
       let zoomDirection = e.deltaY>0?OUTOF:INTO;
 
-     const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
+      console.info('switched to remote translateCursor this is experimental');
+     const [cursorX, cursorY] = translateCursor(e.clientX, e.clientY, this.transforms());
+
+     // const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
+
      const transformed = this.#translateZoom({ zoom: this.getter('zoom'), panX: this.getter('panX'), panY: this.getter('panY'), cursorX, cursorY, deltaZoom: zoomDirection, magnitude: this.magnitude });
 
       this.change(transformed);
@@ -80,8 +86,10 @@ export default class Zoom {
 
     let zoom1 = zoomClamp(zoom + (deltaZoom * controledMagnitude));
     const zoomChange = zoom1 - zoom;
-    const panX1 = panX - (cursorX * zoomChange) / zoom;
-    const panY1 = panY - (cursorY * zoomChange) / zoom;
+    console.info('switched to remote translateCursor this is experimental'); // uncomment //XXX / zoom; if broken
+
+    const panX1 = panX - (cursorX * zoomChange) //XXX / zoom;
+    const panY1 = panY - (cursorY * zoomChange) //XXX / zoom;
     const response = { zoom: zoom1, panX: panX1, panY: panY1 };
     return response;
   }

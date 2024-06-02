@@ -2192,6 +2192,36 @@
   };
   var Pan_default = Pan;
 
+  // plug-ins/translate-cursor/index.js
+  function translate(x0, y0, localList) {
+    let x1 = x0;
+    let y1 = y0;
+    let parentZoom = 1;
+    let locationX = 0;
+    let locationY = 0;
+    for (const [i, t] of localList.entries()) {
+      let curX = t.x * parentZoom;
+      locationX = locationX + curX;
+      let curY = t.y * parentZoom;
+      locationY = locationY + curY;
+      let curPanX = t.panX * parentZoom;
+      locationX = locationX + curPanX;
+      let curPanY = t.panY * parentZoom;
+      locationY = locationY + curPanY;
+      parentZoom = parentZoom * t.zoom;
+    }
+    x1 = x1 - locationX;
+    y1 = y1 - locationY;
+    const self = localList[localList.length - 1];
+    const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / self.zoom;
+    x1 = x1 / finalZoom;
+    y1 = y1 / finalZoom;
+    x1 = x1 / self.zoom;
+    y1 = y1 / self.zoom;
+    return [x1, y1];
+  }
+  __name(translate, "translate");
+
   // plug-ins/meowse/Zoom.js
   var Zoom = class {
     static {
@@ -2241,7 +2271,8 @@
         const INTO = 1;
         const OUTOF = -1;
         let zoomDirection = e.deltaY > 0 ? OUTOF : INTO;
-        const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
+        console.info("switched to remote translateCursor this is experimental");
+        const [cursorX, cursorY] = translate(e.clientX, e.clientY, this.transforms());
         const transformed = this.#translateZoom({ zoom: this.getter("zoom"), panX: this.getter("panX"), panY: this.getter("panY"), cursorX, cursorY, deltaZoom: zoomDirection, magnitude: this.magnitude });
         this.change(transformed);
         this.after(this);
@@ -2261,8 +2292,9 @@
       const controledMagnitude = magnitude * zoom;
       let zoom1 = zoomClamp(zoom + deltaZoom * controledMagnitude);
       const zoomChange = zoom1 - zoom;
-      const panX1 = panX - cursorX * zoomChange / zoom;
-      const panY1 = panY - cursorY * zoomChange / zoom;
+      console.info("switched to remote translateCursor this is experimental");
+      const panX1 = panX - cursorX * zoomChange;
+      const panY1 = panY - cursorY * zoomChange;
       const response = { zoom: zoom1, panX: panX1, panY: panY1 };
       return response;
     }
@@ -2382,36 +2414,6 @@
       this.area.removeEventListener("mouseup", this.mouseUpHandler);
     }
   };
-
-  // plug-ins/translate-cursor/index.js
-  function translate(x0, y0, localList) {
-    let x1 = x0;
-    let y1 = y0;
-    let parentZoom = 1;
-    let locationX = 0;
-    let locationY = 0;
-    for (const [i, t] of localList.entries()) {
-      let curX = t.x * parentZoom;
-      locationX = locationX + curX;
-      let curY = t.y * parentZoom;
-      locationY = locationY + curY;
-      let curPanX = t.panX * parentZoom;
-      locationX = locationX + curPanX;
-      let curPanY = t.panY * parentZoom;
-      locationY = locationY + curPanY;
-      parentZoom = parentZoom * t.zoom;
-    }
-    x1 = x1 - locationX;
-    y1 = y1 - locationY;
-    const self = localList[localList.length - 1];
-    const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / self.zoom;
-    x1 = x1 / finalZoom;
-    y1 = y1 / finalZoom;
-    x1 = x1 / self.zoom;
-    y1 = y1 / self.zoom;
-    return [x1, y1];
-  }
-  __name(translate, "translate");
 
   // plug-ins/meowse/Menu.js
   var Menu = class {
