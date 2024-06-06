@@ -4,7 +4,7 @@ import { front } from "/plug-ins/domek/index.js"
 import Horizontal from "/plug-ins/windows/Horizontal.js";
 import Control from "/plug-ins/windows/Control.js";
 import Label from "/plug-ins/windows/Label.js";
-import Anchor from "/plug-ins/windows/Anchor.js";
+// import Anchor from "/plug-ins/windows/Anchor.js";
 
 import debounce from "/plug-ins/debounce/index.js";
 import { svg, update, click } from "/plug-ins/domek/index.js"

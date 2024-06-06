@@ -1,5 +1,4 @@
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
-import Anchor from "/plug-ins/windows/Anchor.js";
 
 import Control from "/plug-ins/windows/Control.js";
 import { svg, html, update } from "/plug-ins/domek/index.js"

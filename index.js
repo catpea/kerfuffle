@@ -1079,16 +1079,6 @@
         if (multiSelect) {
         } else {
           if (this.component.selected) {
-            for (const item of globalThis.project.applications) {
-              if (this.component.id !== item.id) {
-                item.selected = false;
-              }
-            }
-            for (const item of globalThis.project.anchors) {
-              if (this.component.id !== item.id) {
-                item.selected = false;
-              }
-            }
           }
         }
       };
@@ -1099,107 +1089,139 @@
     }
   };
 
-  // plug-ins/connect/index.js
-  var uuid2 = bundle["uuid"];
-  var Connect = class {
+  // plug-ins/meowse/Drag.js
+  var Drag = class {
     static {
-      __name(this, "Connect");
+      __name(this, "Drag");
     }
-    parent;
-    anchor;
-    zone;
+    area = window;
+    handle = null;
+    scale = () => 1;
+    scene;
+    // before, movement, after can be set via constructor or by method overloading
+    before() {
+    }
+    movement({ x, y }) {
+    }
+    after() {
+    }
     mouseDownHandler;
     mouseMoveHandler;
     mouseUpHandler;
-    startX = 0;
-    startY = 0;
     dragging = false;
-    constructor({ parent, anchor, zone }) {
-      if (!parent)
-        throw new Error("parent is required");
-      if (!anchor)
-        throw new Error("anchor is required");
-      if (!zone)
-        throw new Error("zone is required");
-      this.parent = parent;
-      this.anchor = anchor;
-      this.zone = zone;
-      this.mount();
+    previousX = 0;
+    previousY = 0;
+    constructor({ handle, area, before, movement, after, scale, scene, component }) {
+      if (handle)
+        this.handle = handle;
+      if (area)
+        this.area = area;
+      if (before)
+        this.before = before;
+      if (movement)
+        this.movement = movement;
+      if (after)
+        this.after = after;
+      if (scale)
+        this.scale = scale;
+      if (scene)
+        this.scene = scene;
+      if (component)
+        this.component = component;
+      this.#mount();
     }
-    mount() {
+    #mount() {
       this.mouseDownHandler = (e) => {
-        this.line = svg.line({
-          class: "editor-anchor-line",
-          style: {
-            "pointer-events": "none"
-            /* required, otherwise the line will mousedrop on it self */
-          },
-          "vector-effect": "non-scaling-stroke"
-        });
-        this.anchor.scene.appendChild(this.line);
-        this.startX = e.clientX;
-        this.startY = e.clientY;
-        this.dragging = true;
-        globalThis.project.iframe = false;
-        this.zone.addEventListener("mousemove", this.mouseMoveHandler);
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+        this.area.addEventListener("mousemove", this.mouseMoveHandler);
+        this.before();
       };
       this.mouseMoveHandler = (e) => {
-        let dx = 0;
-        let dy = 0;
-        dx = e.clientX - this.startX;
-        dy = e.clientY - this.startY;
-        dx = dx + this.anchor.x * globalThis.project.zoom;
-        dy = dy + this.anchor.y * globalThis.project.zoom;
-        dx = dx / globalThis.project.zoom;
-        dy = dy / globalThis.project.zoom;
-        this.geometry = {
-          // origin of th eindicator line is the port
-          x1: this.anchor.x,
-          y1: this.anchor.y,
-          // target of the indicator line is where the cursor is dragging
-          x2: dx,
-          y2: dy
-        };
-        update(this.line, this.geometry);
-        dx = 0;
-        dy = 0;
+        let movementX = this.previousX - e.screenX;
+        let movementY = this.previousY - e.screenY;
+        const scale = this.scale();
+        movementX = movementX / scale;
+        movementY = movementY / scale;
+        let cancelX = false;
+        let cancelY = false;
+        this.movement({
+          x: movementX,
+          y: movementY,
+          cancelX: () => cancelX = true,
+          cancelY: () => cancelY = true,
+          destroy: () => this.destroy(),
+          stop: () => this.area.removeEventListener("mousemove", this.mouseMoveHandler)
+        });
+        if (!cancelX)
+          this.previousX = e.screenX;
+        if (!cancelY)
+          this.previousY = e.screenY;
       };
       this.mouseUpHandler = (e) => {
-        if (e.target == this.anchor) {
-          console.log("SELF");
-        }
-        const isOverAnotherPort = this.dragging && e?.target?.classList?.contains("editor-anchor");
-        const isOverBackground = this.dragging && e?.target?.classList?.contains("editor-background");
-        const origin = this.anchor.getRootContainer().node.origin;
-        if (isOverAnotherPort) {
-          const source = [this.anchor.name, this.anchor.getRootContainer().node.id].join(":");
-          const target = e.target.dataset.target;
-          if (source != target) {
-            globalThis.project.createNode({ meta: { id: uuid2(), type: "Line", source, target, origin }, data: {} });
-          }
-        }
-        if (isOverBackground) {
-          const junctionId = uuid2();
-          globalThis.project.createNode({ meta: { id: junctionId, type: "Junction", x: this.geometry.x2, y: this.geometry.y2, origin }, data: {} });
-          const source = [this.anchor.name, this.anchor.getRootContainer().node.id].join(":");
-          const target = ["input", junctionId].join(":");
-          globalThis.project.createNode({ meta: { id: uuid2(), type: "Line", source, target, origin }, data: {} });
-        }
-        if (this.line)
-          this.line.remove();
-        this.dragging = false;
-        globalThis.project.iframe = true;
-        this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
+        this.after();
+        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
       };
-      this.anchor.pad.addEventListener("mousedown", this.mouseDownHandler);
-      this.zone.addEventListener("mouseup", this.mouseUpHandler);
+      this.handle.addEventListener("mousedown", this.mouseDownHandler);
+      this.area.addEventListener("mouseup", this.mouseUpHandler);
     }
     destroy() {
-      this.anchor.pad.removeEventListener("mousedown", this.mouseDownHandler);
-      this.zone.removeEventListener("mousemove", this.mouseMoveHandler);
-      this.zone.removeEventListener("mouseup", this.mouseUpHandler);
+      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      this.area.removeEventListener("mouseup", this.mouseUpHandler);
     }
   };
+
+  // plug-ins/meowse/Connect.js
+  var Connect = class extends Drag {
+    static {
+      __name(this, "Connect");
+    }
+    line;
+    geometry = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    before() {
+      console.log(`Connect: before`);
+      this.line = svg.line({
+        class: "editor-anchor-line",
+        style: {
+          "pointer-events": "none"
+          /* required, otherwise the line will mousedrop on it self */
+        },
+        "vector-effect": "non-scaling-stroke"
+      });
+      this.geometry = {
+        x1: this.component.x,
+        y1: this.component.y,
+        x2: this.component.x,
+        // 0 length line
+        y2: this.component.y
+        // 0 length line
+      };
+      this.scene.appendChild(this.line);
+    }
+    movement({ x, y }) {
+      console.log(`Connect: movement`);
+      let dx = this.geometry.x2 - x;
+      let dy = this.geometry.y2 - y;
+      console.log({ dx, dy });
+      this.geometry = {
+        // origin of th eindicator line is the port
+        x1: this.component.x,
+        y1: this.component.y,
+        // target of the indicator line is where the cursor is dragging
+        x2: dx,
+        y2: dy
+      };
+      update(this.line, this.geometry);
+    }
+    after() {
+      console.log(`Connect: after`);
+      if (this.line)
+        this.scene.removeChild(this.line);
+      this.line = void 0;
+    }
+  };
+  var Connect_default = Connect;
 
   // plug-ins/windows/Socket.js
   var Anchor = class {
@@ -1226,38 +1248,42 @@
     methods = {
       initialize() {
         this.r = 8;
-        this.s = 2;
+        this.s = 4;
         this.w = this.r * 2;
         this.h = this.r * 2 + this.s;
         this.x = 0;
         this.y = 0;
       },
       mount() {
-        this.el.Primary = svg.circle({
+        this.el.Pad = svg.circle({
           name: this.name,
-          class: "editor-socket",
-          // 'vector-effect': 'non-scaling-stroke',
+          class: "editor-socket-pad",
+          "vector-effect": "non-scaling-stroke",
           r: this.r,
           cx: this.x,
           cy: this.y
         });
-        this.on("selected", (selected) => selected ? this.el.Primary.classList.add("selected") : this.el.Primary.classList.remove("selected"));
+        this.on("selected", (selected) => selected ? this.el.Pad.classList.add("selected") : this.el.Pad.classList.remove("selected"));
         const select = new Select({
           component: this,
-          handle: this.el.Primary
+          handle: this.el.Pad
         });
         this.destructable = () => select.destroy();
-        this.el.Primary.dataset.target = [this.name, this.getRootContainer().id].join(":");
-        this.pad = this.el.Primary;
-        this.on("name", (name2) => update(this.el.Primary, { name: name2 }));
-        this.on("x", (cx) => update(this.el.Primary, { cx }));
-        this.on("y", (cy) => update(this.el.Primary, { cy }));
-        this.on("r", (r) => update(this.el.Primary, { r }));
+        this.el.Pad.dataset.target = [this.name, this.getRootContainer().id].join(":");
+        this.pad = this.el.Pad;
+        this.on("name", (name2) => update(this.el.Pad, { name: name2 }));
+        this.on("x", (cx) => update(this.el.Pad, { cx }));
+        this.on("y", (cy) => update(this.el.Pad, { cy }));
+        this.on("r", (r) => update(this.el.Pad, { r }));
         this.appendElements();
-        const connect = new Connect({
-          anchor: this,
-          zone: window,
-          parent: this
+        const connect = new Connect_default({
+          area: window,
+          handle: this.el.Pad,
+          //.parent.getApplication().pane.viewport.background,
+          scale: () => this.getScale(this),
+          // ---
+          scene: this.scene,
+          component: this
         });
         this.destructable = () => connect.destroy();
       },
@@ -1421,31 +1447,6 @@
       return response;
     }
   };
-  var AnchorLayout = class extends Layout {
-    static {
-      __name(this, "AnchorLayout");
-    }
-    manage(child) {
-      child.x = this.calculateChildX(child);
-      child.y = this.calculateChildY(child);
-      this.parent.on("x", () => child.x = this.calculateChildX(child));
-      this.parent.on("y", () => child.y = this.calculateChildY(child));
-      this.parent.on("w", () => child.x = this.calculateChildX(child));
-      this.parent.on("h", () => child.y = this.calculateChildY(child));
-    }
-    calculateChildX(child) {
-      if (!child.side) {
-        return this.parent.x - child.r - child.s;
-      } else {
-        return this.parent.x + this.parent.w + child.r + child.s;
-      }
-      this.parent.b + this.parent.p;
-    }
-    calculateChildY(child) {
-      const response = this.parent.y + this.parent.b + this.parent.p + child.r + this.above(this.parent, child).filter((o) => o.side == child.side).reduce((total, child2) => total + child2.h, 0) + this.parent.s * 2 * this.above(this.parent, child).length;
-      return response;
-    }
-  };
   var SocketLayout = class extends Layout {
     static {
       __name(this, "SocketLayout");
@@ -1604,89 +1605,8 @@
     };
   };
 
-  // plug-ins/windows/Anchor.js
-  var Anchor2 = class {
-    static {
-      __name(this, "Anchor");
-    }
-    static extends = [Component];
-    properties = {
-      pad: null
-    };
-    observables = {
-      side: 0,
-      color: "transparent"
-    };
-    constraints = {
-      mount: {
-        ".scene is required": function() {
-          if (!this.scene) {
-            return { error: ".svg not found" };
-          }
-        }
-      }
-    };
-    methods = {
-      initialize() {
-        this.r = 8;
-        this.s = 4;
-        this.w = this.r * 2;
-        this.h = this.r * 2 + this.s;
-        this.x = 0;
-        this.y = 0;
-      },
-      mount() {
-        this.el.Primary = svg.circle({
-          name: this.name,
-          class: "editor-anchor",
-          "vector-effect": "non-scaling-stroke",
-          r: this.r,
-          cx: this.x,
-          cy: this.y
-        });
-        this.on("selected", (selected) => selected ? this.el.Primary.classList.add("selected") : this.el.Primary.classList.remove("selected"));
-        const select = new Select({
-          component: this,
-          handle: this.el.Primary
-        });
-        this.destructable = () => select.destroy();
-        this.el.Primary.dataset.target = [this.name, this.getRootContainer().id].join(":");
-        this.pad = this.el.Primary;
-        this.on("name", (name2) => update(this.el.Primary, { name: name2 }));
-        this.on("x", (cx) => update(this.el.Primary, { cx }));
-        this.on("y", (cy) => update(this.el.Primary, { cy }));
-        this.on("r", (r) => update(this.el.Primary, { r }));
-        this.appendElements();
-        const connect = new Connect({
-          anchor: this,
-          zone: window,
-          parent: this
-        });
-        this.destructable = () => connect.destroy();
-      },
-      destroy() {
-        this.removeElements();
-      }
-    };
-  };
-
   // plug-ins/pipe/Pipe.js
   var EventEmitter2 = bundle["events"];
-  var Pipe = class extends EventEmitter2 {
-    static {
-      __name(this, "Pipe");
-    }
-    id;
-    direction;
-    constructor(id2, direction) {
-      super();
-      this.id = id2;
-      this.direction = direction;
-    }
-    input(data) {
-      console.log("pipe got input", data);
-    }
-  };
 
   // plug-ins/windows/Control.js
   var Control = class {
@@ -1695,10 +1615,10 @@
     }
     static extends = [Component];
     properties = {
-      anchorage: null
+      // anchorage: null,
     };
     observables = {
-      anchors: []
+      // anchors:[],
     };
     constraints = {
       mount: {
@@ -1713,53 +1633,40 @@
       initialize() {
       },
       mount() {
-        this.anchorage = new AnchorLayout(this, { source: "anchors" });
-        this.on("anchors.created", (anchor) => {
-          anchor.start();
-          this.createPipe(anchor.name, anchor.side);
-          this.anchorage.manage(anchor);
-        }, { replay: true });
-        this.on("anchors.removed", (anchor) => {
-          anchor.stop();
-          this.removePipe(anchor.name);
-          this.removeControlAnchor(anchor.id);
-          this.anchorage.forget(anchor);
-        });
-        this.appendElements();
       },
-      createPipe(name2, direction) {
-        const id2 = [name2, this.getRootContainer().id].join(":");
-        const pipe = new Pipe(id2, direction);
-        const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-        origin.root.pipes.create(pipe);
-      },
-      removePipe(name2) {
-        const id2 = [name2, this.getRootContainer().id].join(":");
-        const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-        origin.root.pipes.get(id2).stop();
-        origin.root.pipes.remove(id2);
-      },
-      createControlAnchor({ name: name2, side }) {
-        console.log("TODO: createControlAnchor is disabled");
-        return;
-        if (!name2)
-          throw new Error(`It is not possible to create an anchor without an anchor name.`);
-        if (!side === void 0)
-          throw new Error(`It is not possible to create an anchor without specifying a side, 0 or 1.`);
-        const id2 = [name2, this.getRootContainer().id].join(":");
-        const anchor = new Instance(Anchor2, { id: id2, name: name2, side, parent: this, scene: this.scene });
-        const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-        origin.root.anchors.create(anchor);
-        this.anchors.create(anchor);
-      },
-      removeControlAnchor(id2) {
-        this.anchors.remove(id2);
-        const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
-        origin.root.anchors.remove(id2);
-      },
+      //
+      // createPipe(name, direction){
+      //   const id = [name, this.getRootContainer().id].join(':');
+      //   const pipe = new Pipe(id, direction);
+      //   const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
+      //   origin.root.pipes.create(pipe);
+      // },
+      //
+      // removePipe(name){
+      //   const id = [name, this.getRootContainer().id].join(':');
+      //   const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
+      //   origin.root.pipes.get(id).stop();
+      //   origin.root.pipes.remove(id);
+      // },
+      // createControlAnchor({name, side}){
+      //   console.log('TODO: createControlAnchor is disabled');
+      //   return
+      //   if(!name) throw new Error(`It is not possible to create an anchor without an anchor name.`);
+      //   if(!side===undefined) throw new Error(`It is not possible to create an anchor without specifying a side, 0 or 1.`);
+      //   const id = [name, this.getRootContainer().id].join(':')
+      //   const anchor = new Instance(Anchor, { id, name, side, parent: this, scene: this.scene } )
+      //   const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
+      //   origin.root.anchors.create(anchor);
+      //   this.anchors.create(anchor);
+      // },
+      //
+      // removeControlAnchor(id){
+      //   this.anchors.remove(id);
+      //   const origin = globalThis.project.origins.get(this.getRootContainer().node.origin);
+      //   origin.root.anchors.remove(id);
+      // },
+      //
       destroy() {
-        console.warn("TODO: DESTROY ALL ANCHORS");
-        console.warn("TODO: STOP ANCHORAGE");
         this.removeElements();
       }
     };
@@ -1981,77 +1888,6 @@
     };
   };
 
-  // plug-ins/meowse/Drag.js
-  var Drag = class {
-    static {
-      __name(this, "Drag");
-    }
-    area = window;
-    handle = null;
-    scale;
-    before = () => {
-    };
-    movement = () => {
-    };
-    after = () => {
-    };
-    mouseDownHandler;
-    mouseMoveHandler;
-    mouseUpHandler;
-    dragging = false;
-    previousX = 0;
-    previousY = 0;
-    constructor({ handle, area, before, movement, after, scale }) {
-      this.handle = handle;
-      this.area = area;
-      this.before = before;
-      this.movement = movement;
-      this.after = after;
-      this.scale = scale;
-      this.#mount();
-    }
-    #mount() {
-      this.mouseDownHandler = (e) => {
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-        this.area.addEventListener("mousemove", this.mouseMoveHandler);
-        this.before();
-      };
-      this.mouseMoveHandler = (e) => {
-        let movementX = this.previousX - e.screenX;
-        let movementY = this.previousY - e.screenY;
-        const scale = this.scale();
-        movementX = movementX / scale;
-        movementY = movementY / scale;
-        let cancelX = false;
-        let cancelY = false;
-        this.movement({
-          x: movementX,
-          y: movementY,
-          cancelX: () => cancelX = true,
-          cancelY: () => cancelY = true,
-          destroy: () => this.destroy(),
-          stop: () => this.area.removeEventListener("mousemove", this.mouseMoveHandler)
-        });
-        if (!cancelX)
-          this.previousX = e.screenX;
-        if (!cancelY)
-          this.previousY = e.screenY;
-      };
-      this.mouseUpHandler = (e) => {
-        this.after();
-        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
-      };
-      this.handle.addEventListener("mousedown", this.mouseDownHandler);
-      this.area.addEventListener("mouseup", this.mouseUpHandler);
-    }
-    destroy() {
-      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
-      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
-      this.area.removeEventListener("mouseup", this.mouseUpHandler);
-    }
-  };
-
   // plug-ins/meowse/Move.js
   var Move = class extends Drag {
     static {
@@ -2177,8 +2013,6 @@
     methods = {
       initialize() {
         this.controller = new EventEmitter();
-        this.intervalId = setInterval((x) => this.controller.emit("step"), 666);
-        this.controller.emit("step");
         this.getRoot().origins.create(this);
       }
     };
@@ -3962,7 +3796,7 @@
   var emitter_network_default = components;
 
   // plug-ins/windows/Pane.js
-  var uuid3 = bundle["uuid"];
+  var uuid2 = bundle["uuid"];
   var cheerio = bundle["cheerio"];
   var libraries = {
     "emitter-network": emitter_network_default
@@ -4015,7 +3849,7 @@
               [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
             ], (c) => this.children.create(c));
             this.disposable = click(addButton.handle, (e) => {
-              const id2 = uuid3();
+              const id2 = uuid2();
               const node = new Instance(Node, { id: id2, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
               this.elements.create(node);
             });

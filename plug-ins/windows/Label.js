@@ -1,7 +1,7 @@
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 
 import Control from "/plug-ins/windows/Control.js";
-import Anchor from "/plug-ins/windows/Anchor.js";
+// import Anchor from "/plug-ins/windows/Anchor.js";
 import { svg, update, click, text } from "/plug-ins/domek/index.js"
 
 export default class Label {

@@ -11588,7 +11588,7 @@ svg.editor-interface {
     fill: var(--editor-foreground-primary);
   }
 }
-.editor-socket {
+.editor-socket-pad {
   stroke: var(--editor-primary);
   fill: var(--fedora-dark);
   stroke-width: 2;

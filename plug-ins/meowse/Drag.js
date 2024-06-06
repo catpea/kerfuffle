@@ -2,12 +2,19 @@ export default class Drag {
 
   area = window;
   handle = null;
+  scale = ()=>1;
+  scene;
 
-  scale;
+  // before, movement, after can be set via constructor or by method overloading
+  before(){
+  }
 
-  before = ()=>{};
-  movement = ()=>{};
-  after = ()=>{};
+  movement({x,y}){
+  }
+
+  after(){
+  }
+
 
   mouseDownHandler;
   mouseMoveHandler;
@@ -17,14 +24,17 @@ export default class Drag {
   previousX = 0;
   previousY = 0;
 
-  constructor({handle, area, before, movement, after, scale}){
-    this.handle = handle;
-    this.area = area;
-    this.before = before;
-    this.movement = movement;
-    this.after = after;
+  constructor({handle, area, before, movement, after, scale, scene, component}){
 
-    this.scale = scale;
+    if(handle) this.handle = handle;
+    if(area)  this.area = area;
+    if(before) this.before = before;
+    if(movement) this.movement = movement;
+    if(after) this.after = after;
+
+    if(scale) this.scale = scale;
+    if(scene) this.scene = scene;
+    if(component) this.component = component;
 
 
     this.#mount();
@@ -65,7 +75,9 @@ export default class Drag {
         destroy:()=>this.destroy(),
         stop:()=>this.area.removeEventListener('mousemove', this.mouseMoveHandler)
 
-      })
+      });
+
+
       if(!cancelX) this.previousX = e.screenX
       if(!cancelY) this.previousY = e.screenY
 

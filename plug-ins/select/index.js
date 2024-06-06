@@ -31,16 +31,16 @@ export default class Select {
       }else{
         if(this.component.selected){
 
-          for (const item of globalThis.project.applications) {
-            if(this.component.id !== item.id){
-              item.selected = false;
-            }
-          }
-          for (const item of globalThis.project.anchors) {
-            if(this.component.id !== item.id){
-              item.selected = false;
-            }
-          }
+          // for (const item of globalThis.project.applications) {
+          //   if(this.component.id !== item.id){
+          //     item.selected = false;
+          //   }
+          // }
+          // for (const item of globalThis.project.anchors) {
+          //   if(this.component.id !== item.id){
+          //     item.selected = false;
+          //   }
+          // }
 
 
         }
