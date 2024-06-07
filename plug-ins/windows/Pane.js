@@ -231,7 +231,7 @@ export default class Pane {
                 id:1,
                 origin: this.getApplication().id,
                 type:className,
-                // 
+                //
                 // x:tx/this.zoom,
                 // y:ty/this.zoom,
 
@@ -327,6 +327,14 @@ export default class Pane {
         node.assign({type:el.name, ...el.attribs}, data, [$, $(el).children()]);
         this.elements.create( node ); // -> see project #onStart for creation.
       }
+    },
+
+
+    createNode(meta, data, content){
+      console.log(meta, data, content);
+      const node = new Instance(Node, { origin: this.getApplication().id });
+      node.assign(meta, data, content);
+      this.elements.create( node ); // -> see project #onStart for creation.
     },
 
 

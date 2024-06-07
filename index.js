@@ -1094,6 +1094,7 @@
     static {
       __name(this, "Drag");
     }
+    dragging = false;
     area = window;
     handle = null;
     scale = () => 1;
@@ -1134,8 +1135,9 @@
       this.mouseDownHandler = (e) => {
         this.previousX = e.screenX;
         this.previousY = e.screenY;
+        this.dragging = true;
         this.area.addEventListener("mousemove", this.mouseMoveHandler);
-        this.before();
+        this.before({ e });
       };
       this.mouseMoveHandler = (e) => {
         let movementX = this.previousX - e.screenX;
@@ -1143,24 +1145,16 @@
         const scale = this.scale();
         movementX = movementX / scale;
         movementY = movementY / scale;
-        let cancelX = false;
-        let cancelY = false;
-        this.movement({
-          x: movementX,
-          y: movementY,
-          cancelX: () => cancelX = true,
-          cancelY: () => cancelY = true,
-          destroy: () => this.destroy(),
-          stop: () => this.area.removeEventListener("mousemove", this.mouseMoveHandler)
-        });
-        if (!cancelX)
-          this.previousX = e.screenX;
-        if (!cancelY)
-          this.previousY = e.screenY;
+        this.movement({ e, x: movementX, y: movementY });
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
       };
       this.mouseUpHandler = (e) => {
-        this.after();
+        if (!this.dragging)
+          return;
         this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+        this.after({ e });
+        this.dragging = false;
       };
       this.handle.addEventListener("mousedown", this.mouseDownHandler);
       this.area.addEventListener("mouseup", this.mouseUpHandler);
@@ -1173,6 +1167,7 @@
   };
 
   // plug-ins/meowse/Connect.js
+  var uuid2 = bundle["uuid"];
   var Connect = class extends Drag {
     static {
       __name(this, "Connect");
@@ -1200,7 +1195,7 @@
       this.scene.appendChild(this.line);
     }
     movement({ x, y }) {
-      console.log(`Connect: movement`);
+      console.log(`Connect: movement`, this.component.id);
       let dx = this.geometry.x2 - x;
       let dy = this.geometry.y2 - y;
       console.log({ dx, dy });
@@ -1214,11 +1209,27 @@
       };
       update(this.line, this.geometry);
     }
-    after() {
-      console.log(`Connect: after`);
+    after({ e }) {
       if (this.line)
         this.scene.removeChild(this.line);
       this.line = void 0;
+      const isOverSelf = e.target == this.handle;
+      if (isOverSelf)
+        return;
+      const isOverAnotherPort = e?.target?.classList?.contains("editor-socket-pad");
+      const isOverBackground = e?.target?.classList?.contains("viewport-background");
+      if (isOverAnotherPort) {
+        const control = e.target.dataset.control;
+        const port = e.target.dataset.port;
+        this.component.getApplication().pane.createNode({
+          id: uuid2(),
+          type: "Pipe",
+          from: this.component.control.id,
+          out: this.component.name,
+          to: control,
+          in: port
+        });
+      }
     }
   };
   var Connect_default = Connect;
@@ -1233,6 +1244,8 @@
       pad: null
     };
     observables = {
+      control: null,
+      // parent who holds the socket, set by socket api
       side: 0,
       color: "transparent"
     };
@@ -1258,6 +1271,8 @@
         this.el.Pad = svg.circle({
           name: this.name,
           class: "editor-socket-pad",
+          "data-control": this.control.id,
+          "data-port": this.name,
           "vector-effect": "non-scaling-stroke",
           r: this.r,
           cx: this.x,
@@ -1269,7 +1284,6 @@
           handle: this.el.Pad
         });
         this.destructable = () => select.destroy();
-        this.el.Pad.dataset.target = [this.name, this.getRootContainer().id].join(":");
         this.pad = this.el.Pad;
         this.on("name", (name2) => update(this.el.Pad, { name: name2 }));
         this.on("x", (cx) => update(this.el.Pad, { cx }));
@@ -1279,7 +1293,6 @@
         const connect = new Connect_default({
           area: window,
           handle: this.el.Pad,
-          //.parent.getApplication().pane.viewport.background,
           scale: () => this.getScale(this),
           // ---
           scene: this.scene,
@@ -3582,7 +3595,7 @@
     };
     methods = {
       initialize() {
-        this.caption = this.oo.name;
+        this.caption = `${this.oo.name} (${this.id})`;
         this.createSocket("in", 0);
         this.createSocket("function", 0);
         this.createSocket("out", 1);
@@ -3796,7 +3809,7 @@
   var emitter_network_default = components;
 
   // plug-ins/windows/Pane.js
-  var uuid2 = bundle["uuid"];
+  var uuid3 = bundle["uuid"];
   var cheerio = bundle["cheerio"];
   var libraries = {
     "emitter-network": emitter_network_default
@@ -3849,7 +3862,7 @@
               [Label, { h: 24, text: "", flexible: true, parent: this }, (c, p2) => p2.children.create(c)]
             ], (c) => this.children.create(c));
             this.disposable = click(addButton.handle, (e) => {
-              const id2 = uuid2();
+              const id2 = uuid3();
               const node = new Instance(Node, { id: id2, origin: this.getRootContainer().id, type: "Junction", x: 300, y: 300, data: {} });
               this.elements.create(node);
             });
@@ -3937,7 +3950,7 @@
                   id: 1,
                   origin: this.getApplication().id,
                   type: className,
-                  // 
+                  //
                   // x:tx/this.zoom,
                   // y:ty/this.zoom,
                   x: tx,
@@ -4024,6 +4037,12 @@
           node.assign({ type: el.name, ...el.attribs }, data, [$, $(el).children()]);
           this.elements.create(node);
         }
+      },
+      createNode(meta, data, content) {
+        console.log(meta, data, content);
+        const node = new Instance(Node, { origin: this.getApplication().id });
+        node.assign(meta, data, content);
+        this.elements.create(node);
       }
     };
   };
@@ -4999,12 +5018,14 @@
         });
         this.desctructible = this.any("from out", ({ from: nodeId, out: portName }) => {
           const socketId = [nodeId, portName].join("/");
+          console.log("from out", socketId);
           const socket = this.getApplication().socketRegistry.get(socketId);
           socket.on("x", (x) => this.x1 = x);
           socket.on("y", (y) => this.y1 = y);
         });
         this.desctructible = this.any("to in", ({ to: nodeId, in: portName }) => {
           const socketId = [nodeId, portName].join("/");
+          console.log("to in", socketId);
           const socket = this.getApplication().socketRegistry.get(socketId);
           socket.on("x", (x) => this.x2 = x);
           socket.on("y", (y) => this.y2 = y);

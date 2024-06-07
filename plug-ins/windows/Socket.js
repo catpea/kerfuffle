@@ -16,6 +16,7 @@ export default class Anchor {
   };
 
   observables = {
+    control: null, // parent who holds the socket, set by socket api
     side: 0,
     color: 'transparent',
   };
@@ -50,6 +51,8 @@ export default class Anchor {
       this.el.Pad = svg.circle({
         name: this.name,
         class: 'editor-socket-pad',
+        'data-control': this.control.id,
+        'data-port': this.name,
         'vector-effect': 'non-scaling-stroke',
         r: this.r,
         cx: this.x,
@@ -63,7 +66,6 @@ export default class Anchor {
         handle: this.el.Pad,
       }); this.destructable = ()=>select.destroy()
 
-      this.el.Pad.dataset.target = [this.name, this.getRootContainer().id].join(':')
 
       this.pad = this.el.Pad;
 
@@ -73,16 +75,9 @@ export default class Anchor {
       this.on('r',      r=>update(this.el.Pad,{r}),     );
       this.appendElements();
 
-      // OLD CONNECT
-      // const connect = new Connect({
-      //   anchor: this,
-      //   zone: this.getApplication().pane.viewport.background,
-      //   parent: this,
-      // }); this.destructable = ()=>connect.destroy()
-
       const connect = new Connect({
         area: window,
-        handle: this.el.Pad, //.parent.getApplication().pane.viewport.background,
+        handle: this.el.Pad,
         scale: ()=>this.getScale(this),
         // ---
         scene: this.scene,

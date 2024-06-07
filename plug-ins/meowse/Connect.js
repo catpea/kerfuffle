@@ -1,4 +1,5 @@
 import { svg, update } from "/plug-ins/domek/index.js"
+const uuid = bundle['uuid'];
 
 import Drag from "/plug-ins/meowse/Drag.js";
 
@@ -16,7 +17,7 @@ class Connect extends Drag {
       },
       'vector-effect': 'non-scaling-stroke',
     });
-    
+
     this.geometry = {
       x1: this.component.x,
       y1: this.component.y,
@@ -27,7 +28,7 @@ class Connect extends Drag {
   }
 
   movement({x,y}){
-    console.log(`Connect: movement`);
+    console.log(`Connect: movement`, this.component.id);
     let dx = this.geometry.x2 - x;
     let dy = this.geometry.y2 - y;
 
@@ -46,10 +47,32 @@ class Connect extends Drag {
 
   }
 
-  after(){
-    console.log(`Connect: after`);
+  after({e}){
+
+    //NOTE: Remove the line before returning from over-self
+
     if(this.line) this.scene.removeChild(this.line);
     this.line = undefined;
+
+    const isOverSelf = e.target == this.handle;
+    if(isOverSelf) return;
+
+    const isOverAnotherPort = e?.target?.classList?.contains('editor-socket-pad');
+    const isOverBackground = e?.target?.classList?.contains('viewport-background');
+
+    if(isOverAnotherPort){
+      const control = e.target.dataset.control;
+      const port = e.target.dataset.port;
+      this.component.getApplication().pane.createNode({
+        id: uuid(),
+        type: 'Pipe',
+        from: this.component.control.id,
+        out: this.component.name,
+        to: control,
+        in: port,
+      })
+    }
+
   }
 
 }

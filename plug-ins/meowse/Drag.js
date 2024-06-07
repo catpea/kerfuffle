@@ -1,5 +1,7 @@
 export default class Drag {
 
+  dragging = false;
+
   area = window;
   handle = null;
   scale = ()=>1;
@@ -43,49 +45,40 @@ export default class Drag {
   #mount(){
 
     this.mouseDownHandler = (e) => {
+
       this.previousX = e.screenX;
       this.previousY = e.screenY;
+
+      this.dragging = true;
       this.area.addEventListener('mousemove', this.mouseMoveHandler);
-      this.before();
+
+      this.before({e});
     };
 
     this.mouseMoveHandler = (e) => {
-      // console.log( 'HIT!', e.target );
-      // if(e.target !== this.handle) return;
-      // e.preventDefault();
-      // e.stopPropagation();
+
       let movementX = this.previousX - e.screenX;
       let movementY = this.previousY - e.screenY;
 
-      // correct drag speed
-      // const localList = this.transforms();
-      // const self = localList[localList.length-1];
-      // const finalZoom = localList.map(o=>o.zoom).reduce((a,c)=>a*c,1)/self.zoom;
       const scale = this.scale();
+
       movementX = movementX/scale;
       movementY = movementY/scale;
-      // correct drag speed
 
-      let cancelX = false;
-      let cancelY = false;
-      this.movement({ x:movementX, y:movementY,
+      this.movement({e, x:movementX, y:movementY });
 
-        cancelX:()=>cancelX=true,
-        cancelY:()=>cancelY=true,
-        destroy:()=>this.destroy(),
-        stop:()=>this.area.removeEventListener('mousemove', this.mouseMoveHandler)
-
-      });
-
-
-      if(!cancelX) this.previousX = e.screenX
-      if(!cancelY) this.previousY = e.screenY
+      this.previousX = e.screenX
+      this.previousY = e.screenY
 
      };
 
     this.mouseUpHandler = (e) => {
-      this.after();
+      if(!this.dragging) return;
       this.area.removeEventListener('mousemove', this.mouseMoveHandler);
+
+      this.after({e});
+      this.dragging = false;
+
     };
 
     this.handle.addEventListener('mousedown', this.mouseDownHandler);

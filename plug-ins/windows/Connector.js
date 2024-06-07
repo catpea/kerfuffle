@@ -71,6 +71,7 @@ export default class Connector {
 
       this.desctructible = this.any('from out', ({from:nodeId, out:portName})=>{
         const socketId = [nodeId, portName].join('/');
+        console.log('from out', socketId);
         const socket = this.getApplication().socketRegistry.get(socketId);
         socket.on('x', x=>this.x1=x)
         socket.on('y', y=>this.y1=y)
@@ -78,6 +79,7 @@ export default class Connector {
 
       this.desctructible = this.any('to in', ({to:nodeId, in:portName})=>{
         const socketId = [nodeId, portName].join('/');
+        console.log('to in', socketId);
         const socket = this.getApplication().socketRegistry.get(socketId);
         socket.on('x', x=>this.x2=x)
         socket.on('y', y=>this.y2=y)

@@ -21,7 +21,7 @@ export default class Filter {
   methods = {
 
     initialize (){
-      this.caption = this.oo.name;
+      this.caption = `${this.oo.name} (${this.id})`;
 
       this.createSocket('in', 0);
       this.createSocket('function', 0);
