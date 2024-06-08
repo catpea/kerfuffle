@@ -1195,15 +1195,11 @@
       this.scene.appendChild(this.line);
     }
     movement({ x, y }) {
-      console.log(`Connect: movement`, this.component.id);
       let dx = this.geometry.x2 - x;
       let dy = this.geometry.y2 - y;
-      console.log({ dx, dy });
       this.geometry = {
-        // origin of th eindicator line is the port
         x1: this.component.x,
         y1: this.component.y,
-        // target of the indicator line is where the cursor is dragging
         x2: dx,
         y2: dy
       };
@@ -1221,6 +1217,7 @@
       if (isOverAnotherPort) {
         const control = e.target.dataset.control;
         const port = e.target.dataset.port;
+        console.log(`Creating a node in ${this.component.getApplication().id}`);
         this.component.getApplication().pane.createNode({
           id: uuid2(),
           type: "Pipe",
@@ -1229,6 +1226,7 @@
           to: control,
           in: port
         });
+        console.log("Node result", this.component.getApplication().id, this.component.getApplication().socketRegistry.raw.map((o) => o.id));
       }
     }
   };
@@ -1542,14 +1540,20 @@
       initialize() {
         this.pipe = new EventEmitter();
         this.socketLayout = new SocketLayout(this, { source: "sockets" });
+        let parent;
+        if (this.parent) {
+          parent = this.parent.getApplication();
+        } else {
+          parent = this.getApplication();
+        }
         this.on("sockets.created", (socket) => {
           socket.start();
           this.socketLayout.manage(socket);
-          this.getApplication().socketRegistry.create(socket);
+          parent.getApplication().socketRegistry.create(socket);
         }, { replay: true });
         this.on("sockets.removed", (socket) => {
           socket.stop();
-          this.getApplication().socketRegistry.remove(id);
+          parent.getApplication().socketRegistry.remove(id);
           this.removeControlAnchor(socket.id);
           this.socketLayout.forget(socket);
         });
@@ -1560,7 +1564,7 @@
         if (!side === void 0)
           throw new Error(`It is not possible to create an socket without specifying a side, 0 or 1.`);
         const id2 = [this.id, name2].join("/");
-        const socket = new Instance(Anchor, { id: id2, name: name2, side, parent: this, control: this, scene: this.scene });
+        const socket = new Instance(Anchor, { id: id2, name: name2, side, parent: this.parent, control: this, scene: this.scene });
         this.sockets.create(socket);
       },
       removeSocket(id2) {
@@ -1967,6 +1971,7 @@
           this.b = 5;
           this.s = 3;
         }
+        this.caption = `${this.oo.name} (${this.id})`;
       },
       mount() {
         this.draw();
@@ -3911,11 +3916,14 @@
         this.on("panY", (panY) => paneBody.panY = panY);
         this.on("zoom", (zoom2) => paneBody.zoom = zoom2);
         this.on("elements.created", (node) => {
+          console.log(`elements.created (application=${this.getApplication().id})`, this.elements.raw.map((o) => o.id));
+          console.log(`elements.created (application=${this.getApplication().id})`, this.getApplication().socketRegistry.raw.map((o) => o.id));
           const Ui = this.components[node.type] || this.components["Hello"];
           if (!Ui)
             return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
           let root = svg.g({ id: node.id, name: "element" });
           paneBody.content.appendChild(root);
+          console.log("Creating", node.type);
           const options = { node, scene: root, parent: this, id: node.id, content: node.content, library: node.library };
           const attributes = {};
           for (const name2 of node.oo.attributes) {
@@ -4043,6 +4051,7 @@
         const node = new Instance(Node, { origin: this.getApplication().id });
         node.assign(meta, data, content);
         this.elements.create(node);
+        console.log("post:createNode", this.elements.raw.map((o) => o.id));
       }
     };
   };
@@ -5018,7 +5027,9 @@
         });
         this.desctructible = this.any("from out", ({ from: nodeId, out: portName }) => {
           const socketId = [nodeId, portName].join("/");
-          console.log("from out", socketId);
+          console.log("from out", socketId, this.getApplication().id);
+          console.log(`this.any from out (application=${this.getApplication().id})`, this.getApplication().pane.elements.raw.map((o) => o.id));
+          console.log(`this.any from out (application=${this.getApplication().id})`, this.getApplication().socketRegistry.raw.map((o) => o.id));
           const socket = this.getApplication().socketRegistry.get(socketId);
           socket.on("x", (x) => this.x1 = x);
           socket.on("y", (y) => this.y1 = y);
@@ -5132,6 +5143,10 @@
         const node = new Instance(Node, { id: "0", origin: "0", url: this.url, type: "Workspace", data: {} });
         this.rootWindow = new Instance(components_default.Workspace, { id: node.id, node, svg: this.svg, scene: this.scene, parent: null, origins: this.origins, isRootWindow: true });
         this.rootWindow.start();
+        setTimeout(
+          (x) => console.log("qqq ROOT WINDOW SOCKET REGISTRY", this.rootWindow.socketRegistry.raw.map((o) => o.id)),
+          2222
+        );
         const onResize = /* @__PURE__ */ __name(() => {
           this.rootWindow.w = this.svg.clientWidth;
           this.rootWindow.h = this.svg.clientHeight;

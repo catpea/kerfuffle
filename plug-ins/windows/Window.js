@@ -41,11 +41,14 @@ export default class Window {
 
 
     initialize(){
+
       if(!this.isRootWindow){
         this.r = 5;
         this.b = 5;
         this.s = 3;
       }
+
+      this.caption = `${this.oo.name} (${this.id})`;
     },
 
     mount(){

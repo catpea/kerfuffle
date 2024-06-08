@@ -71,7 +71,10 @@ export default class Connector {
 
       this.desctructible = this.any('from out', ({from:nodeId, out:portName})=>{
         const socketId = [nodeId, portName].join('/');
-        console.log('from out', socketId);
+        console.log('from out', socketId, this.getApplication().id);
+        console.log(`this.any from out (application=${this.getApplication().id})`, this.getApplication().pane.elements.raw.map(o=>o.id));
+        console.log(`this.any from out (application=${this.getApplication().id})`, this.getApplication().socketRegistry.raw.map(o=>o.id));
+
         const socket = this.getApplication().socketRegistry.get(socketId);
         socket.on('x', x=>this.x1=x)
         socket.on('y', y=>this.y1=y)

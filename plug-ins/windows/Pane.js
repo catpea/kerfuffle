@@ -178,6 +178,8 @@ export default class Pane {
       this.on("elements.created", (node) => {
 
         // console.log('XXX this.components', node.type, this.components[node.type]?'OK':'X', this.components);
+        console.log(`elements.created (application=${this.getApplication().id})`, this.elements.raw.map(o=>o.id));
+        console.log(`elements.created (application=${this.getApplication().id})`, this.getApplication().socketRegistry.raw.map(o=>o.id));
 
         const Ui = this.components[node.type]||this.components['Hello'];
         if(!Ui) return console.warn(`Skipped Unrecongnized Component Type "${node.type}"`);
@@ -185,7 +187,9 @@ export default class Pane {
         let root = svg.g({ id:node.id, name: 'element' });
         paneBody.content.appendChild(root);
 
+        console.log('Creating', node.type);
         const options = { node, scene: root, parent: this, id:node.id, content:node.content, library:node.library };
+
         const attributes = {};
         for (const name of node.oo.attributes) { attributes[name] = node[name] }
         const ui = new Instance(Ui, Object.assign(attributes, options));
@@ -335,6 +339,7 @@ export default class Pane {
       const node = new Instance(Node, { origin: this.getApplication().id });
       node.assign(meta, data, content);
       this.elements.create( node ); // -> see project #onStart for creation.
+      console.log('post:createNode', this.elements.raw.map(o=>o.id));
     },
 
 
