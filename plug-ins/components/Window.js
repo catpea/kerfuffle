@@ -69,6 +69,8 @@ export default class Window {
       this.on("node", (node) => {
         node.on("url", url => this.pane.url = url);
         node.on("zoom", zoom => this.pane.zoom = zoom);
+        this.pane.on("zoom", zoom => this.zoom = zoom);
+
        });
 
       this.createWindowComponent( this.pane );
