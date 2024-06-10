@@ -31,12 +31,6 @@ export default class System {
       this.rootWindow = new Instance(components.Workspace, {id:node.id, node, svg:this.svg, scene:this.scene, parent:null, origins:this.origins, isRootWindow: true});
       this.rootWindow.start()
 
-      setTimeout(
-        x=>console.log('qqq ROOT WINDOW SOCKET REGISTRY', this.rootWindow.socketRegistry.raw.map(o=>o.id)),
-        2222
-      )
-
-
       const onResize = () => {
         this.rootWindow.w = this.svg.clientWidth;
         this.rootWindow.h = this.svg.clientHeight;

@@ -744,6 +744,65 @@
   }
   __name(cast, "cast");
 
+  // package.json
+  var package_default = {
+    name: "kerfuffle",
+    version: "1.0.2",
+    description: "User Friendly Visual Programming Language",
+    author: "catpea",
+    repository: {
+      type: "git",
+      url: "git+https://github.com/catpea/visual-programming-language.git"
+    },
+    bugs: {
+      url: "https://github.com/catpea/visual-programming-language/issues"
+    },
+    homepage: "https://github.com/catpea/visual-programming-language#readme",
+    type: "module",
+    main: "index.js",
+    scripts: {
+      start: "./start.js",
+      save: "git add .; git commit -m 'Updated Release'; git push; npm version patch; npm publish; git push;",
+      test: "./try.js"
+    },
+    keywords: [],
+    imports: {
+      "#plug-ins/*": "./plug-ins/*",
+      "#abstract/*": "./abstract/*"
+    },
+    license: "ISC",
+    dependencies: {
+      "@codemirror/commands": "^6.3.3",
+      "@codemirror/lang-javascript": "^6.2.2",
+      "@codemirror/state": "^6.4.1",
+      "@codemirror/theme-one-dark": "^6.1.2",
+      "@codemirror/view": "^6.24.1",
+      "@xterm/addon-fit": "^0.10.0",
+      "@xterm/xterm": "^5.5.0",
+      bootstrap: "^5.3.2",
+      "calculate-percent": "^2.1.0",
+      cheerio: "^1.0.0-rc.12",
+      codemirror: "^6.0.1",
+      "deep-equal": "^2.2.3",
+      "esbuild-svelte": "^0.8.1",
+      events: "^3.3.0",
+      json5: "^2.2.3",
+      lodash: "^4.17.21",
+      oneof: "^2.1.0",
+      panzoom: "^9.4.3",
+      svelte: "^4.2.17",
+      uuid: "^9.0.1"
+    },
+    devDependencies: {
+      chalk: "^5.3.0",
+      esbuild: "0.19.6",
+      "esbuild-sass-plugin": "^2.16.0"
+    },
+    directories: {
+      doc: "doc"
+    }
+  };
+
   // plug-ins/domek/index.js
   var update = /* @__PURE__ */ __name(function(elements, properties) {
     const els = Array.isArray(elements) ? elements : [elements];
@@ -4046,6 +4105,20 @@
           this.elements.create(node);
         }
       },
+      getXml() {
+        const serializables = "id x y w h".split(" ");
+        const $ = cheerio.load(``, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
+        for (const application of this.applications) {
+          let body = "";
+          if (application.pane) {
+            body = application.pane.getXml();
+          }
+          const attributes = serializables.map((key) => `${key}="${application[key]}"`).join(" ");
+          $.root().append(`<${application.oo.name} ${attributes}>${body}</${application.oo.name}>`);
+        }
+        const xml = $.root().html();
+        return xml;
+      },
       createNode(meta, data, content) {
         console.log(meta, data, content);
         const node = new Instance(Node, { origin: this.getApplication().id });
@@ -4392,6 +4465,32 @@
       destroy() {
         console.log("todo: destroying root application");
         this.dispose();
+      }
+    };
+  };
+
+  // plug-ins/components/Workspace.js
+  var uuid4 = bundle["uuid"];
+  var cheerio2 = bundle["cheerio"];
+  var Workspace = class {
+    static {
+      __name(this, "Workspace");
+    }
+    static extends = [Window2];
+    methods = {
+      initialize() {
+        console.log("Workspace Initialize!");
+      },
+      saveXml() {
+        console.log("Workspace/saveXml called...");
+        const $ = cheerio2.load(`<?xml version="1.0"?><${this.oo.name} name="${package_default.name}" description="${package_default.description}" version="${package_default.version}"></${this.oo.name}>`, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
+        console.clear();
+        if (this.pane) {
+          $(this.oo.name).append(this.pane.getXml());
+        }
+        const xml = $.root().html();
+        console.log(xml);
+        return xml;
       }
     };
   };
@@ -4798,10 +4897,10 @@
   };
 
   // plug-ins/components/Terminal.js
-  var { Terminal, FitAddon } = bundle["xterm"];
-  var Window3 = class {
+  var { Terminal: Term, FitAddon } = bundle["xterm"];
+  var Terminal = class {
     static {
-      __name(this, "Window");
+      __name(this, "Terminal");
     }
     static extends = [Application];
     properties = {};
@@ -4809,7 +4908,7 @@
       mount() {
         this.foreign = new Instance(Foreign);
         this.createWindowComponent(this.foreign);
-        const term = new Terminal({
+        const term = new Term({
           fontFamily: '"Cascadia Code", Menlo, monospace',
           cursorBlink: true
           // allowProposedApi: true
@@ -4860,25 +4959,39 @@
           term2.write("\r\n$ ");
         }
         __name(prompt, "prompt");
-        function runFakeTerminal() {
+        function runFakeTerm() {
           if (term._initialized) {
             return;
           }
           term._initialized = true;
           term.prompt = () => {
-            term.write("\r\n$$$ ");
+            term.write("\r\n$ ");
           };
-          term.writeln("Below is a simple emulated backend, try running `info`.");
+          term.writeln([`${package_default.name} ${package_default.version} terminal subsystem`, `Type in 'help' and press enter to begin.`].join("\r\n"));
           prompt(term);
         }
-        __name(runFakeTerminal, "runFakeTerminal");
+        __name(runFakeTerm, "runFakeTerm");
         var commands = {
-          info: {
+          help: {
             f: () => {
-              term.writeln(["yup, I got your info command", "teminal is neat"].join("\r\n"));
+              term.writeln([
+                "known commands:",
+                ...Object.keys(commands).map((key) => `${key}: ${commands[key].description}`)
+              ].join("\r\n"));
+              this.getRoot().saveXml();
               term.prompt(term);
             },
-            description: "Prints a fake directory structure"
+            description: "prints information about all the available commands"
+          },
+          save: {
+            f: () => {
+              term.writeln(["Gatehring data..."].join("\r\n"));
+              const xml = this.getRoot().saveXml();
+              term.writeln(xml);
+              term.writeln(["Save complete", "data printed in the web console"].join("\r\n"));
+              term.prompt(term);
+            },
+            description: "executes the save XML function"
           }
         };
         function runCommand(term2, text3) {
@@ -4894,7 +5007,7 @@
           prompt(term2);
         }
         __name(runCommand, "runCommand");
-        runFakeTerminal();
+        runFakeTerm();
       },
       stop() {
         console.log("todo: stopping root application");
@@ -4913,9 +5026,9 @@
   var { indentWithTab } = bundle["@codemirror/commands"];
   var { EditorState } = bundle["@codemirror/state"];
   var { oneDark } = bundle["@codemirror/theme-one-dark"];
-  var Window4 = class {
+  var Editor = class {
     static {
-      __name(this, "Window");
+      __name(this, "Editor");
     }
     static extends = [Application];
     properties = {};
@@ -5111,13 +5224,13 @@
 
   // plug-ins/components/index.js
   var components2 = {
-    Workspace: Window2,
+    Workspace,
     Pipe: Pipe2,
     Window: Window2,
     Port,
     Hello: Hello2,
-    Terminal: Window3,
-    Editor: Window4
+    Terminal,
+    Editor
   };
   var components_default = components2;
 
@@ -5143,10 +5256,6 @@
         const node = new Instance(Node, { id: "0", origin: "0", url: this.url, type: "Workspace", data: {} });
         this.rootWindow = new Instance(components_default.Workspace, { id: node.id, node, svg: this.svg, scene: this.scene, parent: null, origins: this.origins, isRootWindow: true });
         this.rootWindow.start();
-        setTimeout(
-          (x) => console.log("qqq ROOT WINDOW SOCKET REGISTRY", this.rootWindow.socketRegistry.raw.map((o) => o.id)),
-          2222
-        );
         const onResize = /* @__PURE__ */ __name(() => {
           this.rootWindow.w = this.svg.clientWidth;
           this.rootWindow.h = this.svg.clientHeight;

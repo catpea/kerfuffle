@@ -1,9 +1,10 @@
+import pkg from "/package.json";
 import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 import Application from "/plug-ins/windows/Application.js";
 import Foreign from "/plug-ins/windows/Foreign.js";
-const { Terminal, FitAddon } = bundle['xterm'];
+const { Terminal:Term, FitAddon } = bundle['xterm'];
 
-export default class Window {
+export default class Terminal {
   static extends = [Application];
 
   properties = {
@@ -16,7 +17,7 @@ export default class Window {
       this.foreign = new Instance(Foreign);
       this.createWindowComponent( this.foreign );
 
-      const term = new Terminal({
+      const term = new Term({
         fontFamily: '"Cascadia Code", Menlo, monospace',
         cursorBlink: true,
         // allowProposedApi: true
@@ -79,7 +80,7 @@ export default class Window {
         term.write('\r\n$ ');
       }
 
-      function runFakeTerminal() {
+      function runFakeTerm() {
 
         if (term._initialized) {
           return;
@@ -88,25 +89,45 @@ export default class Window {
         term._initialized = true;
 
         term.prompt = () => {
-          term.write('\r\n$$$ ');
+          term.write('\r\n$ ');
         };
 
-        term.writeln('Below is a simple emulated backend, try running `info`.');
+        term.writeln([`${pkg.name} ${pkg.version} terminal subsystem`,`Type in 'help' and press enter to begin.`].join('\r\n'));
         prompt(term);
 
-      } // runFakeTerminal
+      } // runFakeTerm
 
 
 
 
         var commands = {
-          info: {
+
+          help: {
             f: () => {
-              term.writeln(['yup, I got your info command', 'teminal is neat'].join('\r\n'));
+              term.writeln([
+                'known commands:',
+                ...Object.keys(commands).map(key=>`${key}: ${commands[key].description}`),
+              ].join('\r\n'));
+              this.getRoot().saveXml();
               term.prompt(term);
             },
-            description: 'Prints a fake directory structure'
+            description: 'prints information about all the available commands'
           },
+
+          save: {
+            f: () => {
+              term.writeln(['Gatehring data...'].join('\r\n'));
+              const xml = this.getRoot().saveXml();
+              term.writeln(xml);
+              term.writeln(['Save complete', 'data printed in the web console'].join('\r\n'));
+              term.prompt(term);
+            },
+            description: 'executes the save XML function'
+          },
+
+
+
+
         };
 
         function runCommand(term, text) {
@@ -127,7 +148,7 @@ export default class Window {
 
 
 
-      runFakeTerminal();
+      runFakeTerm();
     },
 
     stop(){

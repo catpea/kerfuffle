@@ -12,7 +12,7 @@ const { oneDark } = bundle['@codemirror/theme-one-dark']; // NOTE: "Dark Backgro
 import {  svg, html, update, click } from "/plug-ins/domek/index.js"
 
 
-export default class Window {
+export default class Editor {
   static extends = [Application];
 
   properties = {

@@ -333,6 +333,20 @@ export default class Pane {
       }
     },
 
+    getXml(){
+      const serializables =  'id x y w h'.split(' ');
+      const $ = cheerio.load(``, { xmlMode: true, decodeEntities: true, withStartIndices: true, withEndIndices: true });
+        for (const application of this.applications) {
+          let body = "";
+          if(application.pane){
+            body = application.pane.getXml();
+          }
+          const attributes = serializables.map(key=>`${key}="${application[key]}"`).join(' ')
+          $.root().append(`<${application.oo.name} ${attributes}>${body}</${application.oo.name}>`);
+        }
+      const xml = $.root().html();
+      return xml;
+    },
 
     createNode(meta, data, content){
       console.log(meta, data, content);
