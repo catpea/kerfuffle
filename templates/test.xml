@@ -1,106 +1,27 @@
-<?xml version="1.0"?>
-
-<Workspace id="0" name="Hello Project" description="A Selection Of World VisualPrograms" compatibility="1.0.1">
-
-  <Window id="test-a" x="100" y="100" w="1000" h="1000" showMenu="true" showStatus="true" zoom="2">
-    <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
-
-    <Editor id="test-d" x="100" y="1200" w="1000" h="1000">
-    </Editor>
-
-    <Terminal id="test-c" x="100" y="100" w="1000" h="800">
-    </Terminal>
-
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace name="kerfuffle" description="User Friendly Visual Programming Language" version="1.0.2">
+  <Window id="test-a" x="100" y="100" w="1000" h="1000" showMenu="true" showStatus="true">
+    <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"/>
+    <Editor id="test-d" x="100" y="1200" w="1000" h="1000"/>
+    <Terminal id="test-c" x="100" y="100" w="1000" h="800"/>
   </Window>
-
-  <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" zoom=".666" showStatus="true" library="emitter-network">
-
-    <Queue  id="test-1" x="100" y="100" w="320" h="256"/>
+  <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" showStatus="true" library="emitter-network">
+    <Queue id="test-1" x="100" y="100" w="320" h="256"/>
     <Filter id="test-2" x="500" y="100" w="170" h="256"/>
     <Filter id="test-3" x="800" y="100" w="170" h="256"/>
     <Filter id="test-4" x="800" y="500" w="170" h="256"/>
-
     <Filter id="test-5" x="1100" y="100" w="170" h="256"/>
     <Filter id="test-6" x="1400" y="100" w="170" h="256"/>
-
     <Pipe id="c1" from="test-1" to="test-2" out="out" in="in"/>
     <Pipe id="c2" from="test-2" to="test-3" out="out" in="in"/>
     <Pipe id="c3" from="test-2" to="test-4" out="out" in="in"/>
-
     <Pipe id="c4" from="test-3" to="test-5" out="out" in="in"/>
     <Pipe id="c5" from="test-5" to="test-6" out="out" in="in"/>
-
-
-
     <Window id="test-a" x="1100" y="1100" w="1000" h="1000" showMenu="true" showStatus="true">
-      <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"></Hello>
-
-      <Editor id="test-d" x="100" y="1200" w="1000" h="1000">
-      </Editor>
-
-      <Terminal id="test-c" x="100" y="100" w="1000" h="800">
-      </Terminal>
-
+      <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"/>
+      <Editor id="test-d" x="100" y="1200" w="1000" h="1000"/>
+      <Terminal id="test-c" x="100" y="100" w="1000" h="800"/>
     </Window>
-
   </Window>
-
-
-  <Hello id="test-foreign-1" x="1200" y="1200" w="1000" h="1000"></Hello>
-  <!-- <Hello id="test-foreign-2" x="2400" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-3" x="3600" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-4" x="4800" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-5" x="6000" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-6" x="7200" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-7" x="8400" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-8" x="9600" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-9" x="10800" y="1200" w="1000" h="1000"></Hello>
-  <Hello id="test-foreign-10" x="12000" y="1200" w="1000" h="1000"></Hello>
- -->
-
-
-
-
-  <!-- <Window id="test-a" x="0" y="0" w="1000" h="1000">
-    <Port out id="test-a0" name="out"></Port>
-    <Window id="test-a1" x="0" y="0" w="1000" h="1000"></Window>
-    <Window id="test-a2" x="1100" y="0" w="1000" h="1000"></Window>
-  </Window>
-
-  <Window id="test-b" x="1100" y="0" w="1000" h="1000">
-    <Port in id="test-b0" name="in"></Port>
-    <Window id="test-b1" x="0" y="0" w="1000" h="1000"></Window>
-    <Window id="test-b2" x="1100" y="0" w="1000" h="1000"></Window>
-  </Window>
-
-  <Pipe from="test-a" out="out" to="zz"></Pipe>
-  <Function id="zz" name="log"></Function>
-  <Pipe from="zz" to="test-b" in="in"></Pipe>
-
-  <Window id="test-c" x="2300" y="0" w="1000" h="1000">
-    <Function id="a" Window="test-d"></Function>
-    <Function id="b" Window="test-e"></Function>
-    <Port out id="c" name="out"></Port>
-    <Pipe from="a" source="text" to="b" target="in"></Pipe>
-    <Pipe from="b" source="out" to="c" target="out"></Pipe>
-  </Window>
-
-  <Window id="test-d" x="0" y="1100" w="1000" h="1000">
-    <Port out id="a" format="string" value="Hello World!" name="out"></Port>
-  </Window>
-
-  <Program id="test-e" x="1100" y="1100" w="1000" h="1000">
-    <Port in id="a" name="in"></Port>
-    <Function id="b" src="scripts/transform-upper.js"></Function>
-    <Port out id="c" name="out"></Port>
-    <Pipe from="a" to="b"></Pipe>
-    <Pipe from="b" to="c"></Pipe>
-    <Window id="test-a" x="0" y="0" w="1000" h="1000">
-      <Window id="test-a1" x="0" y="0" w="1000" h="1000"></Window>
-      <Window id="test-a2" x="1100" y="550" w="1000" h="1000"></Window>
-    </Window>
-  </Program>
-
-  <Window id="test-f" x="2300" y="1100" w="1000" h="1000"></Window> -->
-
+  <Hello id="test-foreign-1" x="1200" y="1200" w="1000" h="1000"/>
 </Workspace>

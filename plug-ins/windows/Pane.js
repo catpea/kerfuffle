@@ -341,7 +341,7 @@ export default class Pane {
           if(application.pane){
             body = application.pane.getXml();
           }
-          const attributes = serializables.map(key=>`${key}="${application[key]}"`).join(' ')
+          const attributes = (application.serializables||serializables).filter(key=>application[key]).map(key=>`${key}="${application[key]}"`).join(' ')
           $.root().append(`<${application.oo.name} ${attributes}>${body}</${application.oo.name}>`);
         }
       const xml = $.root().html();

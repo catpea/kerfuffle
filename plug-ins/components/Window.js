@@ -11,6 +11,7 @@ export default class Window {
   static extends = [Application];
 
   properties = {
+    serializables: 'id x y w h showMenu showStatus zoom library'.split(' ')
   };
 
   methods = {

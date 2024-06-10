@@ -5,6 +5,10 @@ import Connector from "/plug-ins/windows/Connector.js";
 export default class Pipe {
   static extends = [Window];
 
+  properties = {
+    serializables: 'id from to out in'.split(' ')
+  };
+
   methods = {
     initialize(){
       this.showCaption = false;

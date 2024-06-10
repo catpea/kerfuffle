@@ -4113,7 +4113,7 @@
           if (application.pane) {
             body = application.pane.getXml();
           }
-          const attributes = serializables.map((key) => `${key}="${application[key]}"`).join(" ");
+          const attributes = (application.serializables || serializables).filter((key) => application[key]).map((key) => `${key}="${application[key]}"`).join(" ");
           $.root().append(`<${application.oo.name} ${attributes}>${body}</${application.oo.name}>`);
         }
         const xml = $.root().html();
@@ -4419,7 +4419,9 @@
       __name(this, "Window");
     }
     static extends = [Application];
-    properties = {};
+    properties = {
+      serializables: "id x y w h showMenu showStatus zoom library".split(" ")
+    };
     methods = {
       // TODO: menu should be destroyed/recreated each time
       closeMenu() {
@@ -5193,6 +5195,9 @@
       __name(this, "Pipe");
     }
     static extends = [Window];
+    properties = {
+      serializables: "id from to out in".split(" ")
+    };
     methods = {
       initialize() {
         this.showCaption = false;
