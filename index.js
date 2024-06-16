@@ -5288,17 +5288,23 @@
       case "Foreign":
         response = "wrench-adjustable";
         break;
-      case "Workspace":
-        response = "box";
+      case "Sockets":
+        response = "node-plus";
         break;
-      case "Workspace":
-        response = "box";
+      case "Vertical":
+        response = "arrows-vertical";
         break;
-      case "Workspace":
-        response = "box";
+      case "Hortizontal":
+        response = "arrows";
         break;
-      case "Workspace":
-        response = "box";
+      case "Container":
+        response = "box2-heart";
+        break;
+      case "Component":
+        response = "heart-pulse";
+        break;
+      case "Application":
+        response = "brightness-high";
         break;
       default:
         response = "list";
