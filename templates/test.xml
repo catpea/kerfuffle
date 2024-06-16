@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Workspace name="kerfuffle" description="User Friendly Visual Programming Language" version="1.0.2">
 
-  <Architecture id="architecture-1" x="600" y="100" w="500" h="1000"/>
+  <Architecture name="Architecture Overview" id="architecture-1" x="600" y="100" w="500" h="1000"/>
+  <Analysis name="Object Analysis" id="analysis-1" x="1200" y="100" w="1000" h="1000"/>
+  <Pipe id="aa" from="architecture-1" to="analysis-1" out="out" in="in"/>
 
 
 
-  <Window id="test-a"  x="1200" y="100" w="1800" h="1000" showMenu="true" showStatus="true">
-    <Architecture id="architecture-2" x="600" y="100" w="500" h="1000"/>
-    <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"/>
-    <Editor id="test-d" x="100" y="1200" w="1000" h="1000"/>
-    <Terminal id="test-c" x="100" y="100" w="1000" h="800"/>
+  <Window id="test-a" name="Test Window" x="600" y="1200" w="1800" h="1000" showMenu="true" showStatus="true">
+
+    <Hello id="test-e" name="Hello Kitchen Sink" x="1200" y="1200" w="1000" h="1000"/>
+    <Editor id="test-d" name="Code Editor" x="100" y="1200" w="1000" h="1000"/>
+    <Terminal id="test-c" name="System Terminal" x="100" y="100" w="1000" h="800"/>
+
   </Window>
 
   <!-- <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" showStatus="true" library="emitter-network">

@@ -19,7 +19,7 @@ export default class Component {
 
     selected:  false, // selection manager feature
 
-    name:  'un-named',
+    name:  undefined,
 
 
     x: 0,
@@ -34,7 +34,7 @@ export default class Component {
     b: 0, // border
     p: 0, // padding
     s: 0, // spacer/gap
-    
+
     flexible: false, // whether or not component fills all available x,y space in ceratin situations
 
   };

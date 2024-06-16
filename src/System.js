@@ -26,8 +26,8 @@ export default class System {
     mount(){
 
 
-      const node = new Instance(Node, {id:'0', origin:'0', url:this.url, type:'Workspace', data:{}});
-      this.rootWindow = new Instance(components.Workspace, {id:node.id, node, svg:this.svg, scene:this.scene, parent:null, isRootWindow: true});
+      const node = new Instance(Node, {id:'0', name:'Workspace', origin:'0', url:this.url, type:'Workspace', data:{}});
+      this.rootWindow = new Instance(components.Workspace, {id:node.id, name:node.name, node, svg:this.svg, scene:this.scene, parent:null, isRootWindow: true});
       this.rootWindow.start()
 
       const onResize = () => {

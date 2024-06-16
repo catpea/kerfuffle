@@ -46,7 +46,11 @@ export default class Zoom {
 
     this.wheelHandler = (e) => {
 
+      ///NOTE: e.stopPropagation() is insufficent e.stopImmediatePropagation(); must be called to end other component zooming problems.
+      e.stopImmediatePropagation();
+
       this.before(this);
+
       const INTO = +1;
       const OUTOF = -1;
       let zoomDirection = e.deltaY>0?OUTOF:INTO;

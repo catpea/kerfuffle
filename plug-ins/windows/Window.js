@@ -48,7 +48,7 @@ export default class Window {
         this.s = 3;
       }
 
-      this.caption = `${this.oo.name} (${this.id})`;
+      this.caption = `${this.name||this.oo.name} (${this.id})`;
     },
 
     mount(){

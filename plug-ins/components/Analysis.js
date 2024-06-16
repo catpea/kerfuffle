@@ -2,10 +2,10 @@ import {Instance} from "/plug-ins/object-oriented-programming/index.js";
 import Application from "/plug-ins/windows/Application.js";
 import Foreign from "/plug-ins/windows/Foreign.js";
 
-import Interface from '/plug-ins/components/architecture/Interface.svelte';
-import stores from '/plug-ins/components/architecture/stores.js';
+import Interface from '/plug-ins/components/analysis/Interface.svelte';
+import stores from '/plug-ins/components/analysis/stores.js';
 
-export default class Architecture {
+export default class Analysis {
   static extends = [Application];
 
   properties = {
@@ -13,7 +13,9 @@ export default class Architecture {
 
   methods = {
     initialize(){
-      this.createSocket('out', 1);
+      this.createSocket('in', 0);
+
+
     },
     mount(){
 
@@ -23,10 +25,16 @@ export default class Architecture {
       this.component = new Interface({
           target: this.foreign.body,
           props: {
-            send: this.send.bind(this),
+            object: null,
             paneItems: stores.getPaneItems( this.getRoot() )
           }
       });
+
+      this.pipe.on('in', (packet)=>{
+        const object = this.getRoot().applications.get(packet.id);
+        this.component.$set({ object});
+        console.log(object);
+      })
 
     },
 

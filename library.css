@@ -11564,6 +11564,12 @@ svg.editor-interface {
 }
 .card {
 }
+.hoverable-primary:hover {
+  background-color: var(--bs-primary);
+}
+.hoverable-secondary:hover {
+  background-color: var(--bs-dark);
+}
 .viewport-background.workspace {
   stroke: var(--editor-border);
   fill: var(--editor-background-secondary);

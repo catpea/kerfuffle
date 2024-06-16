@@ -5,7 +5,9 @@ import Hello from './Hello.js';
 import Terminal from './Terminal.js';
 import Editor from './Editor.js';
 import Pipe from './Pipe.js';
+
 import Architecture from './Architecture.js';
+import Analysis from './Analysis.js';
 
 // Dependency Injection Pattern
 
@@ -17,7 +19,9 @@ const components = {
   Pipe,
 
   Hello,
+
   Architecture,
+  Analysis,
 
   Terminal,
   Editor,

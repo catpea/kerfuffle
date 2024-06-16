@@ -283,7 +283,8 @@ export default class Pane {
 
       const zoom = new Zoom({
         magnitude: 0.1,
-        area: paneBody.background,
+        // area: paneBody.background, // this does just the background
+        area: paneBody.Viewport, // this zooms over everything and requires a stop in the zoom system
         component: paneBody,
         handle: paneBody.background,
         getter: (key)=>this[key],
