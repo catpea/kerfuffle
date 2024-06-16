@@ -10,6 +10,8 @@ export default class Application {
   };
 
   observables = {
+    origins: [],
+    applications: [],
     url: null,
   };
 
@@ -17,13 +19,8 @@ export default class Application {
 
     initialize(){
       this.controller = new EventEmitter();
-
-      // this.intervalId = setInterval(x=>this.controller.emit('step'), 666);
-      // this.controller.emit('step');
-
-      // All Applications Register Themselves
-      this.getRoot().origins.create(this);
-
+      this.getRoot().applications.create(this);
+      console.log('XXXX', this.getRoot().id, this.id, );
     },
 
 

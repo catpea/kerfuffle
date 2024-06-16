@@ -5,15 +5,20 @@ import Hello from './Hello.js';
 import Terminal from './Terminal.js';
 import Editor from './Editor.js';
 import Pipe from './Pipe.js';
+import Architecture from './Architecture.js';
 
 // Dependency Injection Pattern
 
 const components = {
   Workspace,
-  Pipe,
-  Window,
+
   Port,
+  Window,
+  Pipe,
+
   Hello,
+  Architecture,
+
   Terminal,
   Editor,
 }

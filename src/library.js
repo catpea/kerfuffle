@@ -1,6 +1,7 @@
 // Boot Script - this is a boot sctipt that gets all the non-symmetrical oddities out of the way
 import bootstrapCss from 'bootstrap/dist/css/bootstrap.min.css';
 import bootstrapJs from 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
 import xtermCss from '@xterm/xterm/css/xterm.css';
 import Nostromo from "#plug-ins/nostromo-theme/index.js";
 import Obsidian from "#plug-ins/obsidian-theme/index.js";

@@ -12,7 +12,6 @@ export default class System {
 
   observables = {
     url: null,
-    origins:[],
   };
 
   constraints = {
@@ -28,7 +27,7 @@ export default class System {
 
 
       const node = new Instance(Node, {id:'0', origin:'0', url:this.url, type:'Workspace', data:{}});
-      this.rootWindow = new Instance(components.Workspace, {id:node.id, node, svg:this.svg, scene:this.scene, parent:null, origins:this.origins, isRootWindow: true});
+      this.rootWindow = new Instance(components.Workspace, {id:node.id, node, svg:this.svg, scene:this.scene, parent:null, isRootWindow: true});
       this.rootWindow.start()
 
       const onResize = () => {

@@ -47,7 +47,7 @@ export default class Themes {
         // console.info("dataset.uiTheme", document.querySelector("html").dataset);
       });
 
-      this.on("themes.created", (list) => {p
+      this.on("themes.created", (list) => {
         // console.log("themes created", { list });
       });
 

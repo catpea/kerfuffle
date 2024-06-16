@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Workspace name="kerfuffle" description="User Friendly Visual Programming Language" version="1.0.2">
-  <Window id="test-a" x="100" y="100" w="1000" h="1000" showMenu="true" showStatus="true">
+
+  <Architecture id="architecture-1" x="600" y="100" w="500" h="1000"/>
+
+
+
+  <Window id="test-a"  x="1200" y="100" w="1800" h="1000" showMenu="true" showStatus="true">
+    <Architecture id="architecture-2" x="600" y="100" w="500" h="1000"/>
     <Hello id="test-e" x="1200" y="1200" w="1000" h="1000"/>
     <Editor id="test-d" x="100" y="1200" w="1000" h="1000"/>
     <Terminal id="test-c" x="100" y="100" w="1000" h="800"/>
   </Window>
-  <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" showStatus="true" library="emitter-network">
+
+  <!-- <Window id="test-emitter-nodes" x="1200" y="100" w="1800" h="1000" showStatus="true" library="emitter-network">
     <Queue id="test-1" x="100" y="100" w="320" h="256"/>
     <Filter id="test-2" x="500" y="100" w="170" h="256"/>
     <Filter id="test-3" x="800" y="100" w="170" h="256"/>
@@ -23,5 +30,5 @@
       <Terminal id="test-c" x="100" y="100" w="1000" h="800"/>
     </Window>
   </Window>
-  <Hello id="test-foreign-1" x="1200" y="1200" w="1000" h="1000"/>
+  <Hello id="test-foreign-1" x="1200" y="1200" w="1000" h="1000"/> -->
 </Workspace>

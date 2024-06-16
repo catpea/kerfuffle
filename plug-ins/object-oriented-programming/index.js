@@ -225,7 +225,7 @@ export class Instance {
           observableData[observableName] = new List(observableName, observableValue);
           Object.defineProperty(this, observableName, {
             get: () => observableData[observableName].value,
-            set: (value) => {throw new Error(`observable array ${name} cannot be replaced`)},
+            set: (value) => {throw new Error(`observable array "${observableName}" cannot be replaced`)},
             configurable: false,
           });
         }else{ // primitive
@@ -318,7 +318,7 @@ export class Instance {
 
     this.all = function(observables, ...functions){
       if(typeof observables === 'string') observables = observables.split(' ');
-      
+
       const callback2 = ()=>{
         const entries = observables.map(key => [key, this[key]])
         const packet = Object.fromEntries(entries);
@@ -561,7 +561,7 @@ export class List {
   // Install Observer Functionality
 
   #observers = {};
-  observe(eventName, observerCallback, options = { autorun: true, replay: false }) {
+  observe(eventName, observerCallback, options = { initialize:false, autorun: true, replay: false }) {
 
     if (typeof observerCallback !== "function") throw new TypeError("observer must be a function.");
     if (!Array.isArray(this.#observers[eventName])) this.#observers[eventName] = []; // If there isn't an observers array for this key yet, create it
@@ -575,11 +575,16 @@ export class List {
 
     // REPLAY, applies to all events (autorun only applies to non-dot events)
     // if .created needs a feed to initialize
+    if( options.initialize ){
+        observerCallback(this.#value)
+    }
+
     if( options.replay ){
       for (const item of this.#value) { observerCallback(item) }
     }
 
     this.#observers[eventName].push(observerCallback);
+
     return () => {
       this.unobserve(eventName, observerCallback);
     };
@@ -592,6 +597,7 @@ export class List {
   notify(eventName, eventData, ...extra) {
     if (Array.isArray(this.#observers[eventName])) this.#observers[eventName].forEach((observerCallback) => observerCallback(eventData, ...extra));
   }
+
   status(){
     return {
       observerCount: Object.values(this.#observers).flat().length,
@@ -611,7 +617,7 @@ export class List {
       // if(!((Container.prototype.isPrototypeOf(item)) || (Control.prototype.isPrototypeOf(item)))) throw new Error(`Must be a Container or Control.`);
       this.#value.push(item);
       this.notify("created", item);
-      this.notify("changed", this);
+      this.notify("changed", this.#value);
     }
   }
 
@@ -628,7 +634,7 @@ export class List {
     const item = this.#value.find(o => o.id === id);
     this.#value = this.#value.filter(o => o !== item);
     this.notify("removed", item);
-    this.notify("changed", this);
+    this.notify("changed", this.#value);
   }
 
 

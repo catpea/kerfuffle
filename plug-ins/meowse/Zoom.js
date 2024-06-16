@@ -46,29 +46,22 @@ export default class Zoom {
 
     this.wheelHandler = (e) => {
 
-      //XXX e.stopPropagation();
-
       this.before(this);
-
       const INTO = +1;
       const OUTOF = -1;
       let zoomDirection = e.deltaY>0?OUTOF:INTO;
+      const [cursorX, cursorY] = translateCursor(e.clientX, e.clientY, this.transforms());
 
-      console.info('switched to remote translateCursor this is experimental');
-     const [cursorX, cursorY] = translateCursor(e.clientX, e.clientY, this.transforms());
-
-     //XXXDQD const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
-
-     const transformed = this.#translateZoom({ zoom: this.getter('zoom'), panX: this.getter('panX'), panY: this.getter('panY'), cursorX, cursorY, deltaZoom: zoomDirection, magnitude: this.magnitude });
+      const transformed = this.#translateZoom({ zoom: this.getter('zoom'), panX: this.getter('panX'), panY: this.getter('panY'), cursorX, cursorY, deltaZoom: zoomDirection, magnitude: this.magnitude });
 
       this.change(transformed);
       this.after(this);
 
     };
 
-    this.area.addEventListener(this.event, this.wheelHandler, {passive: true});
-    this.handle.addEventListener(this.event, this.wheelHandler, {passive: true});
-    this.area.addEventListener('mousemove', this.movelHandler, {passive: true});
+    this.area.addEventListener(this.event, this.wheelHandler );
+    this.handle.addEventListener(this.event, this.wheelHandler );
+    this.area.addEventListener('mousemove', this.movelHandler );
   }
 
   destroy(){

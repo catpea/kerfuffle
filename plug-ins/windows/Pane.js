@@ -133,7 +133,7 @@ export default class Pane {
       this.getApplication().viewport = paneBody;
 
       this.children.create( paneBody );
-      globalThis.project.origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
+      this.getRoot().origins.create({ id: this.getRootContainer().id, root: this, scene:paneBody.el.Mask })
 
       this.getApplication().on('showStatus', (showStatus)=>{
         if(showStatus){
