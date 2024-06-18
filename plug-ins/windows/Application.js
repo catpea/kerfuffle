@@ -15,6 +15,39 @@ export default class Application {
     url: null,
   };
 
+  traits = {
+
+
+    /**
+    USAGE:
+    this.xWritable = writable(0);
+    this.yWritable = writable(0);
+    this.component = new Interface({
+        target: this.foreign.body,
+        props: {
+          x: this.xWritable,
+          y: this.yWritable,
+          object: null,
+          paneItems: stores.getPaneItems( this.getRoot() )
+        }
+    });
+    this.connectObservableToWritable( object, 'x', this, 'xWritable', (v)=>v.toFixed(2))
+    this.connectObservableToWritable( object, 'y', this, 'yWritable', (v)=>v.toFixed(2))
+
+    **/
+    connectObservableToWritable(fromObject, property, toObject, writable, transform){
+
+      if(!this.oo.scratch.couplers){
+        this.oo.scratch.couplers = {};
+        this.disposable = ()=>{ Object.values(this.oo.scratch.couplers).map(f=>f())}; // clean any remaining couplers
+      }
+      let id = property;
+      if(this.oo.scratch.couplers[id]) this.oo.scratch.couplers[id](); // execute destructable
+      this.oo.scratch.couplers[id] = fromObject.on(property, (v)=>toObject[writable].set(transform?transform(v):v),{autorun:true},{manualDispose:true});
+
+    },
+  };
+
   methods = {
 
     initialize(){

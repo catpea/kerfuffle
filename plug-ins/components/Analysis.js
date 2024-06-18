@@ -5,6 +5,8 @@ import Foreign from "/plug-ins/windows/Foreign.js";
 import Interface from '/plug-ins/components/analysis/Interface.svelte';
 import stores from '/plug-ins/components/analysis/stores.js';
 
+import { writable } from 'svelte/store'
+
 export default class Analysis {
   static extends = [Application];
 
@@ -12,6 +14,9 @@ export default class Analysis {
   };
 
   methods = {
+
+
+
     initialize(){
       this.createSocket('in', 0);
 
@@ -22,9 +27,13 @@ export default class Analysis {
       this.foreign = new Instance(Foreign);
       this.createWindowComponent( this.foreign );
 
+      this.xWritable = writable(0);
+      this.yWritable = writable(0);
       this.component = new Interface({
           target: this.foreign.body,
           props: {
+            x: this.xWritable,
+            y: this.yWritable,
             object: null,
             paneItems: stores.getPaneItems( this.getRoot() )
           }
@@ -33,6 +42,9 @@ export default class Analysis {
       this.pipe.on('in', (packet)=>{
         const object = this.getRoot().applications.get(packet.id);
         this.component.$set({ object});
+        this.connectObservableToWritable( object, 'x', this, 'xWritable', (v)=>v.toFixed(2))
+        this.connectObservableToWritable( object, 'y', this, 'yWritable', (v)=>v.toFixed(2))
+
         console.log(object);
       })
 

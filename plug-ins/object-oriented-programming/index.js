@@ -52,6 +52,7 @@ export class Instance {
     // console.log(`%cCreate Class (${specification.constructor.name})`, 'background: hsl(124, 50%, 60%); color: black;');
 
     this.oo = {}
+    this.oo.scratch = {}; // space for extensions (cytoscape easter egg)
     this.oo.name = specification.constructor.name;
     this.oo.class = Class;
     this.oo.types = specification.types;
@@ -312,6 +313,32 @@ export class Instance {
 
 
     // Enable Observing
+
+    // let glues = {};
+    // this.glue = function(name, update, staleId){
+    //   console.log('EEE GLUE', staleId, glues);
+    //   if(glues[staleId]){
+    //     console.log(`EEE trashing staleId ${staleId}`, glues);
+    //     glues[staleId](); // clean if stale is present
+    //     delete glues[staleId];
+    //   }else{
+    //     console.log(`EEE staleId ${staleId} not found`, glues);
+    //   }
+    //   let newId = uuid();
+    //   let dispose = this.on(name, v=>update(v),{},{manualDispose:true});
+    //   update(this[name]); // kick-off
+    //   glues[newId] = dispose;
+    //   console.log(`EEE GOT ${Object.values(glues).length} glue(s)`, glues);
+    //   return newId;
+    // }
+    // disposable(Object.values(glues).map(x=>x())); // clean glue on shutdown
+
+    // this.signal = function(name){
+    //   const signal = new Signal();
+    //   signal.dispose = this.on(name, v=>signal.set(v),{},{manualDispose:true});
+    //   return signal;
+    // }
+
     this.on = function(eventPath, observerCallback, options, control){
       const [name, path] = eventPath.split('.', 2);
       // if(!observableData[name]) console.info(`property "${name}" not defined on ${this.oo.name} (${Object.keys(observableData).join(', ')})`);
@@ -716,3 +743,30 @@ export class List {
 
 
 }
+
+
+
+//
+// class Signal {
+//
+//   subscribers = [];
+//
+//   value = undefined;
+//   dispose = undefined;
+//   subscriptionFunction = null;
+//
+//   set(value){
+//     this.value = value;
+//   }
+//
+//   subscribe(subscriptionFunction){
+//     this.subscriptionFunction = subscriptionFunction;
+//     this.subscriptionFunction(this.value);
+//     return this.unsubscribe.bind(this);
+//   }
+//
+//   unsubscribe(){
+//     this.dispose();
+//   }
+//
+// }

@@ -1,5 +1,4 @@
 <script>
-
   import Entry from './Entry.svelte';
   import classIcons from '/plug-ins/class-icons/index.js';
 
@@ -7,6 +6,9 @@
 
   export let stores;
   export let object;
+
+  export let x;
+  export let y;
 
   export let paneItems;
 
@@ -16,8 +18,10 @@
     Method: true,
   };
 
-
   function stopWheel(el){
+
+
+
       el.addEventListener('wheel', (e)=>{
         if (e.shiftKey) {
           e.preventDefault();
@@ -35,13 +39,14 @@
 </script>
 
 {#if object}
+
   <div class="container-fluid pt-3" style="overflow-y: scroll;" use:stopWheel>
 
       <div class="row">
         <div class="col">
         <h3>
-          {object.oo.name} Class
-          <small class="text-body-secondary">id:{object.id}</small>
+          {object.oo.name} Class;
+          <small class="text-body-secondary">id:{object.id} <span style="font-size: .92rem;">({$x}x{$y})<span></small>
         </h3>
         </div>
       </div>
