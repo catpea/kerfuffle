@@ -27,6 +27,9 @@ export class Inheritance {
     for (const Class of this.instance.oo.extends) {
       // THIS IS WRONG: we are creating instconst instance = new Instance( Class, data, {superInstantiation:true, root:this.instance} );
       const instance = new Class(); // NOTE: this is standard instantiation as we only need the specification
+      instance.name = Class.name;
+      if(!instance.traits) instance.traits = [];
+      if(!instance.methods) instance.methods = [];
       this.instance.oo.specifications.push( instance );
       instance.parent = parent;
       parent = instance;
@@ -275,6 +278,35 @@ export class Instance {
     }
 
 
+
+
+    // REFLECTION API
+    // NOTE: these are API/protocol functions - stable way to reliably get what you need
+
+    const that = this;
+    this.oo.getMethods = function(){
+      const response = that.oo.specifications.map( ({name, methods})=>({name,data: Object.entries(methods)          .map( ([name,code]) => ({name,code: 'function ' + code.toString()}) )                }) );
+      console.log(response);
+      return response
+    }
+    this.oo.getTraits = function(){
+      const response = that.oo.specifications.map( ({name, traits})=>({name,data: Object.entries(traits)          .map( ([name,code]) => ({name,code: 'function ' + code.toString()}) )                }) );
+      console.log(response);
+      return response
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    // REFLECTION
 
 
 

@@ -14,7 +14,7 @@ export default class Window {
     serializables: 'id x y w h showMenu showStatus zoom library'.split(' ')
   };
 
-  methods = {
+  traits = {
 
     // TODO: menu should be destroyed/recreated each time
 
@@ -54,6 +54,12 @@ export default class Window {
       this.menu.show = true;
 
     },
+    
+  };
+
+  methods = {
+
+
 
     initialize(){
       this.createSocket('in', 0);

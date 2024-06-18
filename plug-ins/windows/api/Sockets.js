@@ -11,6 +11,29 @@ export default class Sockets {
     sockets: [],
   };
 
+
+
+
+  traits = {
+
+        createSocket(name, side){
+          if(!name) throw new Error(`It is not possible to create an socket without an socket name.`);
+          if(!side===undefined) throw new Error(`It is not possible to create an socket without specifying a side, 0 or 1.`);
+          const id = [this.id, name].join('/');
+          const socket = new Instance(Socket, { id, name, side, parent: this.parent, control:this, scene: this.scene } )
+          this.sockets.create(socket);
+        },
+
+        removeSocket(id){
+          this.sockets.remove(id);
+        },
+
+        send(name, packet){
+          // this.sockets.get([this.id, name].join('/')).emit(name, packet);
+          this.pipe.emit(name, packet);
+        }
+  };
+
   methods = {
 
     initialize(){
@@ -46,22 +69,6 @@ export default class Sockets {
 
 
 
-    createSocket(name, side){
-      if(!name) throw new Error(`It is not possible to create an socket without an socket name.`);
-      if(!side===undefined) throw new Error(`It is not possible to create an socket without specifying a side, 0 or 1.`);
-      const id = [this.id, name].join('/');
-      const socket = new Instance(Socket, { id, name, side, parent: this.parent, control:this, scene: this.scene } )
-      this.sockets.create(socket);
-    },
-
-    removeSocket(id){
-      this.sockets.remove(id);
-    },
-
-    send(name, packet){
-      // this.sockets.get([this.id, name].join('/')).emit(name, packet);
-      this.pipe.emit(name, packet);
-    }
 
   };
 }

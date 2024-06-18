@@ -46,8 +46,18 @@ export default class Zoom {
 
     this.wheelHandler = (e) => {
 
-      ///NOTE: e.stopPropagation() is insufficent e.stopImmediatePropagation(); must be called to end other component zooming problems.
       e.stopImmediatePropagation();
+
+      // if(e.shiftKey) {
+      //
+      //   console.log('Brought under control.');
+      //   return;
+      //
+      // }
+
+      ///NOTE: e.stopPropagation() is insufficent e.stopImmediatePropagation(); must be called to end other component zooming problems.
+      // e.preventDefault();
+
 
       this.before(this);
 

@@ -14,10 +14,13 @@ export function createCounter() {
 }
 
 export function getPaneItems1(root) {
+
 	const { subscribe, update } = writable( [] );
 
-  // root.on('children', v=>update(x => v), {initialize:true});
-  root.on('children.changed', v=>update(x => v), {initialize:true});
+  
+
+
+  root.on('applications.changed', v=>update(x => v), {initialize:true});
 
 	return {
 		subscribe,

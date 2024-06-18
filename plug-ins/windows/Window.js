@@ -35,6 +35,13 @@ export default class Window {
     contain:true,
   };
 
+  traits = {
+    createWindowComponent(component){
+      component.parent = this;
+      this.children.create(component);
+    },
+  };
+
   methods = {
 
 
@@ -104,10 +111,7 @@ export default class Window {
 
     },
 
-    createWindowComponent(component){
-      component.parent = this;
-      this.children.create(component);
-    },
+
 
 
 

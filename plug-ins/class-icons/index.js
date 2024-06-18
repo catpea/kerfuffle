@@ -67,6 +67,14 @@ export default function(className){
       response = 'brightness-high';
       break;
 
+    case 'Trait':
+      response = 'gear-wide';
+      break;
+
+    case 'Method':
+      response = 'gear-wide-connected';
+      break;
+
     default:
       response = 'list';
   }
