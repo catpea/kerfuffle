@@ -40,10 +40,10 @@ export default class Analysis {
       });
 
       this.pipe.on('in', (packet)=>{
-        const object = this.getRoot().applications.get(packet.id);
+        const object = packet.object||this.getRoot().applications.get(packet.id);
         this.component.$set({ object});
-        this.connectObservableToWritable( object, 'x', this, 'xWritable', (v)=>v.toFixed(2))
-        this.connectObservableToWritable( object, 'y', this, 'yWritable', (v)=>v.toFixed(2))
+        // this.connectObservableToWritable( object, 'x', this, 'xWritable', (v)=>v.toFixed(2))
+        // this.connectObservableToWritable( object, 'y', this, 'yWritable', (v)=>v.toFixed(2))
 
         console.log(object);
       })

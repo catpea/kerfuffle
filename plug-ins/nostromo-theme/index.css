@@ -1,6 +1,7 @@
 :root, [data-ui-theme=nostromo] {
   --editor-primary: #58934c;
   --editor-secondary: #958d44;
+  --editor-white: white;
 
   --editor-primary-hue: 183;
 
@@ -77,6 +78,21 @@ svg.editor-interface {
 }
 .hoverable-secondary:hover {
   background-color: var(--bs-dark)
+}
+
+.hoverable-text-primary:hover {
+  color: var(--bs-primary) ! important;
+}
+
+.hoverable-text-light:hover > * {
+  color: var(--editor-white) ! important;
+  opacity:1 !important;
+}
+.hoverable-text-dark:hover {
+  color: var(--bs-dark) ! important;
+}
+.hoverable-dotted:hover {
+  border-bottom: 1px dotted var(--bs-dark) ! important;
 }
 
 

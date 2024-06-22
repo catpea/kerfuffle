@@ -357,7 +357,7 @@ export class Instance {
       }
 
 
-      if(control?.manualDispose){
+      if(control?.manualDispose || options?.manual){
         return observableData[name].observe(path||name, observerCallback, options);
       }else{
         disposable( observableData[name].observe(path||name, observerCallback, options) );
@@ -554,7 +554,10 @@ export class Primitive {
   // Install Observer Functionality
 
   #observers = {};
-  observe(eventName, observerCallback, options = { autorun: true }) {
+  observe(eventName, observerCallback, configuration) {
+    const defaults = { autorun: true };
+    const options = Object.assign(defaults, configuration);
+
     if (typeof observerCallback !== "function") throw new TypeError("observer must be a function.");
     if (!Array.isArray(this.#observers[eventName])) this.#observers[eventName] = []; // If there isn't an observers array for this key yet, create it
     this.#observers[eventName].push(observerCallback);
@@ -620,7 +623,9 @@ export class List {
   // Install Observer Functionality
 
   #observers = {};
-  observe(eventName, observerCallback, options = { initialize:false, autorun: true, replay: false }) {
+  observe(eventName, observerCallback, configuration) {
+    const defaults = {initialize:false, autorun: true, replay: false};
+    const options = Object.assign(defaults, configuration);
 
     if (typeof observerCallback !== "function") throw new TypeError("observer must be a function.");
     if (!Array.isArray(this.#observers[eventName])) this.#observers[eventName] = []; // If there isn't an observers array for this key yet, create it

@@ -95,6 +95,8 @@ export default class Pane {
     },
 
     mount(){
+      // this.parent.elements = this.elements;
+
       // console.log(Δ);
 
       // let X ='';

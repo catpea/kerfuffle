@@ -24,7 +24,7 @@ export default class Architecture {
           target: this.foreign.body,
           props: {
             send: this.send.bind(this),
-            paneItems: stores.getPaneItems( this.getRoot() )
+            tree: stores.getApplicationTree(this)
           }
       });
 

@@ -39,6 +39,10 @@ export default function(className){
       response = 'usb';
       break;
 
+    case 'Label':
+      response = 'alphabet';
+      break;
+
     case 'Foreign':
       response = 'wrench-adjustable';
       break;
