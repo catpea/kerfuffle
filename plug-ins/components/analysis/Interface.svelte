@@ -1,7 +1,7 @@
 <script>
   import Entry from './Entry.svelte';
   import classIcons from '/plug-ins/class-icons/index.js';
-
+  import stopWheel from '/plug-ins/stop-wheel/index.js';
   import {getFunctionSignature} from '/plug-ins/code-tools/index.js';
 
   export let stores;
@@ -17,24 +17,6 @@
     Trait: true,
     Method: true,
   };
-
-  function stopWheel(el){
-
-
-
-      el.addEventListener('wheel', (e)=>{
-        if (e.shiftKey) {
-          e.preventDefault();
-          return false;
-        };
-
-        e.stopPropagation()
-        // e.stopImmediatePropagation()
-          // e.preventDefault();
-          // return false;
-        // }
-      });
-  }
 
 </script>
 

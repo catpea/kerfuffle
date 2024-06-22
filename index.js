@@ -12427,6 +12427,7 @@
         if (if_block1)
           if_block1.c();
         attr(span, "class", "ps-2 text-muted");
+        set_style(span, "cursor", "pointer");
         attr(i, "class", i_class_value = "bi bi-" + class_icons_default(
           /*item*/
           ctx[2].type
@@ -12577,6 +12578,19 @@
   };
   var Entry_default = Entry;
 
+  // plug-ins/stop-wheel/index.js
+  function stopWheel(el) {
+    el.addEventListener("wheel", (e) => {
+      if (e.shiftKey) {
+        e.preventDefault();
+        return false;
+      }
+      ;
+      e.stopPropagation();
+    });
+  }
+  __name(stopWheel, "stopWheel");
+
   // plug-ins/components/architecture/Interface.svelte
   function create_fragment8(ctx) {
     let div5;
@@ -12584,9 +12598,9 @@
     let div1;
     let div0;
     let button0;
-    let t0;
-    let button1;
     let t1;
+    let button1;
+    let t3;
     let div4;
     let div3;
     let ul;
@@ -12614,20 +12628,20 @@
         div1 = element("div");
         div0 = element("div");
         button0 = element("button");
-        button0.innerHTML = `<i class="bi bi-arrow-clockwise"></i>`;
-        t0 = space();
-        button1 = element("button");
-        button1.innerHTML = `<i class="bi bi-gem"></i>`;
+        button0.innerHTML = `<i class="bi bi-camera me-2"></i> Refresh Snapshot`;
         t1 = space();
+        button1 = element("button");
+        button1.innerHTML = `<i class="bi bi-vignette me-2"></i> Squelch`;
+        t3 = space();
         div4 = element("div");
         div3 = element("div");
         ul = element("ul");
         create_component(entry.$$.fragment);
         attr(button0, "type", "button");
-        attr(button0, "class", "btn btn-outline-dark");
+        attr(button0, "class", "btn btn-outline-secondary");
         attr(button1, "type", "button");
-        attr(button1, "class", "btn btn-outline-dark");
-        attr(div0, "class", "btn-group float-end");
+        attr(button1, "class", "btn btn-outline-secondary");
+        attr(div0, "class", "btn-group btn-group-sm float-end");
         attr(div1, "class", "col");
         attr(div2, "class", "row");
         attr(ul, "class", "list-unstyled my-3");
@@ -12642,9 +12656,9 @@
         append(div2, div1);
         append(div1, div0);
         append(div0, button0);
-        append(div0, t0);
+        append(div0, t1);
         append(div0, button1);
-        append(div5, t1);
+        append(div5, t3);
         append(div5, div4);
         append(div4, div3);
         append(div3, ul);
@@ -12696,25 +12710,13 @@
     };
   }
   __name(create_fragment8, "create_fragment");
-  function stopWheel(el) {
-    el.addEventListener("wheel", (e) => {
-      if (e.shiftKey) {
-        e.preventDefault();
-        return false;
-      }
-      ;
-      e.stopPropagation();
-    });
-  }
-  __name(stopWheel, "stopWheel");
   function instance8($$self, $$props, $$invalidate) {
     let $tree, $$unsubscribe_tree = noop, $$subscribe_tree = /* @__PURE__ */ __name(() => ($$unsubscribe_tree(), $$unsubscribe_tree = subscribe(tree, ($$value) => $$invalidate(2, $tree = $$value)), tree), "$$subscribe_tree");
     $$self.$$.on_destroy.push(() => $$unsubscribe_tree());
     let { send } = $$props;
     let { tree } = $$props;
     $$subscribe_tree();
-    let opened = { Applications: true };
-    const click_handler = /* @__PURE__ */ __name(() => tree.refresh(), "click_handler");
+    const click_handler = /* @__PURE__ */ __name(() => tree.snapshot(), "click_handler");
     $$self.$$set = ($$props2) => {
       if ("send" in $$props2)
         $$invalidate(0, send = $$props2.send);
@@ -12785,57 +12787,35 @@
 
   // plug-ins/components/architecture/stores.js
   function getApplicationTree(component) {
-    const monitor = [];
-    const unmonitor = [];
     const { subscribe: subscribe2, update: update3 } = writable({ children: [] });
     function addDirectory({ id: id2, name, type, parent }, depth = 0) {
-      const directory = { id: id2, name, type, children: [], object: parent, open: depth > 2 ? false : true };
+      const directory = { id: id2, name, type, children: [], object: parent, open: depth > 3 ? false : true };
       depth++;
       if (parent?.children) {
         for (const child of parent.children) {
           directory.children.push(addDirectory({ id: child.id, name: child.name || child.oo.name, type: child.oo.name, parent: child }, depth));
-          monitor.push([parent, "children.changed"]);
         }
-      }
-      if (type == "Workspace" && parent?.applications) {
       }
       if (type !== "Workspace" && parent?.applications) {
         for (const element2 of parent.applications) {
           directory.children.push(addDirectory({ id: element2.id, name: element2.name || element2.oo.name, type: element2.oo.name, parent: element2 }, depth));
-          monitor.push([parent, "applications.changed"]);
         }
       }
       return directory;
     }
     __name(addDirectory, "addDirectory");
     const system2 = component.getRoot();
-    function refresh() {
-      console.log("REFRESH!", unmonitor.length);
-      unmonitor.map((o) => o());
-      monitor.splice(0, monitor.length);
+    function snapshot() {
       update3(() => addDirectory({ id: system2.id, name: system2.name, parent: system2, type: system2.oo.name }));
-      monitor.map(([o, event]) => unmonitor.push(o.on(event, () => setTimeout(
-        () => refresh(),
-        1
-        /* BUG: still inacurate, but a nice try, must run after component creation copmpletes via mout & co.*/
-      ), { autorun: false, manual: true })));
     }
-    __name(refresh, "refresh");
-    system2.on("applications.changed", () => refresh());
-    refresh();
-    function cleanup() {
-      console.log("STORE CLEANUP!");
-      unmonitor.map((o) => o());
-      monitor.splice(0, monitor.length);
-    }
-    __name(cleanup, "cleanup");
+    __name(snapshot, "snapshot");
+    snapshot();
+    setTimeout(() => snapshot(), 100);
+    setTimeout(() => snapshot(), 1e3);
+    setTimeout(() => snapshot(), 5e3);
     return {
-      subscribe: (...argv) => {
-        cleanup();
-        return subscribe2(...argv);
-      },
-      refresh
-      // increment
+      subscribe: subscribe2,
+      snapshot
     };
   }
   __name(getApplicationTree, "getApplicationTree");
@@ -13122,7 +13102,7 @@
         if (if_block2)
           if_block2.m(div2, null);
         if (!mounted) {
-          dispose = action_destroyer(stopWheel_action = stopWheel2.call(null, div4));
+          dispose = action_destroyer(stopWheel_action = stopWheel.call(null, div4));
           mounted = true;
         }
       },
@@ -14509,17 +14489,6 @@
     };
   }
   __name(create_fragment9, "create_fragment");
-  function stopWheel2(el) {
-    el.addEventListener("wheel", (e) => {
-      if (e.shiftKey) {
-        e.preventDefault();
-        return false;
-      }
-      ;
-      e.stopPropagation();
-    });
-  }
-  __name(stopWheel2, "stopWheel");
   function instance9($$self, $$props, $$invalidate) {
     let $x, $$unsubscribe_x = noop, $$subscribe_x = /* @__PURE__ */ __name(() => ($$unsubscribe_x(), $$unsubscribe_x = subscribe(x, ($$value) => $$invalidate(4, $x = $$value)), x), "$$subscribe_x");
     let $y, $$unsubscribe_y = noop, $$subscribe_y = /* @__PURE__ */ __name(() => ($$unsubscribe_y(), $$unsubscribe_y = subscribe(y, ($$value) => $$invalidate(5, $y = $$value)), y), "$$subscribe_y");
