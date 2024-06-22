@@ -10874,6 +10874,19 @@
     };
   };
 
+  // plug-ins/stop-wheel/index.js
+  function stopWheel(el) {
+    el.addEventListener("wheel", (e) => {
+      if (e.shiftKey) {
+        e.preventDefault();
+        return false;
+      }
+      ;
+      e.stopPropagation();
+    });
+  }
+  __name(stopWheel, "stopWheel");
+
   // plug-ins/windows/ui/Menu.svelte
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
@@ -10935,6 +10948,9 @@
     let div0;
     let t1;
     let ul;
+    let stopWheel_action;
+    let mounted;
+    let dispose;
     let each_value = ensure_array_like(
       /*options*/
       ctx[0].data
@@ -10966,6 +10982,10 @@
           if (each_blocks[i]) {
             each_blocks[i].m(ul, null);
           }
+        }
+        if (!mounted) {
+          dispose = action_destroyer(stopWheel_action = stopWheel.call(null, div1));
+          mounted = true;
         }
       },
       p(ctx2, [dirty]) {
@@ -10999,6 +11019,8 @@
           detach(div1);
         }
         destroy_each(each_blocks, detaching);
+        mounted = false;
+        dispose();
       }
     };
   }
@@ -12577,19 +12599,6 @@
     }
   };
   var Entry_default = Entry;
-
-  // plug-ins/stop-wheel/index.js
-  function stopWheel(el) {
-    el.addEventListener("wheel", (e) => {
-      if (e.shiftKey) {
-        e.preventDefault();
-        return false;
-      }
-      ;
-      e.stopPropagation();
-    });
-  }
-  __name(stopWheel, "stopWheel");
 
   // plug-ins/components/architecture/Interface.svelte
   function create_fragment8(ctx) {
