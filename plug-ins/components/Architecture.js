@@ -5,6 +5,8 @@ import Foreign from "/plug-ins/windows/Foreign.js";
 import Interface from '/plug-ins/components/architecture/Interface.svelte';
 import stores from '/plug-ins/components/architecture/stores.js';
 
+import stopWheel from '/plug-ins/stop-wheel/index.js';
+
 export default class Architecture {
   static extends = [Application];
 
@@ -28,6 +30,7 @@ export default class Architecture {
           }
       });
 
+       stopWheel(this.foreign.body);
     },
 
     stop(){

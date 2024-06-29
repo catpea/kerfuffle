@@ -1,7 +1,6 @@
 <script>
   import Entry from './Entry.svelte';
   import classIcons from '/plug-ins/class-icons/index.js';
-  import stopWheel from '/plug-ins/stop-wheel/index.js';
   import {getFunctionSignature} from '/plug-ins/code-tools/index.js';
 
   export let stores;
@@ -22,7 +21,7 @@
 
 {#if object}
 
-  <div class="container-fluid pt-3" style="overflow-y: scroll;" use:stopWheel>
+  <div class="container-fluid pt-3">
 
       <div class="row">
         <div class="col">

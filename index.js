@@ -9542,6 +9542,83 @@
     return array_like_or_iterator?.length !== void 0 ? array_like_or_iterator : Array.from(array_like_or_iterator);
   }
   __name(ensure_array_like, "ensure_array_like");
+  function outro_and_destroy_block(block, lookup) {
+    transition_out(block, 1, 1, () => {
+      lookup.delete(block.key);
+    });
+  }
+  __name(outro_and_destroy_block, "outro_and_destroy_block");
+  function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block4, next, get_context) {
+    let o = old_blocks.length;
+    let n = list.length;
+    let i = o;
+    const old_indexes = {};
+    while (i--)
+      old_indexes[old_blocks[i].key] = i;
+    const new_blocks = [];
+    const new_lookup = /* @__PURE__ */ new Map();
+    const deltas = /* @__PURE__ */ new Map();
+    const updates = [];
+    i = n;
+    while (i--) {
+      const child_ctx = get_context(ctx, list, i);
+      const key = get_key(child_ctx);
+      let block = lookup.get(key);
+      if (!block) {
+        block = create_each_block4(key, child_ctx);
+        block.c();
+      } else if (dynamic) {
+        updates.push(() => block.p(child_ctx, dirty));
+      }
+      new_lookup.set(key, new_blocks[i] = block);
+      if (key in old_indexes)
+        deltas.set(key, Math.abs(i - old_indexes[key]));
+    }
+    const will_move = /* @__PURE__ */ new Set();
+    const did_move = /* @__PURE__ */ new Set();
+    function insert2(block) {
+      transition_in(block, 1);
+      block.m(node, next);
+      lookup.set(block.key, block);
+      next = block.first;
+      n--;
+    }
+    __name(insert2, "insert");
+    while (o && n) {
+      const new_block = new_blocks[n - 1];
+      const old_block = old_blocks[o - 1];
+      const new_key = new_block.key;
+      const old_key = old_block.key;
+      if (new_block === old_block) {
+        next = new_block.first;
+        o--;
+        n--;
+      } else if (!new_lookup.has(old_key)) {
+        destroy(old_block, lookup);
+        o--;
+      } else if (!lookup.has(new_key) || will_move.has(new_key)) {
+        insert2(new_block);
+      } else if (did_move.has(old_key)) {
+        o--;
+      } else if (deltas.get(new_key) > deltas.get(old_key)) {
+        did_move.add(new_key);
+        insert2(new_block);
+      } else {
+        will_move.add(old_key);
+        o--;
+      }
+    }
+    while (o--) {
+      const old_block = old_blocks[o];
+      if (!new_lookup.has(old_block.key))
+        destroy(old_block, lookup);
+    }
+    while (n)
+      insert2(new_blocks[n - 1]);
+    run_all(updates);
+    return new_blocks;
+  }
+  __name(update_keyed_each, "update_keyed_each");
 
   // node_modules/svelte/src/shared/boolean_attributes.js
   var _boolean_attributes = (
@@ -10637,7 +10714,7 @@
       library: null,
       panX: 0,
       panY: 0,
-      zoom: 0.5,
+      zoom: 1,
       applications: [],
       elements: [],
       anchors: [],
@@ -10877,12 +10954,22 @@
   // plug-ins/stop-wheel/index.js
   function stopWheel(el) {
     el.addEventListener("wheel", (e) => {
-      if (e.shiftKey) {
+      const hasVerticalScrollbar = el.clientHeight < el.scrollHeight;
+      const hasHorizontalScrollbar = el.clientWidth < el.scrollWidth;
+      const isHoldingShiftKey = e.shiftKey;
+      let action = "zoom";
+      if (hasVerticalScrollbar)
+        action = "scroll";
+      if (isHoldingShiftKey)
+        action = "zoom";
+      if (action == "zoom") {
         e.preventDefault();
         return false;
       }
       ;
-      e.stopPropagation();
+      if (action == "scroll") {
+        e.stopPropagation();
+      }
     });
   }
   __name(stopWheel, "stopWheel");
@@ -12109,7 +12196,6 @@
   function get_each_context2(ctx, list, i) {
     const child_ctx = ctx.slice();
     child_ctx[2] = list[i];
-    child_ctx[8] = i;
     return child_ctx;
   }
   __name(get_each_context2, "get_each_context");
@@ -12222,19 +12308,23 @@
   __name(create_if_block_2, "create_if_block_2");
   function create_if_block2(ctx) {
     let ul;
+    let each_blocks = [];
+    let each_1_lookup = /* @__PURE__ */ new Map();
     let ul_transition;
     let current;
     let each_value = ensure_array_like(
       /*item*/
       ctx[2].children
     );
-    let each_blocks = [];
+    const get_key = /* @__PURE__ */ __name((ctx2) => (
+      /*item*/
+      ctx2[2].id
+    ), "get_key");
     for (let i = 0; i < each_value.length; i += 1) {
-      each_blocks[i] = create_each_block2(get_each_context2(ctx, each_value, i));
+      let child_ctx = get_each_context2(ctx, each_value, i);
+      let key = get_key(child_ctx);
+      each_1_lookup.set(key, each_blocks[i] = create_each_block2(key, child_ctx));
     }
-    const out = /* @__PURE__ */ __name((i) => transition_out(each_blocks[i], 1, 1, () => {
-      each_blocks[i] = null;
-    }), "out");
     return {
       c() {
         ul = element("ul");
@@ -12259,23 +12349,8 @@
             /*item*/
             ctx2[2].children
           );
-          let i;
-          for (i = 0; i < each_value.length; i += 1) {
-            const child_ctx = get_each_context2(ctx2, each_value, i);
-            if (each_blocks[i]) {
-              each_blocks[i].p(child_ctx, dirty);
-              transition_in(each_blocks[i], 1);
-            } else {
-              each_blocks[i] = create_each_block2(child_ctx);
-              each_blocks[i].c();
-              transition_in(each_blocks[i], 1);
-              each_blocks[i].m(ul, null);
-            }
-          }
           group_outros();
-          for (i = each_value.length; i < each_blocks.length; i += 1) {
-            out(i);
-          }
+          each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx2, each_value, each_1_lookup, ul, outro_and_destroy_block, create_each_block2, null, get_each_context2);
           check_outros();
         }
       },
@@ -12307,7 +12382,6 @@
         current = true;
       },
       o(local) {
-        each_blocks = each_blocks.filter(Boolean);
         for (let i = 0; i < each_blocks.length; i += 1) {
           transition_out(each_blocks[i]);
         }
@@ -12332,14 +12406,17 @@
         if (detaching) {
           detach(ul);
         }
-        destroy_each(each_blocks, detaching);
+        for (let i = 0; i < each_blocks.length; i += 1) {
+          each_blocks[i].d();
+        }
         if (detaching && ul_transition)
           ul_transition.end();
       }
     };
   }
   __name(create_if_block2, "create_if_block");
-  function create_each_block2(ctx) {
+  function create_each_block2(key_1, ctx) {
+    let first;
     let entry;
     let current;
     entry = new Entry({
@@ -12359,27 +12436,33 @@
       }
     });
     return {
+      key: key_1,
+      first: null,
       c() {
+        first = empty();
         create_component(entry.$$.fragment);
+        this.first = first;
       },
       m(target, anchor) {
+        insert(target, first, anchor);
         mount_component(entry, target, anchor);
         current = true;
       },
-      p(ctx2, dirty) {
+      p(new_ctx, dirty) {
+        ctx = new_ctx;
         const entry_changes = {};
         if (dirty & /*controller*/
         2)
           entry_changes.controller = /*controller*/
-          ctx2[1];
+          ctx[1];
         if (dirty & /*send*/
         1)
           entry_changes.send = /*send*/
-          ctx2[0];
+          ctx[0];
         if (dirty & /*item*/
         4)
           entry_changes.item = /*item*/
-          ctx2[2];
+          ctx[2];
         entry.$set(entry_changes);
       },
       i(local) {
@@ -12393,6 +12476,9 @@
         current = false;
       },
       d(detaching) {
+        if (detaching) {
+          detach(first);
+        }
         destroy_component(entry, detaching);
       }
     };
@@ -12614,7 +12700,6 @@
     let div3;
     let ul;
     let entry;
-    let stopWheel_action;
     let current;
     let mounted;
     let dispose;
@@ -12637,10 +12722,10 @@
         div1 = element("div");
         div0 = element("div");
         button0 = element("button");
-        button0.innerHTML = `<i class="bi bi-camera me-2"></i> Refresh Snapshot`;
+        button0.innerHTML = `<i class="bi bi-vignette me-2"></i> Squelch`;
         t1 = space();
         button1 = element("button");
-        button1.innerHTML = `<i class="bi bi-vignette me-2"></i> Squelch`;
+        button1.innerHTML = `<i class="bi bi-camera me-2"></i> Refresh Snapshot`;
         t3 = space();
         div4 = element("div");
         div3 = element("div");
@@ -12657,7 +12742,6 @@
         attr(div3, "class", "col");
         attr(div4, "class", "row");
         attr(div5, "class", "container-fluid pt-3");
-        set_style(div5, "overflow-y", "scroll");
       },
       m(target, anchor) {
         insert(target, div5, anchor);
@@ -12674,15 +12758,12 @@
         mount_component(entry, ul, null);
         current = true;
         if (!mounted) {
-          dispose = [
-            listen(
-              button0,
-              "click",
-              /*click_handler*/
-              ctx[3]
-            ),
-            action_destroyer(stopWheel_action = stopWheel.call(null, div5))
-          ];
+          dispose = listen(
+            button1,
+            "click",
+            /*click_handler*/
+            ctx[3]
+          );
           mounted = true;
         }
       },
@@ -12714,7 +12795,7 @@
         }
         destroy_component(entry);
         mounted = false;
-        run_all(dispose);
+        dispose();
       }
     };
   }
@@ -12853,6 +12934,7 @@
             tree: stores_default.getApplicationTree(this)
           }
         });
+        stopWheel(this.foreign.body);
       },
       stop() {
         console.log("todo: stopping root application");
@@ -12997,9 +13079,6 @@
     let t11;
     let t12;
     let t13;
-    let stopWheel_action;
-    let mounted;
-    let dispose;
     let each_value_6 = ensure_array_like(
       /*object*/
       ctx[0].oo.extends
@@ -13071,7 +13150,6 @@
         attr(div2, "class", "col");
         attr(div3, "class", "row");
         attr(div4, "class", "container-fluid pt-3");
-        set_style(div4, "overflow-y", "scroll");
       },
       m(target, anchor) {
         insert(target, div4, anchor);
@@ -13110,10 +13188,6 @@
         append(div2, t13);
         if (if_block2)
           if_block2.m(div2, null);
-        if (!mounted) {
-          dispose = action_destroyer(stopWheel_action = stopWheel.call(null, div4));
-          mounted = true;
-        }
       },
       p(ctx2, dirty) {
         if (dirty & /*object*/
@@ -13217,8 +13291,6 @@
           if_block1.d();
         if (if_block2)
           if_block2.d();
-        mounted = false;
-        dispose();
       }
     };
   }
@@ -14610,6 +14682,7 @@
             paneItems: stores_default2.getPaneItems(this.getRoot())
           }
         });
+        stopWheel(this.foreign.body);
         this.pipe.on("in", (packet) => {
           const object = packet.object || this.getRoot().applications.get(packet.id);
           this.component.$set({ object });

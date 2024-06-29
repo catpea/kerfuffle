@@ -5,6 +5,8 @@ import Foreign from "/plug-ins/windows/Foreign.js";
 import Interface from '/plug-ins/components/analysis/Interface.svelte';
 import stores from '/plug-ins/components/analysis/stores.js';
 
+import stopWheel from '/plug-ins/stop-wheel/index.js';
+
 import { writable } from 'svelte/store'
 
 export default class Analysis {
@@ -38,6 +40,8 @@ export default class Analysis {
             paneItems: stores.getPaneItems( this.getRoot() )
           }
       });
+
+      stopWheel(this.foreign.body);
 
       this.pipe.on('in', (packet)=>{
         const object = packet.object||this.getRoot().applications.get(packet.id);

@@ -29,7 +29,7 @@
   </div>
   {#if open}
     <ul class="list-unstyled ps-4" transition:slide={{ delay: 1, duration: 300, easing: quintOut, axis: 'y' }}>
-      {#each item.children as item, i}
+      {#each item.children as item (item.id)}
         <svelte:self {controller} {send} {item}/>
       {/each}
     </ul>
