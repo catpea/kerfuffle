@@ -1,13 +1,11 @@
 <script>
-import stopWheel from '/plug-ins/stop-wheel/index.js';
-
   export let control;
 
   export let options = {data:[]};
 
 </script>
 
-<div class="card" use:stopWheel>
+<div class="card">
   <div class="card-header">
     Operations
   </div>

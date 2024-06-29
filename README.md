@@ -3,6 +3,17 @@ Visual Programming Language
 
 ## TODO
 
+- [ ] Selection Manager
+- [ ] Convert Selection To Window
+- [ ] Selete Connection
+- [ ] Delete Component
+- [ ] Resizable Components
+
+- [ ] Minimize Window To A Window Face
+- [ ] Face
+- [ ] Face Toolbox
+
+- [ ] Non-Selectable Text
 - [ ] Function Node
 - [ ] Ports
 - [ ] Port Node

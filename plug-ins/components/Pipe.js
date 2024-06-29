@@ -12,6 +12,8 @@ export default class Pipe {
   methods = {
     initialize(){
       this.showCaption = false;
+      this.isResizable = false;
+
     },
     mount(){
 

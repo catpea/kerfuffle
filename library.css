@@ -11522,7 +11522,10 @@ fieldset:disabled .btn {
   --editor-primary-hue: 183;
   --mozilla-light: #565656;
   --mozilla-twilight: #3c3c3c;
+  --mozilla-dawn: #313137;
+  --mozilla-dusk: #232327;
   --mozilla-dark: #1c1b22;
+  --mozilla-midnight: #18181a;
   --fedora-dark: #2f2f2f;
   --codemirror-dark: #282c34;
   --editor-foreground-primary: var(--mozilla-light);
@@ -11569,7 +11572,7 @@ svg.editor-interface {
   background-color: var(--bs-primary);
 }
 .hoverable-secondary:hover {
-  background-color: var(--bs-dark);
+  night background-color: var(--bs-dark);
 }
 .hoverable-text-primary:hover {
   color: var(--bs-primary) !important;
@@ -11607,6 +11610,9 @@ svg.editor-interface {
   &.indicate {
     fill: var(--editor-foreground-primary);
   }
+}
+.window-resize-handle {
+  fill: var(--mozilla-dawn);
 }
 .editor-socket-pad {
   stroke: var(--editor-primary);

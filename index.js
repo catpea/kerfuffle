@@ -8368,6 +8368,95 @@
     }
   };
 
+  // plug-ins/meowse/Resize.js
+  var Resize = class {
+    static {
+      __name(this, "Resize");
+    }
+    box;
+    area = window;
+    handle = null;
+    scale;
+    before = () => {
+    };
+    movement = () => {
+    };
+    after = () => {
+    };
+    mouseDownHandler;
+    mouseMoveHandler;
+    mouseUpHandler;
+    dragging = false;
+    previousX = 0;
+    previousY = 0;
+    minimumX = 128;
+    minimumY = 128;
+    sinkX = 0;
+    sinkY = 0;
+    simulatedW = 0;
+    simulatedH = 0;
+    constructor({ box, handle, area, before, movement, after, scale, minimumX, minimumY }) {
+      this.box = box;
+      this.handle = handle;
+      this.area = area;
+      this.before = before;
+      this.movement = movement;
+      this.after = after;
+      this.scale = scale;
+      this.minimumX = minimumX;
+      this.minimumY = minimumY;
+      this.#mount();
+    }
+    #mount() {
+      this.mouseDownHandler = (e) => {
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+        this.sinkX = 0;
+        this.sinkY = 0;
+        this.simulatedW = this.box.w;
+        this.simulatedH = this.box.h;
+        this.area.addEventListener("mousemove", this.mouseMoveHandler);
+        this.before();
+      };
+      this.mouseMoveHandler = (e) => {
+        let movementX = this.previousX - e.screenX;
+        let movementY = this.previousY - e.screenY;
+        const scale = this.scale();
+        movementX = movementX / scale;
+        movementY = movementY / scale;
+        this.simulatedW -= movementX;
+        this.simulatedH -= movementY;
+        let limitX = this.simulatedW < this.minimumX;
+        let limitY = this.simulatedH < this.minimumY;
+        if (limitX) {
+          this.sinkX = this.sinkX - movementX;
+          this.box.w = this.minimumX;
+        } else {
+          this.box.w = this.simulatedW;
+        }
+        if (limitY) {
+          this.sinkY = this.sinkY - movementY;
+          this.box.h = this.minimumY;
+        } else {
+          this.box.h = this.simulatedH;
+        }
+        this.previousX = e.screenX;
+        this.previousY = e.screenY;
+      };
+      this.mouseUpHandler = (e) => {
+        this.after();
+        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      };
+      this.handle.addEventListener("mousedown", this.mouseDownHandler);
+      this.area.addEventListener("mouseup", this.mouseUpHandler);
+    }
+    destroy() {
+      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
+      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
+      this.area.removeEventListener("mouseup", this.mouseUpHandler);
+    }
+  };
+
   // plug-ins/windows/Window.js
   var Window = class {
     static {
@@ -8377,6 +8466,7 @@
     observables = {
       caption: "Untitled",
       showCaption: true,
+      isResizable: true,
       showMenu: false,
       showStatus: false,
       socketRegistry: [],
@@ -8393,12 +8483,44 @@
     };
     methods = {
       initialize() {
-        if (!this.isRootWindow) {
-          this.r = 5;
-          this.b = 5;
-          this.s = 3;
-        }
         this.caption = `${this.name || this.oo.name} (${this.id})`;
+        if (this.isRootWindow)
+          return;
+        if (this.oo.name == "Pipe")
+          return;
+        this.r = 5;
+        this.b = 5;
+        this.s = 3;
+        if (this.isResizable) {
+          let width = 32;
+          let height = 32;
+          this.el.ResizeHandle = svg.rect({
+            class: "window-resize-handle",
+            "stroke-width": 0,
+            "fill": "magenta",
+            width,
+            height
+          });
+          this.any("w h x y", ({ w, h, x, y }) => {
+            update(this.el.ResizeHandle, { x: this.x + this.w - width * 0.8, y: this.y + this.h - height * 0.8 });
+          });
+          this.on("r", (ry) => update(this.el.ResizeHandle, { ry }));
+          const resize = new Resize({
+            area: window,
+            minimumX: 320,
+            minimumY: 200,
+            handle: this.el.ResizeHandle,
+            scale: () => this.getScale(this),
+            box: this.getApplication(this),
+            before: () => {
+            },
+            movement: ({ x, y }) => {
+            },
+            after: () => {
+            }
+          });
+          this.destructable = () => resize.destroy();
+        }
       },
       mount() {
         this.draw();
@@ -8572,8 +8694,6 @@
     }
     #mount() {
       this.movelHandler = (e) => {
-        const [cursorX, cursorY] = this.#translateCursor(e.clientX, e.clientY);
-        this.feedback({ cursorX, cursorY });
       };
       this.wheelHandler = (e) => {
         e.stopImmediatePropagation();
@@ -8607,121 +8727,50 @@
       const response = { zoom: zoom1, panX: panX1, panY: panY1 };
       return response;
     }
-    #translateCursor(x0, y0) {
-      const localList = this.transforms();
-      let x1 = x0;
-      let y1 = y0;
-      let parentZoom = 1;
-      let locationX = 0;
-      let locationY = 0;
-      for (const [i, t] of localList.entries()) {
-        let curX = t.x * parentZoom;
-        locationX = locationX + curX;
-        let curY = t.y * parentZoom;
-        locationY = locationY + curY;
-        let curPanX = t.panX * parentZoom;
-        locationX = locationX + curPanX;
-        let curPanY = t.panY * parentZoom;
-        locationY = locationY + curPanY;
-        parentZoom = parentZoom * t.zoom;
-      }
-      x1 = x1 - locationX;
-      y1 = y1 - locationY;
-      const self = localList[localList.length - 1];
-      const finalZoom = localList.map((o) => o.zoom).reduce((a, c) => a * c, 1) / self.zoom;
-      x1 = x1 / finalZoom;
-      y1 = y1 / finalZoom;
-      return [x1, y1];
-    }
-  };
-
-  // plug-ins/meowse/Resize.js
-  var Resize = class {
-    static {
-      __name(this, "Resize");
-    }
-    box;
-    area = window;
-    handle = null;
-    scale;
-    before = () => {
-    };
-    movement = () => {
-    };
-    after = () => {
-    };
-    mouseDownHandler;
-    mouseMoveHandler;
-    mouseUpHandler;
-    dragging = false;
-    previousX = 0;
-    previousY = 0;
-    minimumX = 128;
-    minimumY = 128;
-    sinkX = 0;
-    sinkY = 0;
-    simulatedW = 0;
-    simulatedH = 0;
-    constructor({ box, handle, area, before, movement, after, scale, minimumX, minimumY }) {
-      this.box = box;
-      this.handle = handle;
-      this.area = area;
-      this.before = before;
-      this.movement = movement;
-      this.after = after;
-      this.scale = scale;
-      this.minimumX = minimumX;
-      this.minimumY = minimumY;
-      this.#mount();
-    }
-    #mount() {
-      this.mouseDownHandler = (e) => {
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-        this.sinkX = 0;
-        this.sinkY = 0;
-        this.simulatedW = this.box.w;
-        this.simulatedH = this.box.h;
-        this.area.addEventListener("mousemove", this.mouseMoveHandler);
-        this.before();
-      };
-      this.mouseMoveHandler = (e) => {
-        let movementX = this.previousX - e.screenX;
-        let movementY = this.previousY - e.screenY;
-        const scale = this.scale();
-        movementX = movementX / scale;
-        movementY = movementY / scale;
-        this.simulatedW -= movementX;
-        this.simulatedH -= movementY;
-        let limitX = this.simulatedW < this.minimumX;
-        let limitY = this.simulatedH < this.minimumY;
-        if (limitX) {
-          this.sinkX = this.sinkX - movementX;
-          this.box.w = this.minimumX;
-        } else {
-          this.box.w = this.simulatedW;
-        }
-        if (limitY) {
-          this.sinkY = this.sinkY - movementY;
-          this.box.h = this.minimumY;
-        } else {
-          this.box.h = this.simulatedH;
-        }
-        this.previousX = e.screenX;
-        this.previousY = e.screenY;
-      };
-      this.mouseUpHandler = (e) => {
-        this.after();
-        this.area.removeEventListener("mousemove", this.mouseMoveHandler);
-      };
-      this.handle.addEventListener("mousedown", this.mouseDownHandler);
-      this.area.addEventListener("mouseup", this.mouseUpHandler);
-    }
-    destroy() {
-      this.handle.removeEventListener("mousedown", this.mouseDownHandler);
-      this.area.removeEventListener("mousemove", this.mouseMoveHandler);
-      this.area.removeEventListener("mouseup", this.mouseUpHandler);
-    }
+    // #translateCursor(x0,y0){
+    //
+    //
+    //   const localList = this.transforms();
+    //
+    //   let x1 = x0;
+    //   let y1 = y0;
+    //   let parentZoom = 1;
+    //   let locationX = 0;
+    //   let locationY = 0;
+    //
+    //   // console.log(locationX, locationY);
+    //
+    //   for (const [i,t] of localList.entries()) {
+    //
+    //     // Position of component x
+    //     let curX = (t.x) * parentZoom;
+    //     locationX = locationX + curX;
+    //
+    //     // Position of component y
+    //     let curY = (t.y) * parentZoom;
+    //     locationY = locationY + curY;
+    //
+    //     // Position of parent's x pan
+    //     let curPanX = t.panX * parentZoom;
+    //     locationX = locationX + curPanX;
+    //
+    //     // Position of parent's y pan
+    //     let curPanY = t.panY * parentZoom;
+    //     locationY = locationY + curPanY;
+    //
+    //     parentZoom = parentZoom * t.zoom; // set current zoom as parent zoom
+    //   }
+    //
+    //   x1 = x1 - locationX;
+    //   y1 = y1 - locationY;
+    //
+    //   const self = localList[localList.length-1];
+    //   const finalZoom = localList.map(o=>o.zoom).reduce((a,c)=>a*c,1)/self.zoom;
+    //   x1 = x1/finalZoom
+    //   y1 = y1/finalZoom
+    //
+    //   return [ x1, y1 ];
+    // }
   };
 
   // plug-ins/meowse/Menu.js
@@ -8960,10 +9009,6 @@
     return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
   }
   __name(subscribe, "subscribe");
-  function action_destroyer(action_result) {
-    return action_result && is_function(action_result.destroy) ? action_result.destroy : noop;
-  }
-  __name(action_destroyer, "action_destroyer");
 
   // node_modules/svelte/src/runtime/internal/environment.js
   var is_client = typeof window !== "undefined";
@@ -10714,7 +10759,7 @@
       library: null,
       panX: 0,
       panY: 0,
-      zoom: 1,
+      zoom: 0.5,
       applications: [],
       elements: [],
       anchors: [],
@@ -10759,26 +10804,11 @@
         this.getRoot().origins.create({ id: this.getRootContainer().id, root: this, scene: paneBody.el.Mask });
         this.getApplication().on("showStatus", (showStatus) => {
           if (showStatus) {
-            const [horizontal, [statusBar, resizeHandle]] = nest(Horizontal, [
-              [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p) => p.children.create(c)],
-              [Label, { h: 24, W: 24, text: "///", parent: this }, (c, p) => p.children.create(c)]
+            const [horizontal, [statusBar]] = nest(Horizontal, [
+              [Label, { h: 24, text: "Status: nominal", parent: this }, (c, p) => p.children.create(c)]
+              // [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
             ], (c) => this.children.create(c));
             this.any(["x", "y", "zoom", "w", "h"], ({ x, y, zoom: zoom2, w, h }) => statusBar.text = `${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom2.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-            const resize = new Resize({
-              area: window,
-              minimumX: 320,
-              minimumY: 200,
-              handle: resizeHandle.el.Container,
-              scale: () => this.getParentScale(this),
-              box: this.getApplication(this),
-              before: () => {
-              },
-              movement: ({ x, y }) => {
-              },
-              after: () => {
-              }
-            });
-            this.destructable = () => resize.destroy();
           }
         });
         if (this.parent.isRootWindow) {
@@ -10951,29 +10981,6 @@
     };
   };
 
-  // plug-ins/stop-wheel/index.js
-  function stopWheel(el) {
-    el.addEventListener("wheel", (e) => {
-      const hasVerticalScrollbar = el.clientHeight < el.scrollHeight;
-      const hasHorizontalScrollbar = el.clientWidth < el.scrollWidth;
-      const isHoldingShiftKey = e.shiftKey;
-      let action = "zoom";
-      if (hasVerticalScrollbar)
-        action = "scroll";
-      if (isHoldingShiftKey)
-        action = "zoom";
-      if (action == "zoom") {
-        e.preventDefault();
-        return false;
-      }
-      ;
-      if (action == "scroll") {
-        e.stopPropagation();
-      }
-    });
-  }
-  __name(stopWheel, "stopWheel");
-
   // plug-ins/windows/ui/Menu.svelte
   function get_each_context(ctx, list, i) {
     const child_ctx = ctx.slice();
@@ -11035,9 +11042,6 @@
     let div0;
     let t1;
     let ul;
-    let stopWheel_action;
-    let mounted;
-    let dispose;
     let each_value = ensure_array_like(
       /*options*/
       ctx[0].data
@@ -11069,10 +11073,6 @@
           if (each_blocks[i]) {
             each_blocks[i].m(ul, null);
           }
-        }
-        if (!mounted) {
-          dispose = action_destroyer(stopWheel_action = stopWheel.call(null, div1));
-          mounted = true;
         }
       },
       p(ctx2, [dirty]) {
@@ -11106,8 +11106,6 @@
           detach(div1);
         }
         destroy_each(each_blocks, detaching);
-        mounted = false;
-        dispose();
       }
     };
   }
@@ -11134,6 +11132,29 @@
     }
   };
   var Menu_default = Menu2;
+
+  // plug-ins/stop-wheel/index.js
+  function stopWheel(el) {
+    el.addEventListener("wheel", (e) => {
+      const hasVerticalScrollbar = el.clientHeight < el.scrollHeight;
+      const hasHorizontalScrollbar = el.clientWidth < el.scrollWidth;
+      const isHoldingShiftKey = e.shiftKey;
+      let action = "zoom";
+      if (hasVerticalScrollbar)
+        action = "scroll";
+      if (isHoldingShiftKey)
+        action = "zoom";
+      if (action == "zoom") {
+        e.preventDefault();
+        return false;
+      }
+      ;
+      if (action == "scroll") {
+        e.stopPropagation();
+      }
+    });
+  }
+  __name(stopWheel, "stopWheel");
 
   // plug-ins/windows/Menu.js
   var Menu3 = class {
@@ -11175,6 +11196,7 @@
           target: this.foreign.body,
           control: this.control
         });
+        stopWheel(this.foreign.body);
         this.on("options", (options) => this.ui.$set({ options }));
         this.foreign.body.addEventListener("click", (e) => {
           this.parent.closeMenu();
@@ -12058,6 +12080,7 @@
     methods = {
       initialize() {
         this.showCaption = false;
+        this.isResizable = false;
       },
       mount() {
         this.connector = new Instance(Connector, {

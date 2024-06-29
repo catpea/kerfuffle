@@ -3,6 +3,7 @@ import Vertical from "/plug-ins/windows/Vertical.js";
 import Foreign from "/plug-ins/windows/Foreign.js";
 import { svg, update } from "/plug-ins/domek/index.js"
 import UI from "./ui/Menu.svelte";
+import stopWheel from '/plug-ins/stop-wheel/index.js';
 
 
 export default class Menu {
@@ -52,6 +53,7 @@ export default class Menu {
         target: this.foreign.body,
         control: this.control,
       });
+      stopWheel(this.foreign.body);
 
       this.on('options', options=> this.ui.$set({options}));
 

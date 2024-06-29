@@ -54,7 +54,7 @@ export default class Pane {
 
     panX: 0,
     panY: 0,
-    zoom: 1,
+    zoom: .5,
 
     applications: [],
     elements: [],
@@ -139,23 +139,23 @@ export default class Pane {
 
       this.getApplication().on('showStatus', (showStatus)=>{
         if(showStatus){
-          const [horizontal, [ statusBar, resizeHandle ]] = nest(Horizontal, [
+          const [horizontal, [ statusBar ]] = nest(Horizontal, [
             [Label, {h: 24,   text: 'Status: nominal', parent:this}, (c,p)=>p.children.create(c)],
-            [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
+            // [Label, {h: 24, W:24, text: '///', parent:this}, (c,p)=>p.children.create(c)],
           ], (c)=>this.children.create(c));
           this.any(['x','y','zoom','w','h'], ({x,y,zoom,w,h})=>statusBar.text=`${x.toFixed(0)}x${y.toFixed(0)} zoom:${zoom.toFixed(2)} win=${this.getApplication().w.toFixed(0)}:${this.getApplication().h.toFixed(0)} pane=${w.toFixed(0)}:${h.toFixed(0)} id:${this.getApplication().id}`);
-          const resize = new Resize({
-            area: window,
-            minimumX:320,
-            minimumY:200,
-            handle: resizeHandle.el.Container,
-            scale: ()=>this.getParentScale(this),
-            box:  this.getApplication(this),
-            before: ()=>{},
-            movement: ({x,y})=>{},
-            after: ()=>{},
-          });
-          this.destructable = ()=>resize.destroy();
+          // const resize = new Resize({
+          //   area: window,
+          //   minimumX:320,
+          //   minimumY:200,
+          //   handle: resizeHandle.el.Container,
+          //   scale: ()=>this.getParentScale(this),
+          //   box:  this.getApplication(this),
+          //   before: ()=>{},
+          //   movement: ({x,y})=>{},
+          //   after: ()=>{},
+          // });
+          // this.destructable = ()=>resize.destroy();
         }
       });
 

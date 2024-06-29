@@ -14,6 +14,7 @@ import Caption from "/plug-ins/windows/Caption.js";
 
 import Move from "/plug-ins/meowse/Move.js";
 import Focus from "/plug-ins/meowse/Focus.js";
+import Resize from "/plug-ins/meowse/Resize.js";
 
 
 export default class Window {
@@ -24,6 +25,7 @@ export default class Window {
     caption: 'Untitled',
 
     showCaption: true,
+    isResizable: true,
     showMenu: false,
     showStatus: false,
 
@@ -49,13 +51,48 @@ export default class Window {
 
     initialize(){
 
-      if(!this.isRootWindow){
+      this.caption = `${this.name||this.oo.name} (${this.id})`;
+
+      if(this.isRootWindow) return;
+      if(this.oo.name == 'Pipe') return;
+
         this.r = 5;
         this.b = 5;
         this.s = 3;
+
+      if(this.isResizable){
+        let width = 32;
+        let height = 32;
+
+        this.el.ResizeHandle = svg.rect({
+          class: 'window-resize-handle',
+          'stroke-width': 0,
+          'fill': 'magenta',
+          width,
+          height,
+        });
+
+        this.any('w h x y', ({w,h,x,y})=>{
+          update(this.el.ResizeHandle,{x:(this.x+this.w)-(width*.8), y:(this.y+this.h)-(height*.8)})
+        });
+        this.on('r',     ry=>update(this.el.ResizeHandle,{ry}),     );
+
+        const resize = new Resize({
+          area: window,
+          minimumX:320,
+          minimumY:200,
+          handle: this.el.ResizeHandle,
+          scale: ()=>this.getScale(this),
+          box:  this.getApplication(this),
+          before: ()=>{},
+          movement: ({x,y})=>{},
+          after: ()=>{},
+        });
+
+        this.destructable = ()=>resize.destroy();
+
       }
 
-      this.caption = `${this.name||this.oo.name} (${this.id})`;
     },
 
     mount(){
@@ -65,13 +102,17 @@ export default class Window {
 
       if(this.isRootWindow) return;
 
+
+
       if(this.showCaption){
+
         let caption = new Instance(Caption, {h: 24, text: this.caption});
         this.on('caption', v=>caption.text=v)
         this.createWindowComponent(caption);
         this.on("node", (node) => {
           if(node.caption) node.on("caption", caption => this.caption = caption);
         });
+
         const move = new Move({
           area: window,
           handle: caption.handle,
@@ -83,6 +124,7 @@ export default class Window {
           },
           after: ()=>{},
         });
+
         this.destructable = ()=>move.destroy();
       }
 
